@@ -190,6 +190,21 @@ export const logContextSchema = z.object({
     voteBufferOperation: z
         .enum(["enqueue", "fetch", "flush", "notify", "cleanup"])
         .optional(),
+    voteBufferFlushId: uuid.optional(),
+    voteBufferStage: z
+        .enum([
+            "fetch_votes",
+            "begin_transaction",
+            "lock_conversations",
+            "recheck_votes",
+            "read_existing_votes",
+            "persist_votes",
+            "commit_transaction",
+            "rollback_transaction",
+            "notify",
+            "cleanup",
+        ])
+        .optional(),
     parameterCount: counter.optional(),
     durationMs: counter.optional(),
     responseTime: counter.optional(),

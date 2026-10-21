@@ -166,10 +166,10 @@ const isSurveyResultsLoading = computed(
 const isLoading = computed(
   () =>
     isTabActive.value &&
-    (analysisQuery.isPending.value ||
-      analysisQuery.isRefetching.value ||
-      analysisCheckpointsQuery.isPending.value ||
-      analysisCheckpointsQuery.isRefetching.value ||
+    ((analysisQuery.isPending.value &&
+      analysisQuery.data.value === undefined) ||
+      (analysisCheckpointsQuery.isPending.value &&
+        analysisCheckpointsQuery.data.value === undefined) ||
       isSurveyResultsLoading.value)
 );
 

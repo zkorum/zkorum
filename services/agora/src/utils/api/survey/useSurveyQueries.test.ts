@@ -1,10 +1,17 @@
 import { QueryClient, VueQueryPlugin } from "@tanstack/vue-query";
+import { createPinia } from "pinia";
 import type {
   SurveyResponseWithdrawResponse,
   SurveyStatusCheckResponse,
 } from "src/shared/types/dto";
+import { Dto } from "src/shared/types/dto";
 import type { SurveyGateSummary } from "src/shared/types/zod";
-import { participationRejectionFixture } from "src/utils/api/participation/participationTestFixtures";
+import { useAuthenticationStore } from "src/stores/authentication";
+import { useConversationOnboardingStore } from "src/stores/conversationOnboarding";
+import {
+  participationRejectionFixture,
+  savedSurveyFixture,
+} from "src/utils/api/participation/participationTestFixtures";
 import {
   getSurveyFormQueryKey,
   getSurveyStatusQueryKey,
@@ -25,12 +32,36 @@ import {
 } from "vue";
 
 import type { useBackendSurveyApi } from "./survey";
+import { refreshSurveyConfigQueries } from "./surveyConfigQuery";
 
 const api = vi.hoisted(() => ({
+  saveSurveyAnswer:
+    vi.fn<ReturnType<typeof useBackendSurveyApi>["saveSurveyAnswer"]>(),
+  fetchSurveyForm:
+    vi.fn<ReturnType<typeof useBackendSurveyApi>["fetchSurveyForm"]>(),
+  checkSurveyStatus:
+    vi.fn<ReturnType<typeof useBackendSurveyApi>["checkSurveyStatus"]>(),
   withdrawSurveyResponse:
     vi.fn<ReturnType<typeof useBackendSurveyApi>["withdrawSurveyResponse"]>(),
 }));
 const viewerScopeMock = vi.hoisted(() => vi.fn<typeof useViewerQueryScope>());
+const notify = vi.hoisted(() => vi.fn());
+vi.mock("src/utils/ui/notify", () => ({
+  useNotify: () => ({ showNotifyMessage: notify }),
+}));
+vi.mock("src/composables/ui/useComponentI18n", () => ({
+  useComponentI18n: () => ({ t: (key: string) => key }),
+}));
+vi.mock("src/stores/language", async () => {
+  const { defineStore } = await import("pinia");
+  const { ref } = await import("vue");
+  return {
+    useLanguageStore: defineStore("test-language", () => ({
+      displayLanguage: ref("en"),
+      spokenLanguages: ref<string[]>([]),
+    })),
+  };
+});
 vi.mock("./survey", () => ({ useBackendSurveyApi: () => api }));
 vi.mock("src/utils/api/auth", () => ({
   useBackendAuthApi: () => ({
@@ -47,6 +78,10 @@ vi.mock("src/utils/api/post/useConversationQuery", () => ({
 
 import {
   type SurveyFormData,
+  useSurveyAnswerSaveMutation,
+  useSurveyFormQuery,
+  useSurveyPrefetch,
+  useSurveyStatusQuery,
   useSurveyWithdrawMutation,
 } from "./useSurveyQueries";
 
@@ -77,8 +112,9 @@ const completedStatus: SurveyStatusCheckResponse = {
   surveyGate: completedGate,
   routeResolution: { kind: "summary" },
 };
-const completedForm: SurveyFormData = {
+const completedForm = {
   success: true,
+  surveyConfigId: 1,
   currentRevision: 1,
   surveyGate: completedGate,
   questions: [
@@ -113,7 +149,7 @@ const completedForm: SurveyFormData = {
       },
     },
   ],
-};
+} satisfies SurveyFormData;
 
 const apps: App[] = [];
 const clients: QueryClient[] = [];
@@ -123,16 +159,71 @@ afterEach(() => {
   vi.resetAllMocks();
 });
 
-function mountWithdrawal() {
+function withdrawnResponse({
+  form = completedForm,
+  gate = withdrawnGate,
+  routeResolution = { kind: "question", questionSlugId: "question-one" },
+}: {
+  form?: SurveyFormData;
+  gate?: SurveyGateSummary;
+  routeResolution?: SurveyStatusCheckResponse["routeResolution"];
+} = {}): Extract<SurveyResponseWithdrawResponse, { success: true }> {
+  return {
+    success: true,
+    participationStatus: gate.canParticipate
+      ? { status: "ready" }
+      : {
+          status: "onboarding_required",
+          nextStep: { kind: "survey", routeResolution },
+        },
+    recovery: {
+      kind: "survey",
+      form: {
+        ...form,
+        surveyGate: gate,
+        questions: form.questions.map((question) => ({
+          ...question,
+          isRequired: !gate.isOptional && question.isRequired,
+          currentAnswer: undefined,
+          isPassed: false,
+          isMissingRequired: !gate.isOptional && question.isRequired,
+          isStale: false,
+          isCurrentAnswerValid: false,
+          answeredQuestionSemanticVersion: undefined,
+        })),
+      },
+      routeResolution,
+    },
+  };
+}
+
+function mountWithdrawal({
+  cache = true,
+  prefetch = false,
+}: { cache?: boolean; prefetch?: boolean } = {}) {
   const queryClient = new QueryClient();
   clients.push(queryClient);
-  queryClient.setQueryData(statusKey, completedStatus);
-  queryClient.setQueryData(formKey, completedForm);
+  if (cache) {
+    queryClient.setQueryData(statusKey, completedStatus);
+    queryClient.setQueryData(formKey, completedForm);
+  }
+  const pinia = createPinia();
+  const auth = useAuthenticationStore(pinia);
+  auth.setLoginStatus({
+    isKnown: true,
+    isLoggedIn: true,
+    userId: "viewer-one",
+  });
+  auth.isAuthInitialized = true;
+  const prefetchEnabled = ref(prefetch);
   const activeConversationSlugId = ref(conversationSlugId);
   const activeViewerScope = ref<ViewerQueryScope>(viewerScope);
   viewerScopeMock.mockReturnValue(computed(() => activeViewerScope.value));
   let withdraw:
     | ReturnType<typeof useSurveyWithdrawMutation>["mutateAsync"]
+    | undefined;
+  let save:
+    | ReturnType<typeof useSurveyAnswerSaveMutation>["mutateAsync"]
     | undefined;
   const app = createApp(
     defineComponent({
@@ -141,24 +232,620 @@ function mountWithdrawal() {
           conversationSlugId: activeConversationSlugId,
         });
         withdraw = mutation.mutateAsync;
+        save = useSurveyAnswerSaveMutation({
+          conversationSlugId: activeConversationSlugId,
+        }).mutateAsync;
+        if (prefetch)
+          useSurveyPrefetch({
+            conversationSlugId: activeConversationSlugId,
+            enabled: prefetchEnabled,
+          });
         return () => h("div");
       },
     })
   );
   app.use(VueQueryPlugin, { queryClient });
+  app.use(pinia);
   app.mount(document.createElement("div"));
   apps.push(app);
   api.withdrawSurveyResponse.mockResolvedValue({
     status: "success",
-    data: {
-      success: true,
-      surveyGate: withdrawnGate,
-      routeResolution: { kind: "question", questionSlugId: "question-one" },
+    data: withdrawnResponse(),
+  });
+  if (withdraw === undefined || save === undefined)
+    throw new Error("Survey mutations were not mounted");
+  return {
+    queryClient,
+    withdraw,
+    save,
+    app,
+    prefetchEnabled,
+    auth,
+    onboarding: useConversationOnboardingStore(pinia),
+    activeConversationSlugId,
+    activeViewerScope,
+  };
+}
+
+function mountReads(queryClient: QueryClient) {
+  let form: ReturnType<typeof useSurveyFormQuery> | undefined;
+  const app = createApp({
+    setup() {
+      useSurveyStatusQuery({ conversationSlugId });
+      form = useSurveyFormQuery({ conversationSlugId });
+      return () => h("div");
     },
   });
-  if (withdraw === undefined) throw new Error("Withdrawal was not mounted");
-  return { queryClient, withdraw, activeConversationSlugId, activeViewerScope };
+  app.use(createPinia());
+  app.use(VueQueryPlugin, { queryClient });
+  app.mount(document.createElement("div"));
+  apps.push(app);
+  if (form === undefined) throw new Error("Survey reads were not mounted");
+  return form;
 }
+
+describe("survey lookahead and writer recovery", () => {
+  it("does not store a late prefetched answer after the viewer changes", async () => {
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.fetchSurveyForm>>>();
+    api.fetchSurveyForm.mockReturnValue(pending.promise);
+    api.checkSurveyStatus.mockResolvedValue({
+      status: "success",
+      data: completedStatus,
+    });
+    const { queryClient, activeViewerScope, prefetchEnabled } = mountWithdrawal(
+      { cache: false, prefetch: true }
+    );
+    await vi.waitFor(() => expect(api.fetchSurveyForm).toHaveBeenCalledOnce());
+    prefetchEnabled.value = false;
+    activeViewerScope.value = { kind: "viewer", userId: "another-viewer" };
+    pending.resolve({ status: "success", data: completedForm });
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryState(formKey)?.fetchStatus).toBe("idle")
+    );
+    expect(queryClient.getQueryData(formKey)).toBeUndefined();
+  });
+
+  it("does not stamp stale language caches with a revision that an answer delta cannot reconstruct", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    queryClient.setQueryData(formKey, { ...completedForm, currentRevision: 2 });
+    const frenchKey = getSurveyFormQueryKey({
+      conversationSlugId,
+      viewerScope,
+      displayLanguage: "fr",
+      spokenLanguages: [],
+    });
+    queryClient.setQueryData(frenchKey, completedForm);
+    const question = completedForm.questions[0];
+    if (question === undefined) throw new Error("Missing question fixture");
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: {
+        ...savedSurveyFixture,
+        currentRevision: 2,
+        savedQuestion: question,
+      },
+    });
+    await save({
+      questionSlugId: question.questionSlugId,
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 2,
+      answer: null,
+    });
+    expect(
+      queryClient.getQueryData<SurveyFormData>(frenchKey)?.currentRevision
+    ).toBe(1);
+    expect(queryClient.getQueryState(frenchKey)?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(formKey)?.isInvalidated).toBe(false);
+  });
+
+  it("orders a new answer after an in-flight withdrawal", async () => {
+    const { queryClient, withdraw, save } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.withdrawSurveyResponse>>
+      >();
+    api.withdrawSurveyResponse.mockReturnValue(pending.promise);
+    const question = completedForm.questions[0];
+    if (question === undefined) throw new Error("Missing question fixture");
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: { ...savedSurveyFixture, savedQuestion: question },
+    });
+    const withdrawal = withdraw();
+    await vi.waitFor(() =>
+      expect(api.withdrawSurveyResponse).toHaveBeenCalledOnce()
+    );
+    const saving = save({
+      questionSlugId: question.questionSlugId,
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: question.currentAnswer,
+    });
+    await nextTick();
+    expect(api.saveSurveyAnswer).not.toHaveBeenCalled();
+    pending.resolve({ status: "success", data: withdrawnResponse() });
+    await Promise.all([withdrawal, saving]);
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toEqual(question.currentAnswer);
+  });
+
+  it("keeps the original write queue alive when the same component changes conversations", async () => {
+    const { withdraw, save, activeConversationSlugId } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.withdrawSurveyResponse>>
+      >();
+    api.withdrawSurveyResponse.mockReturnValue(pending.promise);
+    const question = completedForm.questions[0];
+    if (question === undefined) throw new Error("Missing question fixture");
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: { ...savedSurveyFixture, savedQuestion: question },
+    });
+    const withdrawal = withdraw();
+    await vi.waitFor(() =>
+      expect(api.withdrawSurveyResponse).toHaveBeenCalledOnce()
+    );
+    const answer = {
+      questionSlugId: question.questionSlugId,
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: question.currentAnswer,
+    };
+    const firstConversationSave = save(answer);
+    await nextTick();
+    activeConversationSlugId.value = "conversation-two";
+    await nextTick();
+    try {
+      await save(answer);
+      expect(api.saveSurveyAnswer).toHaveBeenCalledOnce();
+      expect(api.saveSurveyAnswer).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationSlugId: "conversation-two" })
+      );
+    } finally {
+      pending.resolve({ status: "success", data: withdrawnResponse() });
+    }
+    await Promise.all([withdrawal, firstConversationSave]);
+    expect(api.saveSurveyAnswer).toHaveBeenCalledTimes(2);
+    expect(api.saveSurveyAnswer).toHaveBeenLastCalledWith(
+      expect.objectContaining({ conversationSlugId })
+    );
+  });
+
+  it("repairs the owner's caches after unmounting without reviving the old screen", async () => {
+    const { queryClient, app, withdraw } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.withdrawSurveyResponse>>
+      >();
+    api.withdrawSurveyResponse.mockReturnValue(pending.promise);
+    const withdrawal = withdraw();
+    await vi.waitFor(() =>
+      expect(api.withdrawSurveyResponse).toHaveBeenCalledOnce()
+    );
+    app.unmount();
+    apps.splice(apps.indexOf(app), 1);
+    pending.resolve({ status: "success", data: withdrawnResponse() });
+    await expect(withdrawal).resolves.toBeUndefined();
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toBeUndefined();
+  });
+
+  it("does not recreate private caches cleared during an account switch", async () => {
+    const { queryClient, auth, withdraw } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.withdrawSurveyResponse>>
+      >();
+    api.withdrawSurveyResponse.mockReturnValue(pending.promise);
+    const withdrawal = withdraw();
+    await vi.waitFor(() =>
+      expect(api.withdrawSurveyResponse).toHaveBeenCalledOnce()
+    );
+    auth.setLoginStatus({
+      isKnown: true,
+      isLoggedIn: true,
+      userId: "another-viewer",
+    });
+    queryClient.clear();
+    pending.resolve({ status: "success", data: withdrawnResponse() });
+    await expect(withdrawal).resolves.toBeUndefined();
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+  });
+
+  it("settles discarded queued writes when logout clears caches before auth changes", async () => {
+    const { queryClient, withdraw, save } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.withdrawSurveyResponse>>
+      >();
+    api.withdrawSurveyResponse.mockReturnValue(pending.promise);
+    const withdrawal = withdraw();
+    await vi.waitFor(() =>
+      expect(api.withdrawSurveyResponse).toHaveBeenCalledOnce()
+    );
+    const saving = save({
+      questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
+    await nextTick();
+    queryClient.clear();
+    pending.resolve({ status: "success", data: withdrawnResponse() });
+    await expect(withdrawal).resolves.toBeUndefined();
+    await expect(saving).resolves.toBeUndefined();
+    expect(api.saveSurveyAnswer).not.toHaveBeenCalled();
+    expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+  });
+
+  it("repairs caches without returning an old write to a new onboarding session", async () => {
+    const { queryClient, save, onboarding } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.saveSurveyAnswer>>>();
+    api.saveSurveyAnswer.mockReturnValue(pending.promise);
+    const question = completedForm.questions[0];
+    if (question === undefined) throw new Error("Missing question fixture");
+    const saving = save({
+      questionSlugId: question.questionSlugId,
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
+    await vi.waitFor(() => expect(api.saveSurveyAnswer).toHaveBeenCalledOnce());
+    onboarding.startManualEntry({ conversationSlugId });
+    pending.resolve({
+      status: "success",
+      data: {
+        ...savedSurveyFixture,
+        savedQuestion: {
+          ...question,
+          currentAnswer: undefined,
+          isPassed: true,
+        },
+      },
+    });
+    await expect(saving).resolves.toBeUndefined();
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toBeUndefined();
+  });
+
+  it("loads status and form together and shares the pending request with the next screen", async () => {
+    const status =
+      Promise.withResolvers<
+        Awaited<ReturnType<typeof api.checkSurveyStatus>>
+      >();
+    const form =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.fetchSurveyForm>>>();
+    api.checkSurveyStatus.mockReturnValue(status.promise);
+    api.fetchSurveyForm.mockReturnValue(form.promise);
+    const { queryClient, app } = mountWithdrawal({
+      cache: false,
+      prefetch: true,
+    });
+    await vi.waitFor(() => {
+      expect(api.checkSurveyStatus).toHaveBeenCalledOnce();
+      expect(api.fetchSurveyForm).toHaveBeenCalledOnce();
+    });
+    app.unmount();
+    apps.splice(apps.indexOf(app), 1);
+    const reads = mountReads(queryClient);
+    status.resolve({ status: "success", data: completedStatus });
+    form.resolve({ status: "success", data: completedForm });
+    await vi.waitFor(() => expect(reads.data.value).toEqual(completedForm));
+    expect(api.fetchSurveyForm).toHaveBeenCalledOnce();
+    expect(api.checkSurveyStatus).toHaveBeenCalledOnce();
+  });
+
+  it("cancels a first prefetch on a config edit so a late old response cannot revive it", async () => {
+    const oldForm =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.fetchSurveyForm>>>();
+    const aborted = vi.fn();
+    api.fetchSurveyForm.mockImplementationOnce(({ signal }) => {
+      signal?.addEventListener("abort", aborted);
+      return oldForm.promise;
+    });
+    api.checkSurveyStatus.mockResolvedValue({
+      status: "success",
+      data: completedStatus,
+    });
+    const { queryClient } = mountWithdrawal({ cache: false, prefetch: true });
+    await vi.waitFor(() => expect(api.fetchSurveyForm).toHaveBeenCalledOnce());
+    await refreshSurveyConfigQueries({ queryClient, conversationSlugId });
+    expect(aborted).toHaveBeenCalledOnce();
+    oldForm.resolve({ status: "success", data: completedForm });
+    await nextTick();
+    expect(queryClient.getQueryData(formKey)).toBeUndefined();
+    const updated = { ...completedForm, currentRevision: 2 };
+    api.fetchSurveyForm.mockResolvedValue({ status: "success", data: updated });
+    const reads = mountReads(queryClient);
+    await vi.waitFor(() => expect(reads.data.value?.currentRevision).toBe(2));
+    expect(api.fetchSurveyForm).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not let a cancelled old read abort the fresh read that replaced it", async () => {
+    const old =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.fetchSurveyForm>>>();
+    const fresh =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.fetchSurveyForm>>>();
+    api.fetchSurveyForm
+      .mockReturnValueOnce(old.promise)
+      .mockReturnValueOnce(fresh.promise);
+    api.checkSurveyStatus.mockResolvedValue({
+      status: "success",
+      data: completedStatus,
+    });
+    const { queryClient } = mountWithdrawal({ cache: false, prefetch: true });
+    await vi.waitFor(() => expect(api.fetchSurveyForm).toHaveBeenCalledOnce());
+    await refreshSurveyConfigQueries({ queryClient, conversationSlugId });
+    const reads = mountReads(queryClient);
+    await vi.waitFor(() =>
+      expect(api.fetchSurveyForm).toHaveBeenCalledTimes(2)
+    );
+    old.resolve({ status: "success", data: completedForm });
+    await nextTick();
+    expect(queryClient.getQueryState(formKey)?.fetchStatus).toBe("fetching");
+    fresh.resolve({
+      status: "success",
+      data: { ...completedForm, currentRevision: 2 },
+    });
+    await vi.waitFor(() => expect(reads.data.value?.currentRevision).toBe(2));
+  });
+
+  it("keeps a speculative failure silent and retries when the screen opens", async () => {
+    api.checkSurveyStatus.mockResolvedValue({
+      status: "success",
+      data: completedStatus,
+    });
+    api.fetchSurveyForm.mockResolvedValueOnce({
+      status: "success",
+      data: { success: false, reason: "content_not_found" },
+    });
+    const { queryClient } = mountWithdrawal({ cache: false, prefetch: true });
+    await vi.waitFor(() =>
+      expect(queryClient.getQueryState(formKey)?.status).toBe("error")
+    );
+    expect(notify).not.toHaveBeenCalled();
+    api.fetchSurveyForm.mockResolvedValue({
+      status: "success",
+      data: completedForm,
+    });
+    const reads = mountReads(queryClient);
+    await vi.waitFor(() => expect(reads.data.value).toEqual(completedForm));
+  });
+
+  it("installs a conflict snapshot from the writer without rereading and protects it from older reads", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    const oldRead = Promise.withResolvers<SurveyFormData>();
+    const read = queryClient.prefetchQuery({
+      queryKey: formKey,
+      queryFn: ({ signal }) => {
+        signal.addEventListener("abort", () => {});
+        return oldRead.promise;
+      },
+    });
+    const updated: SurveyFormData = {
+      ...completedForm,
+      currentRevision: 2,
+      surveyGate: withdrawnGate,
+      questions: completedForm.questions.map((question) => ({
+        ...question,
+        questionText: "Updated meaning",
+        currentSemanticVersion: 2,
+        currentAnswer: undefined,
+        isCurrentAnswerValid: false,
+        isMissingRequired: true,
+        displayContent: undefined,
+      })),
+    };
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: {
+        success: false,
+        reason: "survey_changed",
+        participationStatus:
+          participationRejectionFixture("survey_required").participationStatus,
+        recovery: {
+          kind: "survey",
+          form: updated,
+          routeResolution: { kind: "question", questionSlugId: "question-one" },
+        },
+      },
+    });
+    await save({
+      questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: { questionType: "choice", optionSlugIds: ["bicycle"] },
+    });
+    oldRead.resolve(completedForm);
+    await read;
+    expect(queryClient.getQueryData(formKey)).toEqual(updated);
+    expect(queryClient.getQueryData(statusKey)).toEqual({
+      surveyGate: withdrawnGate,
+      routeResolution: { kind: "question", questionSlugId: "question-one" },
+    });
+    expect(queryClient.getQueryState(formKey)?.isInvalidated).toBe(false);
+    expect(api.fetchSurveyForm).not.toHaveBeenCalled();
+    expect(api.checkSurveyStatus).not.toHaveBeenCalled();
+  });
+
+  it("uses the canonical saved answer and keeps it fresh for immediate navigation", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    const question = completedForm.questions[0];
+    if (question === undefined) throw new Error("Missing fixture question");
+    const canonical = {
+      questionType: "choice",
+      optionSlugIds: ["bicycle"],
+      optionTextValues: { bicycle: { textValueHtml: "<p>Bike</p>" } },
+    } satisfies NonNullable<
+      SurveyFormData["questions"][number]["currentAnswer"]
+    >;
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: {
+        ...savedSurveyFixture,
+        savedQuestion: { ...question, currentAnswer: canonical },
+      },
+    });
+    await save({
+      questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: {
+        ...canonical,
+        optionTextValues: { bicycle: { textValueHtml: "<p>  Bike  </p>" } },
+      },
+    });
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toEqual(canonical);
+    expect(queryClient.getQueryState(formKey)?.isInvalidated).toBe(false);
+    expect(queryClient.getQueryState(statusKey)?.isInvalidated).toBe(false);
+  });
+
+  it("clears the cached answer when an acknowledged pass omits the answer on the wire", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    const question = savedSurveyFixture.savedQuestion;
+    queryClient.setQueryData(formKey, {
+      ...completedForm,
+      questions: [question],
+    });
+    const data = Dto.surveyAnswerSaveResponse.parse(
+      JSON.parse(
+        JSON.stringify({
+          ...savedSurveyFixture,
+          savedQuestion: {
+            ...question,
+            options: [
+              {
+                optionSlugId: "bicycle",
+                optionText: "Bicycle",
+                displayOrder: 0,
+              },
+              { optionSlugId: "other", optionText: "Other", displayOrder: 1 },
+            ],
+            currentAnswer: undefined,
+            isRequired: false,
+            isPassed: true,
+            isCurrentAnswerValid: false,
+          },
+        })
+      )
+    );
+    api.saveSurveyAnswer.mockResolvedValue({ status: "success", data });
+    await save({
+      questionSlugId: "question",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toBeUndefined();
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]?.isPassed
+    ).toBe(true);
+  });
+
+  it("does not replace a newer cached questionnaire with a late older save acknowledgement", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.saveSurveyAnswer>>>();
+    api.saveSurveyAnswer.mockReturnValue(pending.promise);
+    const saving = save({
+      questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
+    await vi.waitFor(() => expect(api.saveSurveyAnswer).toHaveBeenCalledOnce());
+    const newer = { ...completedForm, currentRevision: 2 };
+    queryClient.setQueryData(formKey, newer);
+    pending.resolve({ status: "success", data: savedSurveyFixture });
+    await expect(saving).resolves.toBeUndefined();
+    expect(queryClient.getQueryData(formKey)).toEqual(newer);
+  });
+
+  it("accepts a recreated questionnaire with a newer instance ID and lower revision", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    queryClient.setQueryData(formKey, { ...completedForm, currentRevision: 5 });
+    const recreated: SurveyFormData = {
+      ...completedForm,
+      surveyConfigId: 2,
+      currentRevision: 1,
+    };
+    api.saveSurveyAnswer.mockResolvedValue({
+      status: "success",
+      data: {
+        success: false,
+        reason: "survey_changed",
+        participationStatus:
+          participationRejectionFixture("survey_required").participationStatus,
+        recovery: {
+          kind: "survey",
+          form: recreated,
+          routeResolution: { kind: "question", questionSlugId: "question-one" },
+        },
+      },
+    });
+    await expect(
+      save({
+        questionSlugId: "question-one",
+        expectedQuestionSemanticVersion: 1,
+        knownSurveyRevision: 5,
+        answer: null,
+      })
+    ).resolves.toMatchObject({ reason: "survey_changed" });
+    expect(queryClient.getQueryData(formKey)).toEqual(recreated);
+  });
+
+  it("ignores a late removed-survey result after a new questionnaire is already cached", async () => {
+    const { queryClient, save } = mountWithdrawal();
+    const pending =
+      Promise.withResolvers<Awaited<ReturnType<typeof api.saveSurveyAnswer>>>();
+    api.saveSurveyAnswer.mockReturnValue(pending.promise);
+    const saving = save({
+      questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
+    await vi.waitFor(() => expect(api.saveSurveyAnswer).toHaveBeenCalledOnce());
+    const recreated = { ...completedForm, surveyConfigId: 2 };
+    queryClient.setQueryData(formKey, recreated);
+    pending.resolve({
+      status: "success",
+      data: {
+        success: false,
+        reason: "survey_changed",
+        participationStatus: { status: "ready" },
+        recovery: {
+          kind: "no_survey",
+          surveyGate: {
+            hasSurvey: false,
+            isOptional: false,
+            canParticipate: true,
+            status: "no_survey",
+          },
+          routeResolution: { kind: "none" },
+        },
+      },
+    });
+    await expect(saving).resolves.toBeUndefined();
+    expect(queryClient.getQueryData(formKey)).toEqual(recreated);
+    expect(queryClient.getQueryData(statusKey)).toEqual(completedStatus);
+  });
+});
 
 describe("survey withdrawal cache", () => {
   it("keeps the cleared survey fresh when navigating from welcome", async () => {
@@ -249,21 +936,23 @@ describe("survey withdrawal cache", () => {
       surveyGate: withdrawnGate,
       routeResolution: { kind: "question", questionSlugId: "question-one" },
     });
-    expect(queryClient.getQueryData(formKey)).toBeUndefined();
+    expect(
+      queryClient.getQueryData<SurveyFormData>(formKey)?.questions[0]
+        ?.currentAnswer
+    ).toBeUndefined();
+    expect(queryClient.getQueryData(formKey)).toBeDefined();
   });
 
   it("uses the backend route even when cached questions suggest a different destination", async () => {
     const { queryClient, withdraw } = mountWithdrawal();
     api.withdrawSurveyResponse.mockResolvedValue({
       status: "success",
-      data: {
-        success: true,
-        surveyGate: withdrawnGate,
+      data: withdrawnResponse({
         routeResolution: {
           kind: "question",
           questionSlugId: "server-question",
         },
-      },
+      }),
     });
 
     await withdraw();
@@ -311,16 +1000,14 @@ describe("survey withdrawal cache", () => {
     activeViewerScope.value = otherViewer;
     response.resolve({
       status: "success",
-      data: {
-        success: true,
-        surveyGate: withdrawnGate,
-        routeResolution: { kind: "question", questionSlugId: "question-one" },
-      },
+      data: withdrawnResponse(),
     });
     await pending;
 
     expect(api.withdrawSurveyResponse).toHaveBeenCalledWith({
       conversationSlugId,
+      skipEmailUpdateConsent: false,
+      isCurrent: expect.any(Function),
     });
     expect(
       queryClient.getQueryData<SurveyStatusCheckResponse>(statusKey)?.surveyGate
@@ -378,11 +1065,10 @@ describe("survey withdrawal cache", () => {
     });
     api.withdrawSurveyResponse.mockResolvedValue({
       status: "success",
-      data: {
-        success: true,
-        surveyGate: optionalWithdrawnGate,
-        routeResolution: { kind: "question", questionSlugId: "question-one" },
-      },
+      data: withdrawnResponse({
+        form: passedForm,
+        gate: optionalWithdrawnGate,
+      }),
     });
 
     await withdraw();

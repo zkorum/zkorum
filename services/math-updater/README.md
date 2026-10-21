@@ -190,6 +190,10 @@ make image-buildx TAG=2.0.4
 make image-push TAG=2.0.4
 ```
 
+For a fresh rebuild, use `make image-buildx TAG=2.0.4 NO_CACHE=1`. See the
+[worker image deployment guide](../../README.md#building-worker-images) for when
+to bypass Docker's build cache, including package and certificate security updates.
+
 Retry workers are built and deployed as separate services with their own Docker images.
 
 ## Related Services

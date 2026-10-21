@@ -41,8 +41,8 @@ const { applyReviewedManifest } =
 const { incidentManifestSchema } =
     await import("../scripts/twilioIncidentManifestSchema.js");
 const authSessionService = await import("../src/service/authSession.js");
-const realtimeEventOutboxService =
-    await import("../src/service/realtimeEventOutbox.js");
+const { initializeRealtimeDispatch, fetchDeliveredEventUpperBound } =
+    await import("../src/service/realtimeEventDispatch.js");
 const schema = await import("../src/shared-backend/schema.js");
 const { normalizeEmail } = await import("../src/shared/types/zod-email.js");
 
@@ -134,6 +134,7 @@ describe("OTP destination throttling", () => {
     beforeEach(async () => {
         await sqlClient.unsafe(`
             TRUNCATE TABLE
+                "realtime_event_dispatch_state",
                 "realtime_event_outbox",
                 "event_ticket",
                 "user_spoken_languages",
@@ -3079,7 +3080,8 @@ describe("OTP destination throttling", () => {
         expect(JSON.stringify(sessions)).not.toContain(otherUser.userId);
     });
 
-    it("waits for earlier outbox inserts before exposing a safe upper bound", async () => {
+    it("delivers late commits without blocking other outbox writers", async () => {
+        await initializeRealtimeDispatch(db);
         const firstInsertStarted = createLatch();
         const allowFirstInsertCommit = createLatch();
         const firstInsert = sqlClient.begin(async (tx) => {
@@ -3096,21 +3098,40 @@ describe("OTP destination throttling", () => {
             VALUES ('test_second', '{}'::jsonb)
         `;
 
-        let didResolve = false;
-        const safeUpperBound = realtimeEventOutboxService
-            .fetchSafeOutboxUpperBound({ db })
-            .then((value) => {
-                didResolve = true;
-                return value;
+        try {
+            await expect(fetchDeliveredEventUpperBound(db)).resolves.toBe(1);
+            const delivered = await db.select().from(realtimeEventOutboxTable);
+            expect(
+                delivered.map((row) => ({
+                    id: row.id,
+                    deliveryId: row.deliveryId,
+                })),
+            ).toEqual([{ id: 2, deliveryId: 1 }]);
+            // A third business transaction can still commit while the first
+            // insert is open; allocation order is not used as a replay cursor.
+            await db.insert(realtimeEventOutboxTable).values({
+                eventType: "test_third",
+                payload: {},
             });
-        await new Promise<void>((resolve) => {
-            setTimeout(resolve, 50);
-        });
-        expect(didResolve).toBe(false);
-
-        allowFirstInsertCommit.release();
-        await firstInsert;
-        await expect(safeUpperBound).resolves.toBe(2);
+        } finally {
+            allowFirstInsertCommit.release();
+            await firstInsert;
+        }
+        await expect(fetchDeliveredEventUpperBound(db)).resolves.toBe(3);
+        const delivered = await db
+            .select()
+            .from(realtimeEventOutboxTable)
+            .orderBy(realtimeEventOutboxTable.deliveryId);
+        expect(
+            delivered.map((row) => ({
+                id: row.id,
+                deliveryId: row.deliveryId,
+            })),
+        ).toEqual([
+            { id: 2, deliveryId: 1 },
+            { id: 1, deliveryId: 2 },
+            { id: 3, deliveryId: 3 },
+        ]);
     });
 
     it("revokes another session without touching the current session", async () => {

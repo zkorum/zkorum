@@ -1,6 +1,8 @@
 IMAGE ?= quay.io/zkorum/agora-conversation-email-update-worker
 TAG ?= latest
 TAG_ARG := $(or $(word 2,$(MAKECMDGOALS)),$(TAG))
+NO_CACHE ?= 0
+NO_CACHE_FLAG := $(if $(filter 1,$(NO_CACHE)),--no-cache)
 DEV_SCENARIO ?= simulated-success
 
 all: dev
@@ -24,7 +26,7 @@ test:
 	pnpm test
 
 image-buildx:
-	docker buildx build --pull --platform linux/amd64 -f Dockerfile -t $(IMAGE):$(TAG_ARG) .
+	docker buildx build --pull $(NO_CACHE_FLAG) --platform linux/amd64 -f Dockerfile -t $(IMAGE):$(TAG_ARG) .
 
 image-push:
 	docker push $(IMAGE):$(TAG_ARG)

@@ -1,8 +1,9 @@
 import { useAuthenticationStore } from "src/stores/authentication";
 import { onScopeDispose, watch } from "vue";
 
-export function useParticipationViewerLifetime() {
-  const auth = useAuthenticationStore();
+export function useParticipationViewerLifetime(
+  auth = useAuthenticationStore()
+) {
   let generation = 0;
   watch(
     [() => auth.userId, () => auth.isLoggedIn],

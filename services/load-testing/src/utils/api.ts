@@ -5,7 +5,14 @@
  */
 
 import http from "k6/http";
-import { Dto, type FetchOpinionPageResponse } from "../shared/types/dto.js";
+import {
+    Dto,
+    type FetchOpinionPageResponse,
+    type SurveyAnswerSaveRequest,
+    type SurveyAnswerSaveResponse,
+    type SurveyFormFetchResponse,
+} from "../shared/types/dto.js";
+import type { SurveyQuestionFormItem } from "../shared/types/zod.js";
 import {
     buildUcan,
     buildAuthorizationHeader,
@@ -193,69 +200,6 @@ export interface FetchMainPageResponse {
     error?: string;
 }
 
-interface SurveyGateSummary {
-    hasSurvey: boolean;
-    isOptional: boolean;
-    canParticipate: boolean;
-    status:
-        | "no_survey"
-        | "not_started"
-        | "in_progress"
-        | "needs_update"
-        | "complete_valid";
-}
-
-interface SurveyQuestionOption {
-    optionSlugId?: string;
-    displayOrder: number;
-}
-
-interface SurveyChoiceQuestionFormItem {
-    questionType: "choice";
-    questionSlugId?: string;
-    displayOrder: number;
-    constraints: {
-        type: "choice";
-        minSelections: number;
-        maxSelections?: number;
-    };
-    options: SurveyQuestionOption[];
-}
-
-interface SurveyFreeTextQuestionFormItem {
-    questionType: "free_text";
-    questionSlugId?: string;
-    displayOrder: number;
-    constraints:
-        | {
-              type: "free_text";
-              inputMode?: "rich_text";
-              minPlainTextLength?: number;
-              maxPlainTextLength: number;
-              maxHtmlLength: number;
-          }
-        | {
-              type: "free_text";
-              inputMode: "integer";
-              minValue: number;
-              maxValue?: number;
-          };
-}
-
-export type SurveyQuestionFormItem =
-    | SurveyChoiceQuestionFormItem
-    | SurveyFreeTextQuestionFormItem;
-
-export type SurveyAnswerSubmission =
-    | {
-          questionType: "choice";
-          optionSlugIds: string[];
-      }
-    | {
-          questionType: "free_text";
-          textValueHtml: string;
-      };
-
 export interface FetchSurveyFormParams {
     conversationSlugId: string;
     did: string;
@@ -263,30 +207,44 @@ export interface FetchSurveyFormParams {
     backendDid: string;
 }
 
-export interface FetchSurveyFormResponse {
-    success: boolean;
-    responseTime: number;
-    surveyGate?: SurveyGateSummary;
-    questions: SurveyQuestionFormItem[];
-    error?: string;
-}
+export type FetchSurveyFormResponse = { responseTime: number } & (
+    | (Pick<
+          Extract<SurveyFormFetchResponse, { success: true }>,
+          "success" | "surveyGate" | "currentRevision" | "questions"
+      > & { error?: undefined })
+    | {
+          success: false;
+          error: string;
+          questions: SurveyQuestionFormItem[];
+          surveyGate?: undefined;
+      }
+);
 
-export interface SaveSurveyAnswerParams {
-    conversationSlugId: string;
-    questionSlugId: string;
-    answer: SurveyAnswerSubmission | null;
+export type SaveSurveyAnswerParams = Pick<
+    SurveyAnswerSaveRequest,
+    | "conversationSlugId"
+    | "questionSlugId"
+    | "expectedQuestionSemanticVersion"
+    | "knownSurveyRevision"
+    | "answer"
+> & {
     did: string;
     prefixedKey: string;
     backendDid: string;
-}
+};
 
-export interface SaveSurveyAnswerResponse {
-    success: boolean;
-    responseTime: number;
-    surveyGate?: SurveyGateSummary;
-    justCompleted?: boolean;
-    error?: string;
-}
+export type SaveSurveyAnswerResponse = { responseTime: number } & (
+    | (Pick<
+          Extract<SurveyAnswerSaveResponse, { success: true }>,
+          "success" | "surveyGate" | "justCompleted"
+      > & { error?: undefined })
+    | {
+          success: false;
+          error: string;
+          surveyGate?: undefined;
+          justCompleted?: undefined;
+      }
+);
 
 export async function fetchSurveyForm(
     params: FetchSurveyFormParams,
@@ -326,13 +284,21 @@ export async function fetchSurveyForm(
             };
         }
 
-        const responseData = JSON.parse(responseBody) as {
-            surveyGate: SurveyGateSummary;
-            questions: SurveyQuestionFormItem[];
-        };
+        const responseData = Dto.surveyFormFetchResponse.parse(
+            JSON.parse(responseBody),
+        );
+        if (!responseData.success) {
+            return {
+                success: false,
+                responseTime,
+                questions: [],
+                error: responseData.reason,
+            };
+        }
         return {
             success: true,
             responseTime,
+            currentRevision: responseData.currentRevision,
             surveyGate: responseData.surveyGate,
             questions: responseData.questions,
         };
@@ -352,6 +318,8 @@ export async function saveSurveyAnswer(
     const {
         conversationSlugId,
         questionSlugId,
+        expectedQuestionSemanticVersion,
+        knownSurveyRevision,
         answer,
         did,
         prefixedKey,
@@ -359,7 +327,13 @@ export async function saveSurveyAnswer(
     } = params;
     const url = `${API_BASE_URL}/api/v1/survey/answer/save`;
     const pathname = "/api/v1/survey/answer/save";
-    const requestBody = { conversationSlugId, questionSlugId, answer };
+    const requestBody = {
+        conversationSlugId,
+        questionSlugId,
+        expectedQuestionSemanticVersion,
+        knownSurveyRevision,
+        answer,
+    };
 
     try {
         const encodedUcan = await buildUcan({
@@ -391,16 +365,9 @@ export async function saveSurveyAnswer(
             };
         }
 
-        const responseData = JSON.parse(response.body as string) as
-            | {
-                  success: true;
-                  surveyGate: SurveyGateSummary;
-                  justCompleted: boolean;
-              }
-            | {
-                  success: false;
-                  reason: string;
-              };
+        const responseData = Dto.surveyAnswerSaveResponse.parse(
+            response.json(),
+        );
         if (!responseData.success) {
             return {
                 success: false,

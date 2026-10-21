@@ -48,6 +48,7 @@ if [ -d "$SERVICES_DIR/conversation-email-update-worker" ]; then
         --include='/conversationEmailUpdatePreferencePolicy.ts' \
         --include='/conversationEmailUpdateSnsIngress.ts' \
         --include='/db.ts' \
+        --include='/databaseResources.ts' \
         --include='/email/***' \
         --include='/logger.ts' \
         --include='/logPrivacy.ts' \

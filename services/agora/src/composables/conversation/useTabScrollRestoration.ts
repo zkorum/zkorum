@@ -44,7 +44,9 @@ export function useTabScrollRestoration({
     return cachedFloorScroll ?? 0;
   }
 
-  onBeforeRouteUpdate((_to, from) => {
+  onBeforeRouteUpdate((to, from) => {
+    if (to.name === from.name) return;
+
     const container = scrollContainer?.value;
     const { minHeight } = state.savePosition({
       routeName: String(from.name),

@@ -183,6 +183,16 @@ export type SSEConversationCommentStatsUpdatedData = z.infer<
     typeof zodSSEConversationCommentStatsUpdatedData
 >;
 
+// Live statement feedback is independent of the published analysis frame.
+export const zodSSEOpinionVoteCountsUpdatedData = z
+    .object({
+        conversationSlugId: zodSlugId,
+        opinionVoteCounts:
+            zodSSEConversationCommentStatsUpdatedData.shape.opinionVoteCounts,
+        timestamp: z.number().int().nonnegative(),
+    })
+    .strict();
+
 /**
  * Data sent when a ranking conversation's current aggregate counters changed.
  */
@@ -339,6 +349,7 @@ export const zodSSEEventDataByType = {
     new_opinion: zodSSENewOpinionData,
     popular_conversation: zodSSEPopularConversationData,
     conversation_analysis_updated: zodSSEConversationAnalysisUpdatedData,
+    opinion_vote_counts_updated: zodSSEOpinionVoteCountsUpdatedData,
     conversation_comment_stats_updated:
         zodSSEConversationCommentStatsUpdatedData,
     conversation_ranking_stats_updated:
@@ -392,6 +403,7 @@ export type SSEShutdownEvent = SSEEvent<"shutdown">;
  * Union of all possible SSE events
  */
 export type AnySSEEvent =
+    | SSEEvent<"opinion_vote_counts_updated">
     | SSEConnectedEvent
     | SSENotificationEvent
     | SSENewConversationEvent

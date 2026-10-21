@@ -2,7 +2,13 @@
   <div class="async-state-handler">
     <!-- Error state -->
     <div
-      v-if="isError && !isPending && !isRefetching && !isRetryPending"
+      v-if="
+        isError &&
+        !canRetainData &&
+        !isPending &&
+        !isRefetching &&
+        !isRetryPending
+      "
       class="asyncStateMessage"
     >
       <slot
@@ -85,19 +91,17 @@
     </div>
 
     <!-- Success state with data or loading state -->
-    <div
-      v-else
-      class="contentWrapper"
-    >
+    <div v-else class="contentWrapper">
       <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { isAxiosError } from "axios";
 import Button from "primevue/button";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
-import { computed, type Ref,ref } from "vue";
+import { computed, type Ref, ref } from "vue";
 
 import {
   type AsyncStateHandlerTranslations,
@@ -115,6 +119,7 @@ const props = withDefaults(defineProps<Props>(), {
   config: () => ({}),
   isEmpty: undefined,
   onRetry: undefined,
+  retainDataOnError: false,
 });
 
 const emit = defineEmits<{
@@ -170,12 +175,26 @@ interface Props {
   config?: AsyncStateConfig;
   isEmpty?: boolean | (() => boolean);
   onRetry?: () => void | Promise<void>;
+  retainDataOnError?: boolean;
 }
 
 // Reactive state to track retry loading with delay
 const isRetryPending = ref(false);
 
 const isPending = computed((): boolean => props.query.isPending.value);
+const canRetainData = computed(() => {
+  if (!props.retainDataOnError || props.query.data.value === undefined)
+    return false;
+  const error = props.query.error.value;
+  const status = isAxiosError(error) ? error.response?.status : undefined;
+  return (
+    status === undefined ||
+    status >= 500 ||
+    status === 408 ||
+    status === 425 ||
+    status === 429
+  );
+});
 const isError = computed((): boolean => props.query.isError.value);
 const isRefetching = computed((): boolean => props.query.isRefetching.value);
 
@@ -211,9 +230,9 @@ const errorMessage = computed((): string | null => {
     error !== null &&
     typeof error === "object" &&
     "message" in error &&
-    typeof (error).message === "string"
+    typeof error.message === "string"
   ) {
-    return (error as { message: string }).message;
+    return error.message;
   }
 
   return null;
@@ -255,9 +274,7 @@ async function handleRetry(): Promise<void> {
       await props.onRetry();
     } else {
       // Default behavior: refetch the query
-      if (props.query.refetch) {
-        await props.query.refetch();
-      }
+      await props.query.refetch();
     }
   } catch (retryError: unknown) {
     const errorMsg =

@@ -27,10 +27,32 @@ Install:
 - [jq](https://jqlang.github.io/jq/)
 - sed
 - bash
-- [Node.js](https://nodejs.org/) 24 (matches the Docker builds)
+- [Node.js](https://nodejs.org/) 24.22.1 (matches `.nvmrc` and the Docker builds)
 - [pnpm](https://pnpm.io/) 12.4.1
 - [watchman](https://facebook.github.io/watchman/)
 - [docker](https://www.docker.com/)
+
+### Node.js version
+
+From the repository root, use [nvm](https://github.com/nvm-sh/nvm) to install and
+select the pinned runtime:
+
+```bash
+nvm install
+nvm use
+nvm alias default 24.22.1
+```
+
+Restart running development services after switching Node; existing processes keep
+their original runtime. CI reads `.nvmrc`; Netlify and Docker builds pin the same
+version explicitly.
+
+### Python TLS trust updates
+
+Python worker and experiments projects require uv 0.13.4 or newer and certifi
+2026.10.19 or newer for the October 2026 eMudhra CA compromise. Docker builds
+enforce patched CA packages. Rebuild images with `--pull --no-cache`, refresh local
+environments with `uv sync --locked`, and restart running workers.
 
 ### Package-manager configuration
 
@@ -178,6 +200,49 @@ make dev-generate
 ```
 
 ... and start coding!
+
+## Deployment
+
+### Building worker images
+
+All six Python workers and the Conversation Email Updates worker support the same
+build-cache option. Run these commands from the worker's service directory:
+
+```bash
+# Normal build: check for a newer base image and reuse cached build steps.
+make image-buildx TAG=YOUR_TAG
+
+# Fresh rebuild: also rerun every build step, including package installation.
+make image-buildx TAG=YOUR_TAG NO_CACHE=1
+
+# Publish the image, then update the deployment's image reference and restart it.
+make image-push TAG=YOUR_TAG
+
+# Inspect the fresh-build command without executing it.
+make -n image-buildx TAG=YOUR_TAG NO_CACHE=1
+```
+
+The scoring worker's optional GPU target supports the same option:
+`make image-buildx-gpu GPU_TAG=YOUR_GPU_TAG NO_CACHE=1`, followed by
+`make image-push-gpu GPU_TAG=YOUR_GPU_TAG`.
+
+`--pull` is always enabled: it checks for an updated base image. `NO_CACHE=1`
+additionally passes Docker's `--no-cache`, preventing reuse of previously built
+layers. This is useful after an OS-package or certificate-trust security update,
+when package repositories have changed without a Dockerfile change, or when
+troubleshooting an unexpectedly stale build. A cached package-install layer does
+not rerun just because new packages are available upstream. Likewise, pip's
+`--no-cache-dir` only controls pip's download cache; Docker can still reuse the
+entire installation layer.
+
+Use cached builds for routine development: fresh rebuilds take longer and download
+more data. Omit `NO_CACHE` or use `NO_CACHE=0` to keep the default behavior. A fresh
+rebuild does not update lockfiles or override pinned dependency versions; those
+still need explicit updates when a fix requires a newer version. Rebuilding alone
+does not replace running containers, so publish and deploy the new image tag too.
+
+See the [production Compose configuration](scripts/infra/docker-compose-production.yml)
+for service wiring and each service's README for its runtime configuration.
 
 ## Embedding Agora on your website
 

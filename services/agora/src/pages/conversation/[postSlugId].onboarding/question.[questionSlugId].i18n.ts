@@ -24,6 +24,7 @@ export interface ConversationSurveyQuestionTranslations {
   freeTextHelp: string;
   conversationClosedMessage: string;
   failedToSaveAnswerMessage: string;
+  surveyChangedMessage: string;
 }
 
 export const conversationSurveyQuestionTranslations: Record<
@@ -58,6 +59,8 @@ export const conversationSurveyQuestionTranslations: Record<
     conversationClosedMessage:
       "This conversation is no longer open for participation.",
     failedToSaveAnswerMessage: "Failed to save your answer.",
+    surveyChangedMessage:
+      "This survey changed. Please review the updated question.",
   },
   ar: {
     failedToLoadSurveyTitle: "فشل تحميل الاستبيان",
@@ -86,6 +89,7 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} حرفًا. الحد الأدنى {min} عند الإجابة.",
     conversationClosedMessage: "لم تعد هذه المحادثة مفتوحة للمشاركة.",
     failedToSaveAnswerMessage: "فشل حفظ إجابتك.",
+    surveyChangedMessage: "تم تغيير هذا الاستبيان. يرجى مراجعة السؤال المحدّث.",
   },
   es: {
     failedToLoadSurveyTitle: "No se pudo cargar la encuesta",
@@ -115,6 +119,8 @@ export const conversationSurveyQuestionTranslations: Record<
     conversationClosedMessage:
       "Esta conversación ya no está abierta para participar.",
     failedToSaveAnswerMessage: "No se pudo guardar su respuesta.",
+    surveyChangedMessage:
+      "Esta encuesta ha cambiado. Revise la pregunta actualizada.",
   },
   fa: {
     failedToLoadSurveyTitle: "بارگیری نظرسنجی انجام نشد",
@@ -143,6 +149,8 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} نویسه. حداقل {min} هنگام پاسخ‌دادن.",
     conversationClosedMessage: "این گفتگو دیگر برای مشارکت باز نیست.",
     failedToSaveAnswerMessage: "ذخیره پاسخ شما انجام نشد.",
+    surveyChangedMessage:
+      "این نظرسنجی تغییر کرده است. لطفاً پرسش به‌روزشده را بررسی کنید.",
   },
   fr: {
     failedToLoadSurveyTitle: "Impossible de charger le questionnaire",
@@ -172,6 +180,8 @@ export const conversationSurveyQuestionTranslations: Record<
     conversationClosedMessage:
       "Cette conversation n'est plus ouverte à la participation.",
     failedToSaveAnswerMessage: "Impossible d'enregistrer votre réponse.",
+    surveyChangedMessage:
+      "Ce questionnaire a changé. Veuillez vérifier la question mise à jour.",
   },
   he: {
     failedToLoadSurveyTitle: "טעינת הסקר נכשלה",
@@ -200,6 +210,7 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} תווים. מינימום {min} כשעונים.",
     conversationClosedMessage: "השיחה הזו כבר לא פתוחה להשתתפות.",
     failedToSaveAnswerMessage: "שמירת התשובה נכשלה.",
+    surveyChangedMessage: "הסקר השתנה. בדקו את השאלה המעודכנת.",
   },
   ja: {
     failedToLoadSurveyTitle: "アンケートを読み込めませんでした",
@@ -231,6 +242,8 @@ export const conversationSurveyQuestionTranslations: Record<
       "{count} / {max} 文字。回答する場合の最小文字数は {min} です。",
     conversationClosedMessage: "この会話はもう参加受付中ではありません。",
     failedToSaveAnswerMessage: "回答を保存できませんでした。",
+    surveyChangedMessage:
+      "アンケートが変更されました。更新された質問をご確認ください。",
   },
   ky: {
     failedToLoadSurveyTitle: "Сурамжылоону жүктөө ишке ашкан жок",
@@ -260,6 +273,8 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} белги. Жооп берсеңиз, кеминде {min} керек.",
     conversationClosedMessage: "Бул сүйлөшүү мындан ары катышууга ачык эмес.",
     failedToSaveAnswerMessage: "Жообуңузду сактоо ишке ашкан жок.",
+    surveyChangedMessage:
+      "Бул сурамжылоо өзгөрдү. Жаңыртылган суроону карап чыгыңыз.",
   },
   ru: {
     failedToLoadSurveyTitle: "Не удалось загрузить опрос",
@@ -288,6 +303,7 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} символов. Минимум {min}, если отвечаете.",
     conversationClosedMessage: "Эта беседа больше не открыта для участия.",
     failedToSaveAnswerMessage: "Не удалось сохранить ваш ответ.",
+    surveyChangedMessage: "Опрос изменился. Проверьте обновлённый вопрос.",
   },
   "zh-Hans": {
     failedToLoadSurveyTitle: "无法加载问卷",
@@ -315,6 +331,7 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} 个字符。作答时最少需要 {min} 个字符。",
     conversationClosedMessage: "这场对话已不再开放参与。",
     failedToSaveAnswerMessage: "无法保存你的回答。",
+    surveyChangedMessage: "问卷已更改。请查看更新后的问题。",
   },
   "zh-Hant": {
     failedToLoadSurveyTitle: "無法載入問卷",
@@ -342,5 +359,6 @@ export const conversationSurveyQuestionTranslations: Record<
     freeTextHelp: "{count} / {max} 個字元。作答時最少需要 {min} 個字元。",
     conversationClosedMessage: "這場對話已不再開放參與。",
     failedToSaveAnswerMessage: "無法儲存你的回答。",
+    surveyChangedMessage: "問卷已變更。請查看更新後的問題。",
   },
 };

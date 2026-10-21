@@ -302,6 +302,54 @@ describe("API logging privacy", () => {
             await capture.server.close();
         }
     });
+    it("preserves bounded vote-flush stage diagnostics without raw payloads", async () => {
+        const capture = captureServer();
+        const voteBufferFlushId = crypto.randomUUID();
+        try {
+            for (const message of [
+                "[VoteBuffer] Stage started",
+                "[VoteBuffer] Stage completed",
+                "[VoteBuffer] Stage is still pending",
+            ]) {
+                capture.server.log.warn(
+                    {
+                        event: "vote_buffer",
+                        voteBufferFlushId,
+                        voteBufferStage: "recheck_votes",
+                        durationMs: 30000,
+                        payload: "private-vote-choice",
+                    },
+                    message,
+                );
+            }
+            logApiError({
+                logger: capture.server.log,
+                level: "error",
+                event: {
+                    event: "vote_buffer",
+                    voteBufferOperation: "flush",
+                    voteBufferFlushId,
+                    voteBufferStage: "recheck_votes",
+                    durationMs: 10000,
+                },
+                error: new Error("private-provider-error"),
+            });
+            expect(capture.records()).toHaveLength(4);
+            for (const record of capture.records()) {
+                expect(record).toMatchObject({
+                    event: "vote_buffer",
+                    voteBufferFlushId,
+                    voteBufferStage: "recheck_votes",
+                });
+            }
+            expect(capture.lines.join("")).not.toContain("private-vote-choice");
+            expect(capture.lines.join("")).not.toContain(
+                "private-provider-error",
+            );
+        } finally {
+            await capture.server.close();
+        }
+    });
     it("keeps approved Bedrock diagnostics while omitting provider text and metadata", async () => {
         const capture = captureServer();
         const error = new Error("private-provider-message private-credential");

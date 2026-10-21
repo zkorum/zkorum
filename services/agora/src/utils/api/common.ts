@@ -81,19 +81,6 @@ export function useCommonApi() {
   }
 
   function getErrorMessage(error: AxiosErrorResponse): string {
-    if (isTimeoutError(error.code)) {
-      return t("timeoutError");
-    }
-
-    if (isNetworkError(error.code)) {
-      return t("networkError");
-    }
-
-    if (isCancellationError(error.code)) {
-      return t("requestCanceled");
-    }
-
-    // Specific error messages for each code
     switch (error.code) {
       case "ERR_BAD_REQUEST":
         return t("invalidRequest");
@@ -185,50 +172,4 @@ export function useCommonApi() {
     handleAxiosErrorStatusCodes,
     getErrorMessage,
   };
-}
-
-// Standalone version for backwards compatibility
-export function getErrorMessage(error: AxiosErrorResponse): string {
-  const { t } = useComponentI18n<CommonApiTranslations>(commonApiTranslations);
-
-  if (isTimeoutError(error.code)) {
-    return t("timeoutError");
-  }
-
-  if (isNetworkError(error.code)) {
-    return t("networkError");
-  }
-
-  if (isCancellationError(error.code)) {
-    return t("requestCanceled");
-  }
-
-  // Specific error messages for each code
-  switch (error.code) {
-    case "ERR_BAD_REQUEST":
-      return t("invalidRequest");
-    case "ERR_BAD_RESPONSE":
-      return t("serverError");
-    case "ERR_FR_TOO_MANY_REDIRECTS":
-      return t("tooManyRedirects");
-    case "ERR_BAD_OPTION":
-    case "ERR_BAD_OPTION_VALUE":
-      return t("configurationError");
-    case "ERR_DEPRECATED":
-      return t("featureNotSupported");
-    case "ERR_NOT_SUPPORT":
-      return t("operationNotSupported");
-    case "ERR_INVALID_URL":
-      return t("invalidUrl");
-    case "ERR_NETWORK":
-      return t("networkError");
-    case "ERR_CANCELED":
-      return t("requestCanceled");
-    case "ECONNABORTED":
-    case "ETIMEDOUT":
-      return t("timeoutError");
-    case undefined:
-    default:
-      return error.message || t("unexpectedError");
-  }
 }

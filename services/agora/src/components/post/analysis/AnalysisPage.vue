@@ -84,6 +84,7 @@
           v-else
           :query="analysisQuery"
           :config="asyncStateConfig"
+          :retain-data-on-error="true"
         >
           <div class="analysis-loaded-content">
             <div class="analysis-header">
@@ -144,7 +145,6 @@
                 "
                 :clusters="polisClusters"
                 :total-participant-count="analysisParticipantCount"
-                :analysis-frame-key="analysisFrameKey"
                 :ai-labeling-enabled="props.aiLabelingEnabled"
                 :compact-mode="currentTab === 'Summary'"
                 :conversation-scroll-context="props.conversationScrollContext"
@@ -589,6 +589,19 @@ const selectedRouteCheckpoint = computed(() =>
   parseCheckpointQuery({ query: route.query })
 );
 
+watch(
+  [activeAnalysisData, selectedRouteCheckpoint],
+  ([analysis, checkpointId]) => {
+    emit(
+      "livePauseStats",
+      checkpointId === undefined
+        ? actionBarStatsFromAnalysis(analysis)
+        : undefined
+    );
+  },
+  { immediate: true }
+);
+
 const loadedAnalysisCheckpoints = computed<AnalysisCheckpoint[]>(
   () =>
     pausedLiveCheckpoints.value ??
@@ -691,31 +704,11 @@ const isCheckpointTimelineLoading = computed(
     pausedLiveCheckpoints.value === undefined
 );
 
-const hasLoadedCheckpoints = computed(
-  () =>
-    props.analysisCheckpointsQuery.data.value !== undefined ||
-    pausedLiveCheckpoints.value !== undefined
-);
-
 const isInitialAnalysisLoading = computed(
   () =>
-    (lastLoadedAnalysisViewState.value === undefined &&
-      isAnalysisForegroundLoading.value) ||
-    (!hasLoadedCheckpoints.value && isCheckpointTimelineLoading.value)
+    lastLoadedAnalysisViewState.value === undefined &&
+    isAnalysisForegroundLoading.value
 );
-
-const analysisFrameKey = computed(() => {
-  const data = activeAnalysisData.value;
-  if (data === undefined) {
-    return undefined;
-  }
-
-  return [
-    data.conversationViewSnapshotId ?? "live",
-    data.analysisSnapshotId ?? "none",
-    data.analysisViewState?.resolvedCandidateId ?? "none",
-  ].join(":");
-});
 
 const noAnalysisViewOptions = computed<AnalysisViewOption[]>(() => {
   const variantsEnabled =
@@ -1097,7 +1090,6 @@ watch(
     pausedLiveAnalysisData.value = undefined;
     pausedLiveCheckpoints.value = undefined;
     pausedLiveSurveyResults.value = undefined;
-    emit("livePauseStats", undefined);
   }
 );
 
@@ -1419,14 +1411,12 @@ function pauseLiveAtCurrentFrame(): void {
   pausedLiveCheckpoints.value = analysisCheckpoints.value;
   pausedLiveSurveyResults.value = props.surveyQuery.data.value;
   emit("update:liveAnalysisPaused", true);
-  emit("livePauseStats", actionBarStatsFromAnalysis(analysisQuery.data.value));
 }
 
 function clearLivePause(): void {
   pausedLiveAnalysisData.value = undefined;
   pausedLiveCheckpoints.value = undefined;
   pausedLiveSurveyResults.value = undefined;
-  emit("livePauseStats", undefined);
 
   if (props.isLiveAnalysisPaused) {
     emit("update:liveAnalysisPaused", false);

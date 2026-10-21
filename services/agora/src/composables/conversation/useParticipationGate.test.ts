@@ -19,6 +19,10 @@ import {
 import { useSaveOnboardingPreference } from "src/utils/api/participation/useSaveOnboardingPreference";
 import type { useBackendSurveyApi } from "src/utils/api/survey/survey";
 import { useSurveyAnswerSaveMutation } from "src/utils/api/survey/useSurveyQueries";
+import {
+  getSurveyFormQueryKey,
+  getSurveyStatusQueryKey,
+} from "src/utils/query/conversationQueryKeys";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type App, createApp, defineComponent, nextTick, ref } from "vue";
 
@@ -111,6 +115,15 @@ vi.mock("src/utils/ui/notify", () => ({
 vi.mock("src/composables/ui/useComponentI18n", () => ({
   useComponentI18n: () => ({ t: (key: string) => key }),
 }));
+vi.mock("src/stores/language", async () => {
+  const { defineStore } = await import("pinia");
+  return {
+    useLanguageStore: defineStore("test-language", () => ({
+      displayLanguage: ref("en"),
+      spokenLanguages: ref<string[]>([]),
+    })),
+  };
+});
 vi.mock("src/composables/conversation/useSurveyNavigation", () => ({
   useSurveyNavigation: () => ({ navigateToSurveyRoot: mocks.navigate }),
 }));
@@ -309,7 +322,9 @@ describe("preloaded backend participation status", () => {
     }
   );
   it("carries the saved snapshot into a newly created guest's cache without another status HTTP request", async () => {
-    const { gate, auth, saveSurvey } = mountGate({ withSurveySave: true });
+    const { gate, auth, saveSurvey, queryClient } = mountGate({
+      withSurveySave: true,
+    });
     if (saveSurvey === undefined)
       throw new Error("Survey saving was not mounted");
     await vi.waitFor(() =>
@@ -317,7 +332,20 @@ describe("preloaded backend participation status", () => {
     );
     mocks.saveSurvey.mockResolvedValue({
       status: "success",
-      data: savedSurveyFixture,
+      data: {
+        ...savedSurveyFixture,
+        recovery: {
+          kind: "survey",
+          form: {
+            success: true,
+            surveyConfigId: 1,
+            currentRevision: 1,
+            surveyGate: savedSurveyFixture.surveyGate,
+            questions: [savedSurveyFixture.savedQuestion],
+          },
+          routeResolution: savedSurveyFixture.routeResolution,
+        },
+      },
     });
     mocks.ensureAuth.mockImplementationOnce(() => {
       auth.setLoginStatus({
@@ -328,8 +356,35 @@ describe("preloaded backend participation status", () => {
       });
       return Promise.resolve();
     });
-    await saveSurvey.mutateAsync({ questionSlugId: "question", answer: null });
+    await saveSurvey.mutateAsync({
+      questionSlugId: "question",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
     expect(auth.isGuest).toBe(true);
+    const viewerScope = { kind: "viewer", userId: "new-guest" } as const;
+    expect(
+      queryClient.getQueryData(
+        getSurveyFormQueryKey({
+          conversationSlugId: "example",
+          displayLanguage: "en",
+          spokenLanguages: [],
+          viewerScope,
+        })
+      )
+    ).toMatchObject({
+      currentRevision: 1,
+      questions: [savedSurveyFixture.savedQuestion],
+    });
+    expect(
+      queryClient.getQueryData(
+        getSurveyStatusQueryKey({ conversationSlugId: "example", viewerScope })
+      )
+    ).toEqual({
+      surveyGate: savedSurveyFixture.surveyGate,
+      routeResolution: savedSurveyFixture.routeResolution,
+    });
     expect(gate.participationStatus.value).toEqual({ status: "ready" });
     expect(mocks.getStatus).toHaveBeenCalledOnce();
   });
@@ -449,6 +504,7 @@ describe("preloaded backend participation status", () => {
     mocks.saveSurvey.mockResolvedValue({
       status: "success",
       data: {
+        ...savedSurveyFixture,
         success: true,
         surveyGate: {
           hasSurvey: true,
@@ -464,7 +520,12 @@ describe("preloaded backend participation status", () => {
     if (saveSurvey === undefined)
       throw new Error("Survey saving was not mounted");
     await vi.waitFor(() => expect(mocks.getStatus).toHaveBeenCalledOnce());
-    await saveSurvey.mutateAsync({ questionSlugId: "question", answer: null });
+    await saveSurvey.mutateAsync({
+      questionSlugId: "question",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
+      answer: null,
+    });
     expect(gate.participationStatus.value).toEqual({ status: "ready" });
     oldRead.resolve({
       data: participationRejectionFixture("survey_required")
@@ -491,6 +552,8 @@ describe("preloaded backend participation status", () => {
     );
     const saving = saveSurvey.mutateAsync({
       questionSlugId: "question",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
       answer: null,
     });
     await vi.waitFor(() => expect(mocks.saveSurvey).toHaveBeenCalledOnce());
@@ -509,6 +572,7 @@ describe("preloaded backend participation status", () => {
     write.resolve({
       status: "success",
       data: {
+        ...savedSurveyFixture,
         success: true,
         surveyGate: {
           hasSurvey: true,

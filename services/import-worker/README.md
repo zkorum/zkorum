@@ -72,6 +72,10 @@ uv run --extra dev pytest -v
 make image-buildx
 ```
 
+Add `NO_CACHE=1` for a fresh rebuild: `make image-buildx TAG=YOUR_TAG NO_CACHE=1`.
+See the [worker image deployment guide](../../README.md#building-worker-images)
+for when to bypass Docker's build cache and how to publish the new image.
+
 ## License
 
 AGPL-3.0. See [COPYING](./COPYING).

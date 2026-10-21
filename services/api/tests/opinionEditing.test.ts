@@ -15,11 +15,14 @@ import {
 } from "vitest";
 import {
     analysisSnapshotOpinionTable,
+    analysisWorkStateTable,
     conversationContentTable,
     conversationTable,
     conversationViewSnapshotTable,
     opinionContentTable,
     opinionTable,
+    opinionGroupSpecTable,
+    realtimeEventOutboxTable,
     organizationMembershipAllProjectCapabilityTable,
     organizationMembershipTable,
     organizationTable,
@@ -46,6 +49,14 @@ import {
     UNKNOWN_CONTENT_LANGUAGE_METADATA,
 } from "../src/service/contentLanguageMetadata.js";
 import { createEagerContentTranslationWorkForOpinion } from "../src/service/contentTranslation.js";
+import {
+    assertNativeValkeyTimeoutRecovery,
+    assertValkeyStallSessionState,
+    assertVoteReadSerialization,
+} from "./voteBufferReadStallCase.js";
+import { assertPostgresVoteFlushRecovery } from "./postgresVoteFlushRecoveryCase.js";
+import { scheduleAnalysisUpdate } from "../src/shared-backend/analysisScheduler.js";
+import { createConversationViewSnapshotsFromCurrentState } from "../src/service/conversationViewSnapshot.js";
 
 vi.mock("../src/shared-backend/conversationCounters.js", async () => ({
     ...(await vi.importActual("../src/shared-backend/conversationCounters.js")),
@@ -271,6 +282,127 @@ describe("statement editing and seed deletion", () => {
             .where(eq(opinionTable.id, opinion.id));
         return { opinion, content };
     }
+
+    it("persists votes and live feedback without constructing an analysis frame", async () => {
+        const { opinion, content } = await statement(true);
+        const buffer = createVoteBuffer({
+            db,
+            valkeyRef: { current: undefined },
+            flushIntervalMs: 60_000,
+            valkeyBatchLimit: 100,
+        });
+        vi.mocked(createConversationViewSnapshotsFromCurrentState).mockClear();
+        try {
+            await buffer.add({
+                vote: {
+                    userId: voterId,
+                    opinionId: opinion.id,
+                    opinionContentId: content.id,
+                    conversationId,
+                    vote: "agree",
+                    timestamp: new Date(),
+                },
+            });
+            await buffer.flush();
+            expect(
+                createConversationViewSnapshotsFromCurrentState,
+            ).not.toHaveBeenCalled();
+            const events = await db.select().from(realtimeEventOutboxTable);
+            expect(events).toHaveLength(1);
+            expect(events[0]).toMatchObject({
+                eventType: "opinion_vote_counts_updated",
+                payload: {
+                    conversationSlugId: "editconv",
+                    opinionVoteCounts: [
+                        {
+                            opinionSlugId: opinion.slugId,
+                            numAgrees: 1,
+                            numDisagrees: 0,
+                            numPasses: 0,
+                        },
+                    ],
+                },
+            });
+            expect(
+                await db
+                    .select()
+                    .from(conversationViewSnapshotTable)
+                    .where(
+                        eq(
+                            conversationViewSnapshotTable.conversationId,
+                            conversationId,
+                        ),
+                    ),
+            ).toHaveLength(1);
+        } finally {
+            await buffer.shutdown();
+        }
+    });
+
+    it("advances analysis generations without waiting for worker execution locks", async () => {
+        const spec = first(
+            await db
+                .insert(opinionGroupSpecTable)
+                .values({
+                    analysisSpecId: 1,
+                    key: randomUUID(),
+                    version: 1,
+                    reducer: "pca",
+                    clusterer: "kmeans",
+                    selectionPolicy: "silhouette_size_balance",
+                    minClusterableParticipants: 2,
+                    minVotesPerParticipant: 1,
+                    maxGroupCount: 3,
+                })
+                .returning(),
+        );
+        const logger = { info: vi.fn(), error: vi.fn() };
+        const initial = await scheduleAnalysisUpdate({
+            db,
+            conversationId,
+            log: logger,
+        });
+        let release: () => void = () => undefined;
+        let locked: () => void = () => undefined;
+        const released = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        const acquired = new Promise<void>((resolve) => {
+            locked = resolve;
+        });
+        const blocker = db.transaction(async (tx) => {
+            await tx
+                .select()
+                .from(analysisWorkStateTable)
+                .where(
+                    and(
+                        eq(
+                            analysisWorkStateTable.conversationId,
+                            conversationId,
+                        ),
+                        eq(analysisWorkStateTable.opinionGroupSpecId, spec.id),
+                    ),
+                )
+                .for("update");
+            locked();
+            await released;
+        });
+        await acquired;
+        try {
+            const scheduled = await db.transaction(async (tx) => {
+                await tx.execute(sql`SET LOCAL lock_timeout = '500ms'`);
+                return await scheduleAnalysisUpdate({
+                    db: tx,
+                    conversationId,
+                    log: logger,
+                });
+            });
+            expect(scheduled.dataGeneration).toBe(initial.dataGeneration + 1);
+        } finally {
+            release();
+            await blocker;
+        }
+    });
     async function vote({
         opinionId,
         contentId,
@@ -869,5 +1001,56 @@ describe("statement editing and seed deletion", () => {
             valkey.close();
             await cacheContainer.stop();
         }
+    }, 120_000);
+
+    it("retains writer serialization and newer payloads during a stalled Valkey recheck", async () => {
+        const { opinion, content } = await statement();
+        await assertVoteReadSerialization({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("recovers from a real Valkey pause through the native client timeout", async () => {
+        const { opinion, content } = await statement();
+        await assertNativeValkeyTimeoutRecovery({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("shows idle-in-transaction ClientRead while awaiting the Valkey recheck", async () => {
+        const { opinion, content } = await statement();
+        await assertValkeyStallSessionState({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("recovers vote persistence and cancellation after a real PostgreSQL connection reset", async () => {
+        if (container === undefined) throw new Error("Missing test database");
+        const { opinion, content } = await statement();
+        await assertPostgresVoteFlushRecovery({
+            db,
+            host: container.getHost(),
+            port: container.getMappedPort(5432),
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
     }, 120_000);
 });

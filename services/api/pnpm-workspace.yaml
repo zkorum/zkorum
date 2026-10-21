@@ -11,8 +11,10 @@ allowBuilds:
     ssh2: false
 
 overrides:
+    # ethers pins an older ws release; preserve its major while applying security fixes.
+    "ws@>=8 <8.21.0": "^8.21.0"
     "@protobufjs/utf8": "1.1.1"
-    "fast-xml-builder": "1.1.7"
+    "fast-xml-builder": "1.2.0"
     "fast-xml-parser": ">=5.7.0"
     "@eslint/plugin-kit": ">=0.3.4"
     "@stablelib/ed25519": "2.1.0"
@@ -25,3 +27,4 @@ overrides:
 
 patchedDependencies:
     "@zk-kit/eddsa-poseidon@1.1.0": patches/@zk-kit__eddsa-poseidon@1.1.0.patch
+    "postgres@3.4.9": patches/postgres@3.4.9.patch

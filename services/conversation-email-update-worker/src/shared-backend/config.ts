@@ -1,6 +1,7 @@
 /** **** WARNING: GENERATED FROM SHARED-BACKEND DIRECTORY, DO NOT MODIFY THIS FILE DIRECTLY! **** **/
 import { z } from "zod";
 import { parseValkeyUrl } from "./valkey.js";
+import { databaseResourceConfigSchema } from "./databaseResources.js";
 
 const zodQueueValkeyUrl = z
     .string()
@@ -25,6 +26,7 @@ const zodQueueValkeyUrl = z
     });
 
 export const sharedConfigSchema = z.object({
+    ...databaseResourceConfigSchema.shape,
     NODE_ENV: z
         .enum(["development", "staging", "production", "test"])
         .default("development"),

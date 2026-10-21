@@ -1,13 +1,6 @@
 import type { ParticipationStatus } from "src/utils/api/participation/useParticipationStatusQuery";
 import type { ConversationRouteContext } from "src/utils/router/conversationRouteContext";
-import {
-  getConversationSurveyCompletePath,
-  getConversationSurveyRoutePath,
-  getConversationSurveyVerifyEmailPath,
-  getConversationSurveyVerifyHardPath,
-  getConversationSurveyVerifyIdentityPath,
-  getConversationSurveyVerifyTicketPath,
-} from "src/utils/survey/navigation";
+import { getConversationOnboardingStepPath } from "src/utils/survey/navigation";
 
 export type VerifyRouteDecision =
   | { kind: "none" }
@@ -35,44 +28,14 @@ export function resolveVerifyRouteDecision({
       return { kind: "complete" };
     case "blocked":
       return { kind: "dismiss" };
-    case "onboarding_required": {
-      const params = { conversationSlugId, routeContext };
-      const step = participationStatus.nextStep;
-      switch (step.kind) {
-        case "account":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyVerifyHardPath(params),
-          };
-        case "email":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyVerifyEmailPath(params),
-          };
-        case "identity":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyVerifyIdentityPath(params),
-          };
-        case "ticket":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyVerifyTicketPath(params),
-          };
-        case "email_updates":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyCompletePath(params),
-          };
-        case "survey":
-          return {
-            kind: "redirect",
-            path: getConversationSurveyRoutePath({
-              ...params,
-              routeResolution: step.routeResolution,
-            }),
-          };
-      }
-    }
+    case "onboarding_required":
+      return {
+        kind: "redirect",
+        path: getConversationOnboardingStepPath({
+          conversationSlugId,
+          routeContext,
+          nextStep: participationStatus.nextStep,
+        }),
+      };
   }
 }

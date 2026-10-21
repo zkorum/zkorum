@@ -2193,24 +2193,36 @@ export class Dto {
             conversationSlugId: zodSlugId,
         })
         .strict();
-    static surveyFormFetchResponse = z.discriminatedUnion("success", [
-        z
-            .object({
-                success: z.literal(true),
-                currentRevision: z.number().int().positive(),
-                questions: z.array(
-                    zodSurveyQuestionFormItem.and(
-                        z
-                            .object({
-                                displayContent:
-                                    zodSurveyQuestionDisplayedContent,
-                            })
-                            .strict(),
-                    ),
+    static surveyFormSnapshot = z
+        .object({
+            success: z.literal(true),
+            surveyConfigId: z.number().int().positive(),
+            currentRevision: z.number().int().positive(),
+            questions: z.array(
+                zodSurveyQuestionFormItem.and(
+                    z
+                        .object({
+                            displayContent:
+                                zodSurveyQuestionDisplayedContent.optional(),
+                        })
+                        .strict(),
                 ),
-                surveyGate: zodSurveyGateSummary,
-            })
-            .strict(),
+            ),
+            surveyGate: zodSurveyGateSummary,
+        })
+        .strict();
+    static surveyFormFetchResponse = z.discriminatedUnion("success", [
+        Dto.surveyFormSnapshot.extend({
+            questions: z.array(
+                zodSurveyQuestionFormItem.and(
+                    z
+                        .object({
+                            displayContent: zodSurveyQuestionDisplayedContent,
+                        })
+                        .strict(),
+                ),
+            ),
+        }),
         z
             .object({
                 success: z.literal(false),
@@ -2315,29 +2327,71 @@ export class Dto {
         .object({
             conversationSlugId: zodSlugId,
             questionSlugId: zodSlugId,
+            expectedQuestionSemanticVersion: z.number().int().positive(),
+            knownSurveyRevision: z.number().int().positive(),
             answer: zodSurveyAnswerSubmission.nullable(),
             skipEmailUpdateConsent: z.boolean().optional().default(false),
         })
         .strict();
+    static surveyAnswerRecovery = z.discriminatedUnion("kind", [
+        z
+            .object({
+                kind: z.literal("survey"),
+                form: Dto.surveyFormSnapshot,
+                routeResolution: zodSurveyRouteResolution,
+            })
+            .strict(),
+        z
+            .object({
+                kind: z.literal("no_survey"),
+                surveyGate: zodSurveyGateSummary,
+                routeResolution: z.object({ kind: z.literal("none") }).strict(),
+            })
+            .strict(),
+    ]);
     static surveyAnswerSaveResponse = z.discriminatedUnion("success", [
         z
             .object({
                 success: z.literal(true),
                 surveyGate: zodSurveyGateSummary,
                 justCompleted: z.boolean(),
+                surveyConfigId: z.number().int().positive(),
+                currentRevision: z.number().int().positive(),
+                savedQuestion: zodSurveyQuestionFormItem,
+                routeResolution: zodSurveyRouteResolution,
+                recovery: Dto.surveyAnswerRecovery.optional(),
                 participationStatus:
                     Dto.conversationParticipationStatusResponse,
             })
             .strict(),
-        Dto.conversationParticipationRejection,
+        z.discriminatedUnion("reason", [
+            Dto.conversationParticipationRejection,
+            z
+                .object({
+                    success: z.literal(false),
+                    reason: z.literal("survey_changed"),
+                    participationStatus:
+                        Dto.conversationParticipationStatusResponse,
+                    recovery: Dto.surveyAnswerRecovery,
+                })
+                .strict(),
+        ]),
     ]);
     static surveyResponseWithdrawRequest = z
         .object({
             conversationSlugId: zodSlugId,
+            skipEmailUpdateConsent: z.boolean().optional().default(false),
         })
         .strict();
     static surveyResponseWithdrawResponse = z.discriminatedUnion("success", [
-        Dto.surveyStatusCheckResponse.extend({ success: z.literal(true) }),
+        z
+            .object({
+                success: z.literal(true),
+                participationStatus:
+                    Dto.conversationParticipationStatusResponse,
+                recovery: Dto.surveyAnswerRecovery,
+            })
+            .strict(),
         Dto.conversationParticipationRejection,
     ]);
     static surveyResultsAggregatedRequest = z
@@ -5189,6 +5243,8 @@ export type SurveyStatusCheckResponse = z.infer<
 export type SurveyAnswerSaveRequest = z.infer<
     typeof Dto.surveyAnswerSaveRequest
 >;
+export type SurveyFormSnapshot = z.infer<typeof Dto.surveyFormSnapshot>;
+export type SurveyAnswerRecovery = z.infer<typeof Dto.surveyAnswerRecovery>;
 export type SurveyAnswerSaveResponse = z.infer<
     typeof Dto.surveyAnswerSaveResponse
 >;

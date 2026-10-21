@@ -47,7 +47,7 @@ import {
 import type { z } from "zod";
 
 import { useNotify } from "../../ui/notify";
-import { getErrorMessage } from "../common";
+import { useCommonApi } from "../common";
 import { classifyApiError } from "../error";
 import { updateConversationQueryCache } from "../post/useConversationQuery";
 import type { AnalysisData } from "./comment";
@@ -849,6 +849,7 @@ export function useAnalysisCheckpointsQuery({
 
 export function useCreateCommentMutation() {
   const { createNewComment } = useBackendCommentApi();
+  const { getErrorMessage } = useCommonApi();
   const queryClient = useQueryClient();
   const { userId } = storeToRefs(useAuthenticationStore());
   const { showNotifyMessage } = useNotify();
@@ -916,6 +917,7 @@ export function useCreateCommentMutation() {
 
 export function useDeleteCommentMutation() {
   const { deleteCommentBySlugId } = useBackendCommentApi();
+  const { getErrorMessage } = useCommonApi();
   const queryClient = useQueryClient();
   const { showNotifyMessage } = useNotify();
   const { t } = useComponentI18n<UseCommentQueriesTranslations>(

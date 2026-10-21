@@ -316,6 +316,12 @@ const baseConfigSchema = sharedConfigSchema.extend({
         .int()
         .min(1)
         .default(5000), // Max votes to fetch from Valkey per flush
+    VOTE_BUFFER_STALL_WARNING_MS: z.coerce
+        .number()
+        .int()
+        .min(100)
+        .max(2_147_483_647) // Larger Node timer delays overflow to 1 ms.
+        .default(30000),
 });
 
 export const configSchema = baseConfigSchema.superRefine((value, ctx) => {

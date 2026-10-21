@@ -230,15 +230,35 @@ describe("optional choice text persistence", () => {
     async function save({
         questionSlugId,
         answer,
+        expectedQuestionSemanticVersion,
+        knownSurveyRevision,
     }: {
         questionSlugId: string;
         answer: SurveyAnswerSubmission | null;
+        expectedQuestionSemanticVersion?: number;
+        knownSurveyRevision?: number;
     }) {
         const { saveSurveyAnswer } = await surveyModulePromise;
+        if (
+            expectedQuestionSemanticVersion === undefined ||
+            knownSurveyRevision === undefined
+        ) {
+            const state = await loadState();
+            const config = state.activeSurveyConfig;
+            const question = config?.questions.find(
+                (item) => item.slugId === questionSlugId,
+            );
+            if (config === undefined || question === undefined)
+                throw new Error("Missing fixture survey version");
+            expectedQuestionSemanticVersion ??= question.currentSemanticVersion;
+            knownSurveyRevision ??= config.currentRevision;
+        }
         return await saveSurveyAnswer({
             db,
             conversationSlugId,
             questionSlugId,
+            expectedQuestionSemanticVersion,
+            knownSurveyRevision,
             answer,
             didWrite: "did:test:survey",
             userAgent: "Vitest",
@@ -258,6 +278,363 @@ describe("optional choice text persistence", () => {
         });
     }
 
+    async function editSurvey(
+        transform: (config: SurveyConfig) => SurveyConfig | null,
+    ) {
+        const {
+            getSurveyConfigForConversation,
+            setSurveyConfigForConversation,
+        } = await surveyModulePromise;
+        await db.transaction(async (tx) => {
+            await tx
+                .select({ id: conversationTable.id })
+                .from(conversationTable)
+                .where(eq(conversationTable.id, conversationId))
+                .for("update");
+            const config = await getSurveyConfigForConversation({
+                db: tx,
+                conversationId,
+            });
+            if (config === undefined) throw new Error("Missing fixture config");
+            await setSurveyConfigForConversation({
+                db: tx,
+                conversationSlugId,
+                conversationId,
+                surveyConfig: transform(config),
+                now,
+                sourceLanguageMetadata,
+            });
+        });
+    }
+
+    it.each([false, true])(
+        "rejects a draft from older wording without invalidating optional saved answers (optional=%s)",
+        async (isOptional) => {
+            await configure({ isOptional });
+            const { question, first } = await firstQuestion();
+            const answer: SurveyAnswerSubmission = {
+                questionType: "choice",
+                optionSlugIds: [first.slugId],
+            };
+            if (isOptional)
+                await save({ questionSlugId: question.slugId, answer });
+            await editSurvey((config) => ({
+                ...config,
+                questions: config.questions.map((item) => ({
+                    ...item,
+                    questionText: "Different meaning",
+                    textChangeIsSemantic: true,
+                })),
+            }));
+            const result = Dto.surveyAnswerSaveResponse.parse(
+                await save({
+                    questionSlugId: question.slugId,
+                    answer,
+                    expectedQuestionSemanticVersion: 1,
+                    knownSurveyRevision: 1,
+                }),
+            );
+            expect(result).toMatchObject({
+                success: false,
+                reason: "survey_changed",
+                recovery: {
+                    kind: "survey",
+                    form: {
+                        currentRevision: 2,
+                        questions: [
+                            {
+                                questionText: "Different meaning",
+                                currentSemanticVersion: 2,
+                            },
+                        ],
+                    },
+                    routeResolution: {
+                        kind: "question",
+                        questionSlugId: question.slugId,
+                    },
+                },
+            });
+            const state = await loadState();
+            if (isOptional) {
+                expect(
+                    state.answersByQuestionId.get(question.id)
+                        ?.answeredQuestionSemanticVersion,
+                ).toBe(1);
+                expect(result.participationStatus).toEqual({ status: "ready" });
+            } else {
+                expect(state.response).toBeUndefined();
+                expect(state.answersByQuestionId.size).toBe(0);
+            }
+        },
+    );
+
+    it("accepts an unchanged question and returns the revised form when another question changed", async () => {
+        await configure({ questionCount: 2 });
+        const { question, first } = await firstQuestion();
+        await editSurvey((config) => ({
+            ...config,
+            questions: config.questions.map((item) =>
+                item.questionSlugId === question.slugId
+                    ? item
+                    : {
+                          ...item,
+                          questionText: "New second question",
+                          textChangeIsSemantic: true,
+                      },
+            ),
+        }));
+        const result = Dto.surveyAnswerSaveResponse.parse(
+            await save({
+                questionSlugId: question.slugId,
+                expectedQuestionSemanticVersion: 1,
+                knownSurveyRevision: 1,
+                answer: {
+                    questionType: "choice",
+                    optionSlugIds: [first.slugId],
+                },
+            }),
+        );
+        expect(result).toMatchObject({
+            success: true,
+            currentRevision: 2,
+            savedQuestion: {
+                currentSemanticVersion: 1,
+                answeredQuestionSemanticVersion: 1,
+            },
+            recovery: { kind: "survey", form: { currentRevision: 2 } },
+        });
+        expect(
+            (await loadState()).answersByQuestionId.get(question.id)
+                ?.optionSlugIds,
+        ).toEqual([first.slugId]);
+    });
+
+    it("accepts cosmetic edits without silently treating semantic changes as cosmetic", async () => {
+        await configure();
+        const { question, first } = await firstQuestion();
+        await editSurvey((config) => ({
+            ...config,
+            questions: config.questions.map((item) => ({
+                ...item,
+                questionText: "Corrected spelling",
+                textChangeIsSemantic: false,
+            })),
+        }));
+        expect(
+            await save({
+                questionSlugId: question.slugId,
+                expectedQuestionSemanticVersion: 1,
+                knownSurveyRevision: 1,
+                answer: {
+                    questionType: "choice",
+                    optionSlugIds: [first.slugId],
+                },
+            }),
+        ).toMatchObject({
+            success: true,
+            currentRevision: 2,
+            savedQuestion: {
+                questionText: "Corrected spelling",
+                currentSemanticVersion: 1,
+            },
+        });
+    });
+
+    it("returns updated constraints instead of repeating validation errors after an annotation field is disabled", async () => {
+        await configure({ allowsText: true });
+        const { question, first } = await firstQuestion();
+        await editSurvey((config) => ({
+            ...config,
+            questions: config.questions.map((item) =>
+                item.questionType === "choice"
+                    ? {
+                          ...item,
+                          options: item.options.map((option) => ({
+                              ...option,
+                              allowsText: false,
+                          })),
+                      }
+                    : item,
+            ),
+        }));
+        const result = await save({
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: 1,
+            answer: {
+                questionType: "choice",
+                optionSlugIds: [first.slugId],
+                optionTextValues: { [first.slugId]: "Old field draft" },
+            },
+        });
+        expect(result).toMatchObject({
+            success: false,
+            reason: "survey_changed",
+            recovery: { kind: "survey", form: { currentRevision: 2 } },
+        });
+        expect((await loadState()).response).toBeUndefined();
+    });
+
+    it("returns the surviving question instead of a 404 when the cached question was removed", async () => {
+        await configure({ questionCount: 2 });
+        const { question, first } = await firstQuestion();
+        await editSurvey((config) => ({
+            ...config,
+            questions: config.questions.filter(
+                (item) => item.questionSlugId !== question.slugId,
+            ),
+        }));
+        const result = await save({
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: 1,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+        });
+        expect(result.success).toBe(false);
+        if (
+            result.success ||
+            result.reason !== "survey_changed" ||
+            result.recovery.kind !== "survey"
+        )
+            throw new Error("Expected a recovery form");
+        expect(result.recovery.form.questions).toHaveLength(1);
+        expect(result.recovery.routeResolution).toEqual({
+            kind: "question",
+            questionSlugId: result.recovery.form.questions[0]?.questionSlugId,
+        });
+        expect((await loadState()).response).toBeUndefined();
+    });
+
+    it("returns a no-survey recovery when the questionnaire was removed", async () => {
+        await configure();
+        const { question, first } = await firstQuestion();
+        await editSurvey(() => null);
+        const result = await save({
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: 1,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+        });
+        expect(Dto.surveyAnswerSaveResponse.parse(result)).toMatchObject({
+            success: false,
+            reason: "survey_changed",
+            participationStatus: { status: "ready" },
+            recovery: {
+                kind: "no_survey",
+                routeResolution: { kind: "none" },
+                surveyGate: { hasSurvey: false },
+            },
+        });
+        expect((await loadState()).response).toBeUndefined();
+    });
+
+    it("identifies a recreated questionnaire even when its revision resets", async () => {
+        await configure();
+        const { question, first } = await firstQuestion();
+        await editSurvey((config) => ({
+            ...config,
+            questions: config.questions.map((item) => ({
+                ...item,
+                questionText: "Cosmetic edit",
+                textChangeIsSemantic: false,
+            })),
+        }));
+        const original = (await loadState()).activeSurveyConfig;
+        if (original === undefined) throw new Error("Missing original config");
+        await editSurvey(() => null);
+        await configure();
+        const result = await save({
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: original.currentRevision,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+        });
+        if (
+            result.success ||
+            result.reason !== "survey_changed" ||
+            result.recovery.kind !== "survey"
+        )
+            throw new Error("Expected recreated survey recovery");
+        expect(result.recovery.form.currentRevision).toBe(1);
+        expect(result.recovery.form.surveyConfigId).toBeGreaterThan(
+            original.id,
+        );
+    });
+
+    it("waits for an author edit to commit before validating the submitted version", async () => {
+        const {
+            setSurveyConfigForConversation,
+            getSurveyConfigForConversation,
+        } = await surveyModulePromise;
+        await configure();
+        const { question, first } = await firstQuestion();
+        let notifyEdited = () => {};
+        const edited = new Promise<void>((resolve) => {
+            notifyEdited = resolve;
+        });
+        let releaseEdit = () => {};
+        const release = new Promise<void>((resolve) => {
+            releaseEdit = resolve;
+        });
+        const editing = db.transaction(async (tx) => {
+            await tx
+                .select({ id: conversationTable.id })
+                .from(conversationTable)
+                .where(eq(conversationTable.id, conversationId))
+                .for("update");
+            const config = await getSurveyConfigForConversation({
+                db: tx,
+                conversationId,
+            });
+            if (config === undefined) throw new Error("Missing fixture config");
+            await setSurveyConfigForConversation({
+                db: tx,
+                conversationSlugId,
+                conversationId,
+                surveyConfig: {
+                    ...config,
+                    questions: config.questions.map((item) => ({
+                        ...item,
+                        questionText: "Concurrent edit",
+                        textChangeIsSemantic: true,
+                    })),
+                },
+                now,
+                sourceLanguageMetadata,
+            });
+            notifyEdited();
+            await release;
+        });
+        await edited;
+        queries.length = 0;
+        const saving = save({
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: 1,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+        });
+        try {
+            await vi.waitFor(() =>
+                expect(
+                    queries.some(
+                        (query) =>
+                            query.includes('from "conversation"') &&
+                            query.includes("for key share"),
+                    ),
+                ).toBe(true),
+            );
+        } finally {
+            releaseEdit();
+        }
+        await editing;
+        expect(await saving).toMatchObject({
+            success: false,
+            reason: "survey_changed",
+            recovery: { kind: "survey", form: { currentRevision: 2 } },
+        });
+        expect((await loadState()).answersByQuestionId.size).toBe(0);
+    });
+
     async function firstQuestion() {
         const state = await loadState();
         const question = state.activeSurveyConfig?.questions[0];
@@ -270,6 +647,84 @@ describe("optional choice text persistence", () => {
             throw new Error("Missing fixture question or options");
         return { question, first, other };
     }
+
+    it("lets another participant finish while the first participant's transaction is still open", async () => {
+        const { saveSurveyAnswer } = await surveyModulePromise;
+        await configure();
+        const { question, first } = await firstQuestion();
+        const secondParticipant = "00000000-0000-4000-8000-000000000002";
+        await db
+            .insert(userTable)
+            .values({ id: secondParticipant, username: "second-surveyor" });
+        participationCheck.mockImplementation(
+            ({ didWrite }: { didWrite: string }) =>
+                Promise.resolve({
+                    success: true,
+                    participantId:
+                        didWrite === "did:test:second"
+                            ? secondParticipant
+                            : participantId,
+                    conversationId,
+                    conversationType: "polis",
+                    rankingMode: null,
+                }),
+        );
+        let announceFirst = () => {};
+        const firstStarted = new Promise<void>((resolve) => {
+            announceFirst = resolve;
+        });
+        let releaseFirst = () => {};
+        const held = new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+        });
+        const request = {
+            db,
+            conversationSlugId,
+            questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: question.currentSemanticVersion,
+            knownSurveyRevision: 1,
+            answer: { questionType: "choice", optionSlugIds: [first.slugId] },
+            didWrite: "did:test:first",
+            userAgent: "Vitest",
+            now,
+            currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: async () => {
+                announceFirst();
+                await held;
+                return undefined;
+            },
+        } satisfies Parameters<typeof saveSurveyAnswer>[0];
+        const firstSave = saveSurveyAnswer(request);
+        await firstStarted;
+        let secondFinished = false;
+        const secondSave = (async () => {
+            const result = await saveSurveyAnswer({
+                ...request,
+                didWrite: "did:test:second",
+                getEmailUpdateOnboardingAction: async ({ database }) => {
+                    // Participant KEY SHARE locks must remain compatible with
+                    // the scheduler's NO KEY UPDATE while another write is open.
+                    await database
+                        .select({ id: conversationTable.id })
+                        .from(conversationTable)
+                        .where(eq(conversationTable.id, conversationId))
+                        .for("no key update");
+                    return undefined;
+                },
+            });
+            secondFinished = true;
+            return result;
+        })();
+        try {
+            await vi.waitFor(() => expect(secondFinished).toBe(true));
+        } finally {
+            releaseFirst();
+        }
+        expect((await firstSave).success).toBe(true);
+        expect((await secondSave).success).toBe(true);
+        expect(await db.select().from(surveyResponseTable)).toHaveLength(2);
+    });
 
     it("serializes simultaneous first saves and derives completion without a second survey read", async () => {
         const { deriveSurveyGate } = await surveyModulePromise;
@@ -285,6 +740,9 @@ describe("optional choice text persistence", () => {
                     throw new Error("Missing fixture option");
                 return await save({
                     questionSlugId: question.slugId,
+                    expectedQuestionSemanticVersion:
+                        question.currentSemanticVersion,
+                    knownSurveyRevision: 1,
                     answer: {
                         questionType: "choice",
                         optionSlugIds: [option.slugId],
@@ -947,21 +1405,43 @@ describe("optional choice text persistence", () => {
                 userAgent: "Vitest",
                 now,
                 currentDisplayLanguage: "en",
+                skipEmailUpdateConsent: false,
+                getEmailUpdateOnboardingAction: () =>
+                    Promise.resolve(undefined),
             } satisfies Parameters<typeof withdrawSurveyResponse>[0];
 
             const result = await withdrawSurveyResponse(request);
 
-            expect(Dto.surveyResponseWithdrawResponse.parse(result)).toEqual({
+            expect(
+                Dto.surveyResponseWithdrawResponse.parse(result),
+            ).toMatchObject({
                 success: true,
-                surveyGate: {
-                    hasSurvey: true,
-                    isOptional,
-                    canParticipate: isOptional,
-                    status: "not_started",
-                },
-                routeResolution: {
-                    kind: "question",
-                    questionSlugId: question.slugId,
+                participationStatus: isOptional
+                    ? { status: "ready" }
+                    : {
+                          status: "onboarding_required",
+                          nextStep: {
+                              kind: "survey",
+                              routeResolution: {
+                                  kind: "question",
+                                  questionSlugId: question.slugId,
+                              },
+                          },
+                      },
+                recovery: {
+                    kind: "survey",
+                    form: {
+                        surveyGate: {
+                            hasSurvey: true,
+                            isOptional,
+                            canParticipate: isOptional,
+                            status: "not_started",
+                        },
+                    },
+                    routeResolution: {
+                        kind: "question",
+                        questionSlugId: question.slugId,
+                    },
                 },
             });
             expect(selectReplica).not.toHaveBeenCalled();
@@ -994,6 +1474,8 @@ describe("optional choice text persistence", () => {
             db: withReplicas(db, [db], selectReplica),
             conversationSlugId,
             questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: question.currentSemanticVersion,
+            knownSurveyRevision: 1,
             answer: { questionType: "choice", optionSlugIds: [first.slugId] },
             didWrite: "did:test:survey",
             userAgent: "Vitest",
@@ -1018,6 +1500,8 @@ describe("optional choice text persistence", () => {
             db,
             conversationSlugId,
             questionSlugId: question.slugId,
+            expectedQuestionSemanticVersion: question.currentSemanticVersion,
+            knownSurveyRevision: 1,
             answer: { questionType: "choice", optionSlugIds: [first.slugId] },
             didWrite: "did:test:survey",
             userAgent: "Vitest",
@@ -1046,6 +1530,52 @@ describe("optional choice text persistence", () => {
         });
     });
 
+    it("withdraws retained answers and annotations even after the author removes the survey", async () => {
+        const { withdrawSurveyResponse } = await surveyModulePromise;
+        await configure({ allowsText: true });
+        const { question, first } = await firstQuestion();
+        await save({
+            questionSlugId: question.slugId,
+            answer: {
+                questionType: "choice",
+                optionSlugIds: [first.slugId],
+                optionTextValues: { [first.slugId]: "Private annotation" },
+            },
+        });
+        await editSurvey(() => null);
+        const result = await withdrawSurveyResponse({
+            db,
+            conversationSlugId,
+            didWrite: "did:test:survey",
+            userAgent: "Vitest",
+            now,
+            currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: () => Promise.resolve(undefined),
+        });
+        expect(result).toMatchObject({
+            success: true,
+            recovery: { kind: "no_survey" },
+        });
+        expect(
+            await db
+                .select()
+                .from(surveyAnswerTable)
+                .where(isNull(surveyAnswerTable.deletedAt)),
+        ).toHaveLength(0);
+        expect(
+            await db
+                .select()
+                .from(surveyAnswerOptionTable)
+                .where(isNull(surveyAnswerOptionTable.deletedAt)),
+        ).toHaveLength(0);
+        expect(
+            await db
+                .select({ withdrawnAt: surveyResponseTable.withdrawnAt })
+                .from(surveyResponseTable),
+        ).toEqual([{ withdrawnAt: now }]);
+    });
+
     it("returns restart routing from the writer when no response exists", async () => {
         const { withdrawSurveyResponse } = await surveyModulePromise;
         await configure();
@@ -1059,19 +1589,36 @@ describe("optional choice text persistence", () => {
             userAgent: "Vitest",
             now,
             currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: () => Promise.resolve(undefined),
         });
 
-        expect(Dto.surveyResponseWithdrawResponse.parse(result)).toEqual({
+        expect(Dto.surveyResponseWithdrawResponse.parse(result)).toMatchObject({
             success: true,
-            surveyGate: {
-                hasSurvey: true,
-                isOptional: false,
-                canParticipate: false,
-                status: "not_started",
+            participationStatus: {
+                status: "onboarding_required",
+                nextStep: {
+                    kind: "survey",
+                    routeResolution: {
+                        kind: "question",
+                        questionSlugId: question.slugId,
+                    },
+                },
             },
-            routeResolution: {
-                kind: "question",
-                questionSlugId: question.slugId,
+            recovery: {
+                kind: "survey",
+                form: {
+                    surveyGate: {
+                        hasSurvey: true,
+                        isOptional: false,
+                        canParticipate: false,
+                        status: "not_started",
+                    },
+                },
+                routeResolution: {
+                    kind: "question",
+                    questionSlugId: question.slugId,
+                },
             },
         });
         expect(selectReplica).not.toHaveBeenCalled();
@@ -1119,6 +1666,8 @@ describe("optional choice text persistence", () => {
             userAgent: "Vitest",
             now,
             currentDisplayLanguage: "en",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: () => Promise.resolve(undefined),
         });
         expect((await loadState()).answersByQuestionId.size).toBe(0);
         expect(

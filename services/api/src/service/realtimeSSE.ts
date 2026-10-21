@@ -16,6 +16,7 @@ import {
 } from "@/shared/types/dto.js";
 import { log } from "@/app.js";
 import { z } from "zod";
+import { formatRealtimeCursor } from "@/shared/utils/realtimeCursor.js";
 
 export {
     buildContentTranslationTopic,
@@ -111,6 +112,11 @@ export function parseRealtimeSubscriptionRequest(
 }
 
 type ConversationSubscriptionEvent =
+    | {
+          id: number | undefined;
+          event: "opinion_vote_counts_updated";
+          data: SSEEventDataByType["opinion_vote_counts_updated"];
+      }
     | {
           id: number | undefined;
           event: "opinion_updated";
@@ -365,7 +371,7 @@ export class RealtimeSSEManager {
         event: TEvent;
         data: SSEEventDataByType[TEvent];
     }): Promise<void> {
-        await reply.sse.send({ id: id?.toString(), event, data });
+        await reply.sse.send({ id: formatRealtimeCursor(id), event, data });
     }
 
     public broadcastToConversationSubscribers({
@@ -401,7 +407,7 @@ export class RealtimeSSEManager {
                     continue;
                 }
                 reply.sse
-                    .send({ id: id?.toString(), event, data })
+                    .send({ id: formatRealtimeCursor(id), event, data })
                     .catch(() => {
                         this.closeAuthenticatedConnection(reply);
                     });
@@ -412,9 +418,11 @@ export class RealtimeSSEManager {
             if (!this.isSubscribedToTopic({ reply, topic })) {
                 continue;
             }
-            reply.sse.send({ id: id?.toString(), event, data }).catch(() => {
-                this.closeAnonymousConnection(reply);
-            });
+            reply.sse
+                .send({ id: formatRealtimeCursor(id), event, data })
+                .catch(() => {
+                    this.closeAnonymousConnection(reply);
+                });
         }
     }
 
@@ -444,7 +452,7 @@ export class RealtimeSSEManager {
                     continue;
                 }
                 reply.sse
-                    .send({ id: id?.toString(), event, data })
+                    .send({ id: formatRealtimeCursor(id), event, data })
                     .catch(() => {
                         this.closeAuthenticatedConnection(reply);
                     });
@@ -462,9 +470,11 @@ export class RealtimeSSEManager {
             ) {
                 continue;
             }
-            reply.sse.send({ id: id?.toString(), event, data }).catch(() => {
-                this.closeAnonymousConnection(reply);
-            });
+            reply.sse
+                .send({ id: formatRealtimeCursor(id), event, data })
+                .catch(() => {
+                    this.closeAnonymousConnection(reply);
+                });
         }
     }
 

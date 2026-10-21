@@ -88,7 +88,6 @@ export function useSurveyAnswerDraft({
       if (
         currentQuestion !== undefined &&
         previousQuestion !== undefined &&
-        currentQuestion.questionSlugId !== undefined &&
         currentQuestion.questionSlugId === previousQuestion.questionSlugId &&
         currentQuestion.questionType === previousQuestion.questionType &&
         currentQuestion.currentSemanticVersion ===
@@ -109,10 +108,7 @@ export function useSurveyAnswerDraft({
               ? currentQuestion.currentAnswer.optionTextValues
               : undefined;
           for (const option of currentQuestion.options) {
-            if (
-              option.optionSlugId !== undefined &&
-              option.allowsText !== true
-            ) {
+            if (option.allowsText !== true) {
               optionTextValues.value[option.optionSlugId] = getSurveyOptionText(
                 {
                   values: savedTextValues,

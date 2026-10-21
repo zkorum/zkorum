@@ -8,6 +8,7 @@ from agora_analysis_worker_shared.ai_description_work import (
     ClaimedAiDescriptionLocaleWorkItem,
     extend_ai_description_locale_work_leases,
 )
+from agora_analysis_worker_shared.logging_utils import log_database_error
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -57,11 +58,12 @@ def start_ai_description_lease_heartbeat(
                     _format_ids(lease_extension.extended_lineage_work_ids),
                     _format_ids(lease_extension.extended_translation_work_ids),
                 )
-            except Exception:
-                log.exception(
-                    "%s AI description lease heartbeat failed claims=%d",
-                    log_prefix,
-                    len(claims),
+            except Exception as error:
+                log_database_error(
+                    logger=log,
+                    message=f"{log_prefix} AI description lease heartbeat failed",
+                    error=error,
+                    context={"claim_count": len(claims)},
                 )
 
     heartbeat_thread = Thread(

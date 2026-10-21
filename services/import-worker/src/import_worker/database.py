@@ -34,7 +34,13 @@ def _is_transaction_read_only(connection: Connection) -> bool:
 def create_primary_engine(connection_string: str) -> Engine:
     if not connection_string:
         raise ValueError("IMPORT_WORKER_CONNECTION_STRING is required")
-    engine = create_engine(use_psycopg_driver(connection_string), pool_pre_ping=True)
+    engine = create_engine(
+        use_psycopg_driver(connection_string),
+        pool_pre_ping=True,
+        pool_size=3,
+        max_overflow=0,
+        pool_timeout=10,
+    )
     try:
         with engine.connect() as connection:
             connection.execute(text("select 1"))

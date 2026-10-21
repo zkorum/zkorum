@@ -59,6 +59,35 @@ export function getConversationCredentialChoicePath({
   }
 }
 
+export function getConversationOnboardingStepPath({
+  conversationSlugId,
+  routeContext,
+  nextStep,
+}: {
+  conversationSlugId: string;
+  routeContext: ConversationRouteContext;
+  nextStep: ConversationOnboardingStep;
+}): string {
+  const params = { conversationSlugId, routeContext };
+  switch (nextStep.kind) {
+    case "account":
+      return getConversationSurveyVerifyHardPath(params);
+    case "email":
+      return getConversationSurveyVerifyEmailPath(params);
+    case "identity":
+      return getConversationSurveyVerifyIdentityPath(params);
+    case "ticket":
+      return getConversationSurveyVerifyTicketPath(params);
+    case "email_updates":
+      return getConversationSurveyCompletePath(params);
+    case "survey":
+      return getConversationSurveyRoutePath({
+        ...params,
+        routeResolution: nextStep.routeResolution,
+      });
+  }
+}
+
 export function getConversationSurveyQuestionPath({
   conversationSlugId,
   questionSlugId,

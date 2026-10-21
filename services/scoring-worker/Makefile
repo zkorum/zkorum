@@ -3,6 +3,8 @@ TAG ?= latest
 GPU_TAG ?= gpu
 TAG_ARG := $(or $(word 2,$(MAKECMDGOALS)),$(TAG))
 GPU_TAG_ARG := $(or $(word 2,$(MAKECMDGOALS)),$(GPU_TAG))
+NO_CACHE ?= 0
+NO_CACHE_FLAG := $(if $(filter 1,$(NO_CACHE)),--no-cache)
 
 all: dev
 
@@ -20,10 +22,10 @@ typecheck:
 	uv run --extra dev basedpyright
 
 image-buildx:
-	docker buildx build --pull --platform linux/amd64 --build-arg PIP_INSTALL_TARGET=. -t $(IMAGE):$(TAG_ARG) .
+	docker buildx build --pull $(NO_CACHE_FLAG) --platform linux/amd64 --build-arg PIP_INSTALL_TARGET=. -t $(IMAGE):$(TAG_ARG) .
 
 image-buildx-gpu:
-	docker buildx build --pull --platform linux/amd64 --build-arg "PIP_INSTALL_TARGET=.[gpu]" -t $(IMAGE):$(GPU_TAG_ARG) .
+	docker buildx build --pull $(NO_CACHE_FLAG) --platform linux/amd64 --build-arg "PIP_INSTALL_TARGET=.[gpu]" -t $(IMAGE):$(GPU_TAG_ARG) .
 
 image-push:
 	docker push $(IMAGE):$(TAG_ARG)

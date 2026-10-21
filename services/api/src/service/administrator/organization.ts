@@ -30,6 +30,13 @@ import { optionalHttpsUrl } from "@/utils/url.js";
 import { ensureOrganizationMembershipBaselineCapabilities } from "../projectAccess.js";
 import { getOrganizationIdsWithActiveDynamicTranslationEntitlement } from "../premiumEntitlement.js";
 
+// Keep unlisted personal organizations after listed organizations in admin pickers.
+const adminOrganizationOrder = [
+    asc(eq(organizationTable.directoryVisibility, "unlisted")),
+    asc(organizationTable.displayName),
+    asc(organizationTable.slug),
+];
+
 function buildOrganizationProperties({
     name,
     slug,
@@ -98,17 +105,6 @@ export async function getAllOrganizations({
     baseImageServiceUrl,
     organizationSlug,
 }: GetAllOrganizationsProps): Promise<GetAllOrganizationsResponse> {
-    const organizationWhereClause =
-        organizationSlug === undefined
-            ? and(
-                  eq(organizationTable.directoryVisibility, "listed"),
-                  isNull(organizationTable.deletedAt),
-              )
-            : and(
-                  eq(organizationTable.directoryVisibility, "listed"),
-                  isNull(organizationTable.deletedAt),
-                  eq(organizationTable.slug, organizationSlug),
-              );
     const organizationTableResponse = await db
         .select({
             id: organizationTable.id,
@@ -121,7 +117,15 @@ export async function getAllOrganizations({
             websiteUrl: organizationTable.websiteUrl,
         })
         .from(organizationTable)
-        .where(organizationWhereClause);
+        .where(
+            and(
+                isNull(organizationTable.deletedAt),
+                organizationSlug === undefined
+                    ? undefined
+                    : eq(organizationTable.slug, organizationSlug),
+            ),
+        )
+        .orderBy(...adminOrganizationOrder);
 
     const organizationIds = organizationTableResponse.map(
         (organization) => organization.id,
@@ -234,12 +238,8 @@ export async function getOrganizationOptions({
             slug: organizationTable.slug,
         })
         .from(organizationTable)
-        .where(
-            and(
-                eq(organizationTable.directoryVisibility, "listed"),
-                isNull(organizationTable.deletedAt),
-            ),
-        );
+        .where(isNull(organizationTable.deletedAt))
+        .orderBy(...adminOrganizationOrder);
 
     const organizationIds = organizationRows.map(
         (organization) => organization.id,
@@ -290,7 +290,6 @@ export async function getOrganizationMembers({
         .where(
             and(
                 eq(organizationTable.slug, organizationName),
-                eq(organizationTable.directoryVisibility, "listed"),
                 isNull(organizationMembershipTable.deletedAt),
                 isNull(organizationTable.deletedAt),
                 eq(userTable.isDeleted, false),
@@ -493,7 +492,7 @@ export async function removeUserOrganizationMapping({
     adminUserId,
     username,
     organizationName,
-}: RemoveUserOrganizationMappingProps) {
+}: RemoveUserOrganizationMappingProps): Promise<void> {
     const primaryDb = getPrimaryDatabase(db);
     const { getUserIdFromUsername } = useCommonUser();
     const targetUserId = await getUserIdFromUsername({
@@ -501,15 +500,11 @@ export async function removeUserOrganizationMapping({
         username,
     });
 
-    const organizationId = await getListedOrganizationIdFromOrganizationSlug({
-        db: primaryDb,
-        organizationSlug: organizationName,
-    });
-    if (organizationId === undefined) {
-        throw httpErrors.notFound("Organization not found");
-    }
-
     await primaryDb.transaction(async (transaction) => {
+        const organizationId = await lockActiveOrganizationId({
+            db: transaction,
+            organizationSlug: organizationName,
+        });
         const membership = (
             await transaction
                 .select({ id: organizationMembershipTable.id })
@@ -567,7 +562,7 @@ export async function addUserOrganizationMapping({
     db,
     username,
     organizationName,
-}: AddUserOrganizationMappingProps) {
+}: AddUserOrganizationMappingProps): Promise<void> {
     const primaryDb = getPrimaryDatabase(db);
     const { getUserIdFromUsername } = useCommonUser();
     const targetUserId = await getUserIdFromUsername({
@@ -575,16 +570,11 @@ export async function addUserOrganizationMapping({
         username,
     });
 
-    const organizationId = await getListedOrganizationIdFromOrganizationSlug({
-        db: primaryDb,
-        organizationSlug: organizationName,
-    });
-
-    if (organizationId === undefined) {
-        throw httpErrors.notFound("Organization not found");
-    }
-
     await primaryDb.transaction(async (transaction) => {
+        const organizationId = await lockActiveOrganizationId({
+            db: transaction,
+            organizationSlug: organizationName,
+        });
         await ensureOrganizationMembershipBaselineCapabilities({
             db: transaction,
             userId: targetUserId,
@@ -777,13 +767,13 @@ export async function archiveOrganization({
     }
 }
 
-async function getListedOrganizationIdFromOrganizationSlug({
+async function lockActiveOrganizationId({
     db,
     organizationSlug,
 }: {
     db: PostgresJsDatabase;
     organizationSlug: string;
-}): Promise<number | undefined> {
+}): Promise<number> {
     const organizationTableResponse = await db
         .select({
             organizationId: organizationTable.id,
@@ -792,15 +782,16 @@ async function getListedOrganizationIdFromOrganizationSlug({
         .where(
             and(
                 eq(organizationTable.slug, organizationSlug),
-                eq(organizationTable.directoryVisibility, "listed"),
                 isNull(organizationTable.deletedAt),
             ),
         )
-        .limit(1);
+        .limit(1)
+        // Serialize membership changes with archiving without serializing concurrent grants.
+        .for("share");
 
     const organization = organizationTableResponse.at(0);
     if (organization === undefined) {
-        return undefined;
+        throw httpErrors.notFound("Organization not found");
     }
 
     return organization.organizationId;

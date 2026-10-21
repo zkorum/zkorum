@@ -20,12 +20,15 @@ from sqlalchemy import (
     func,
     select,
     text,
+    update,
 )
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.schema import CreateSchema, DropSchema
+from sqlalchemy.sql.selectable import CTE
+from sqlalchemy.sql.visitors import iterate
 
 from agora_analysis_worker_shared import description_repair
 from agora_analysis_worker_shared.ai_description_work import (
@@ -135,6 +138,7 @@ from agora_analysis_worker_shared.postgres_engine import create_postgres_engine
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Mapping, Sequence
+    from typing import Literal
 
     from sqlalchemy import Connection, ExecutionContext
 
@@ -610,6 +614,551 @@ def _insert_non_processable_ai_work_state(
         )
     )
     session.commit()
+
+
+def _seed_translation_locale_correlation_case(
+    session: Session, *, eager: bool, activated: bool = True
+) -> None:
+    _insert_non_processable_ai_work_state(session)
+    view = session.execute(select(ConversationViewSnapshot)).scalar_one()
+    view.activated_at = NOW if activated else None
+    work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+    work.locale = DisplayLanguageCode.es
+    session.add_all(
+        [
+            OpinionGroupDescription(
+                id=501,
+                locale=DisplayLanguageCode.en,
+                label="Published group",
+                summary="Published summary",
+                created_at=NOW,
+            ),
+            OpinionGroupDescription(
+                id=999,
+                locale=DisplayLanguageCode.en,
+                label="Unrelated description",
+                summary="Unrelated summary",
+                created_at=NOW,
+            ),
+        ]
+    )
+    if eager:
+        session.execute(delete(OpinionGroupCandidateDescriptionLocaleRequest))
+        _insert_effective_conversation_target_language(session)
+    session.commit()
+
+
+def _add_unrelated_leased_french_translation_work(session: Session) -> None:
+    # This row cannot itself be discovered or claimed. Its locale must not make
+    # Spanish work eligible for a candidate that only needs French.
+    session.add(
+        OpinionGroupDescriptionTranslationWork(
+            id=203,
+            conversation_id=10,
+            description_id=999,
+            locale=DisplayLanguageCode.fr,
+            attempt_count=1,
+            lease_owner="other-worker",
+            lease_token="unrelated-lease",
+            lease_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+            created_at=NOW,
+            updated_at=NOW,
+        )
+    )
+    session.commit()
+
+
+def _seed_other_translation_conversation(
+    session: Session,
+    *,
+    key: int,
+    state: Literal["pending", "leased", "translated", "undemanded"],
+) -> None:
+    session.add(
+        PolisConversationConfig(
+            id=key,
+            voting_presentation=PolisVotingPresentation.list,
+            ai_labeling_enabled=True,
+            analysis_data_generation=1,
+            preferred_opinion_group_count=None,
+            created_at=NOW,
+            updated_at=NOW,
+        )
+    )
+    session.add(
+        Conversation(
+            id=key,
+            slug_id=f"{key:08x}",
+            project_id=1,
+            current_content_id=key,
+            polis_config_id=key,
+            ranking_config_id=None,
+            dynamic_translation_enabled=True,
+            language_settings_source=ConversationLanguageSettingsSource.conversation_override,
+            is_indexed=True,
+            participation_mode=ParticipationMode.account_required,
+            conversation_type=ConversationType.polis,
+            is_importing=False,
+            is_closed=False,
+            is_edited=False,
+            created_at=NOW,
+            updated_at=NOW,
+            last_reacted_at=NOW,
+        )
+    )
+    session.add(
+        ConversationContent(
+            id=key,
+            public_id=uuid.uuid4(),
+            conversation_id=key,
+            title="Other conversation",
+            body_plain_text="Other conversation",
+            source_language_code=SpokenLanguageCode.en,
+            source_raw_language_code="en",
+            source_language_confidence=1.0,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        AnalysisSnapshot(
+            id=key,
+            conversation_id=key,
+            conversation_content_id=key,
+            input_snapshot_id=1,
+            data_generation=1,
+            computed_at=NOW,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        AnalysisSnapshotResult(
+            id=key,
+            conversation_id=key,
+            analysis_snapshot_id=key,
+            opinion_group_spec_id=1,
+            outcome=AnalysisResultOutcomeEnum.success,
+            variants_enabled=False,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        ConversationViewSnapshot(
+            id=key,
+            conversation_id=key,
+            opinion_group_spec_id=1,
+            analysis_snapshot_id=key,
+            conversation_content_id=key,
+            view_reason=ConversationViewSnapshotReasonEnum.analysis_completed,
+            is_closed=False,
+            opinion_count=2,
+            vote_count=2,
+            participant_count=2,
+            total_opinion_count=2,
+            total_vote_count=2,
+            total_participant_count=2,
+            moderated_opinion_count=0,
+            hidden_opinion_count=0,
+            activated_at=NOW,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroupCandidate(
+            id=key,
+            snapshot_result_id=key,
+            opinion_group_variant_id=601,
+            scope_id=key,
+            outcome=AnalysisResultOutcomeEnum.success,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroupCandidateAssessment(
+            id=key,
+            candidate_id=key,
+            selection_score=0.8,
+            silhouette_score=0.8,
+            balance_score=0.8,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroupDescription(
+            id=key,
+            locale=DisplayLanguageCode.en,
+            label="Other group",
+            summary="Other summary",
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroupLineage(
+            id=key,
+            scope_id=key,
+            system_description_id=key,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroup(
+            id=key,
+            candidate_id=key,
+            scope_id=key,
+            lineage_id=key,
+            key="0",
+            external_id=0,
+            num_users=2,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        ConversationTranslationTargetLanguage(
+            id=key,
+            conversation_id=key,
+            language_code=DisplayLanguageCode.fr,
+            created_at=NOW,
+        )
+    )
+    session.add(
+        OpinionGroupDescriptionTranslationWork(
+            id=key,
+            conversation_id=key,
+            description_id=key,
+            locale=DisplayLanguageCode.es if state == "undemanded" else DisplayLanguageCode.fr,
+            attempt_count=1,
+            lease_owner="busy-worker" if state == "leased" else None,
+            lease_token="busy-token" if state == "leased" else None,
+            lease_expires_at=datetime.now(UTC) + timedelta(minutes=10)
+            if state == "leased"
+            else None,
+            created_at=NOW,
+            updated_at=NOW,
+        )
+    )
+    if state == "translated":
+        session.add(
+            OpinionGroupDescriptionTranslation(
+                description_id=key,
+                locale=DisplayLanguageCode.fr,
+                label="Autre groupe",
+                summary="Autre résumé",
+                created_at=NOW,
+            )
+        )
+
+
+def _scan_translation_work(engine: Engine) -> list[int]:
+    return fetch_claimable_ai_description_work_conversation_ids(
+        engine,
+        limit=8,
+        ai_description_epoch=1,
+        translation_enabled=True,
+        include_lineage_descriptions=False,
+        require_activated_view_snapshot=True,
+    )
+
+
+@pytest.mark.parametrize("eager", [False, True], ids=["explicit", "eager"])
+def test_translation_discovery_does_not_borrow_another_work_rows_locale(
+    lineage_scan_engine: Engine,
+    eager: bool,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=eager)
+    # Control: there is no Spanish demand, so this conversation is not ready.
+    assert _scan_translation_work(lineage_scan_engine) == []
+    with Session(lineage_scan_engine) as session:
+        _add_unrelated_leased_french_translation_work(session)
+    assert _scan_translation_work(lineage_scan_engine) == []
+
+
+@pytest.mark.parametrize("eager", [False, True], ids=["explicit", "eager"])
+def test_translation_retry_claims_only_the_demanded_locale(
+    lineage_scan_engine: Engine,
+    eager: bool,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=eager)
+        _add_unrelated_leased_french_translation_work(session)
+    claims = claim_ai_description_locale_work_items_batch(
+        lineage_scan_engine,
+        worker_id="correlation-test",
+        conversation_ids=[10],
+        lease_ttl_seconds=120,
+        limit=8,
+        ai_description_epoch=1,
+        translation_enabled=True,
+        claim_lineage_descriptions=False,
+        require_activated_view_snapshot=True,
+    )
+    assert {claim.locale for claim in claims} == {"fr"}
+    with Session(lineage_scan_engine) as session:
+        unrequested = session.get(OpinionGroupDescriptionTranslationWork, 202)
+        assert unrequested is not None
+        assert unrequested.lease_token is None
+        assert unrequested.attempt_count == 1
+
+
+def test_translation_first_pass_claims_only_the_eager_target_locale(
+    lineage_scan_engine: Engine,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=True, activated=False)
+        _add_unrelated_leased_french_translation_work(session)
+    claims = claim_first_pass_ai_description_locale_work_items_batch(
+        lineage_scan_engine,
+        worker_id="first-pass-correlation-test",
+        conversation_ids=[10],
+        conversation_view_snapshot_ids=[20],
+        lease_ttl_seconds=120,
+        limit=8,
+        ai_description_epoch=1,
+        translation_enabled=True,
+        claim_lineage_descriptions=False,
+    )
+    assert {claim.locale for claim in claims} == {"fr"}
+
+
+@pytest.mark.parametrize("eager", [False, True], ids=["explicit", "eager"])
+@pytest.mark.parametrize(
+    "view_reason",
+    [
+        ConversationViewSnapshotReasonEnum.analysis_completed,
+        ConversationViewSnapshotReasonEnum.conversation_content_updated,
+    ],
+)
+def test_translation_discovery_accepts_real_spanish_demand(
+    lineage_scan_engine: Engine,
+    eager: bool,
+    view_reason: ConversationViewSnapshotReasonEnum,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=eager)
+        session.execute(select(ConversationViewSnapshot)).scalar_one().view_reason = view_reason
+        if eager:
+            target = session.execute(select(ConversationTranslationTargetLanguage)).scalar_one()
+            target.language_code = DisplayLanguageCode.es
+        else:
+            request = session.execute(
+                select(OpinionGroupCandidateDescriptionLocaleRequest)
+            ).scalar_one()
+            request.locale = DisplayLanguageCode.es
+        session.commit()
+    assert fetch_claimable_ai_description_work_conversation_ids(
+        lineage_scan_engine,
+        limit=8,
+        ai_description_epoch=1,
+        translation_enabled=True,
+        include_lineage_descriptions=False,
+        require_activated_view_snapshot=True,
+    ) == [10]
+
+
+@pytest.mark.parametrize("eager", [False, True], ids=["explicit", "eager"])
+@pytest.mark.parametrize("checkpoint", [False, True])
+@pytest.mark.parametrize("newer_activated", [False, True])
+def test_translation_discovery_preserves_checkpoint_and_latest_scope(
+    lineage_scan_engine: Engine,
+    eager: bool,
+    checkpoint: bool,
+    newer_activated: bool,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=eager)
+        session.execute(
+            select(OpinionGroupDescriptionTranslationWork)
+        ).scalar_one().locale = DisplayLanguageCode.fr
+        if checkpoint:
+            session.add(
+                ConversationViewSnapshotCheckpointReason(
+                    conversation_view_snapshot_id=20,
+                    conversation_id=10,
+                    opinion_group_spec_id=1,
+                    reason=ConversationViewSnapshotCheckpointReasonEnum.first_displayable_analysis,
+                    created_at=NOW,
+                )
+            )
+        session.add(
+            ConversationViewSnapshot(
+                id=21,
+                conversation_id=10,
+                opinion_group_spec_id=1,
+                analysis_snapshot_id=31,
+                survey_aggregate_snapshot_id=None,
+                conversation_content_id=40,
+                view_reason=ConversationViewSnapshotReasonEnum.analysis_completed,
+                is_closed=False,
+                opinion_count=2,
+                vote_count=2,
+                participant_count=2,
+                total_opinion_count=2,
+                total_vote_count=2,
+                total_participant_count=2,
+                moderated_opinion_count=0,
+                hidden_opinion_count=0,
+                activated_at=NOW + timedelta(seconds=1) if newer_activated else None,
+                created_at=NOW + timedelta(seconds=1),
+            )
+        )
+        session.commit()
+    # Eager translation is only for the latest non-checkpoint view. Explicit
+    # demand can retain a checkpoint, even while a newer view is unpublished.
+    expected = [10] if checkpoint and not eager else []
+    assert _scan_translation_work(lineage_scan_engine) == expected
+
+
+@pytest.mark.parametrize("state", ["leased", "translated"])
+def test_idle_translation_discovery_skips_candidate_history(
+    lineage_scan_engine: Engine,
+    state: str,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=True)
+        work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+        work.locale = DisplayLanguageCode.fr
+        if state == "leased":
+            work.lease_owner = "active-worker"
+            work.lease_token = "active-token"
+            work.lease_expires_at = datetime.now(UTC) + timedelta(minutes=10)
+        else:
+            session.add(
+                OpinionGroupDescriptionTranslation(
+                    description_id=501,
+                    locale=DisplayLanguageCode.fr,
+                    label="Groupe",
+                    summary="Résumé",
+                    created_at=NOW,
+                )
+            )
+        session.commit()
+    with _capture_statements(lineage_scan_engine) as statements:
+        assert _scan_translation_work(lineage_scan_engine) == []
+    assert len(statements) == 1
+    assert "opinion_group_candidate" not in statements[0]
+    assert "conversation_view_snapshot" not in statements[0]
+
+
+def test_translation_discovery_scopes_intermediate_work_to_pending_conversations(
+    lineage_scan_engine: Engine,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=True)
+        session.execute(
+            select(OpinionGroupDescriptionTranslationWork)
+        ).scalar_one().locale = DisplayLanguageCode.fr
+        _seed_other_translation_conversation(session, key=1000, state="translated")
+        _seed_other_translation_conversation(session, key=1001, state="leased")
+        _seed_other_translation_conversation(session, key=1002, state="pending")
+        _seed_other_translation_conversation(session, key=1003, state="undemanded")
+        _seed_other_translation_conversation(session, key=1004, state="pending")
+        _seed_other_translation_conversation(session, key=1005, state="pending")
+        disabled = session.get(PolisConversationConfig, 1004)
+        assert disabled is not None
+        disabled.ai_labeling_enabled = False
+        deleted = session.get(Conversation, 1005)
+        assert deleted is not None
+        deleted.current_content_id = None
+        # A second live description without pending work must also be excluded,
+        # even though its conversation has another runnable description.
+        session.add(
+            OpinionGroupDescription(
+                id=502,
+                locale=DisplayLanguageCode.en,
+                label="Not pending",
+                summary="Not pending",
+                created_at=NOW,
+            )
+        )
+        session.add(
+            OpinionGroupLineage(id=302, scope_id=701, system_description_id=502, created_at=NOW)
+        )
+        session.add(
+            OpinionGroup(
+                id=802,
+                candidate_id=401,
+                scope_id=701,
+                lineage_id=302,
+                key="1",
+                external_id=1,
+                num_users=1,
+                created_at=NOW,
+            )
+        )
+        session.commit()
+    stages: dict[str, CTE] = {}
+
+    def capture(
+        connection: Connection,
+        cursor: object,
+        statement: str,
+        parameters: object,
+        context: ExecutionContext,
+        executemany: bool,
+    ) -> None:
+        if context.compiled is not None and context.compiled.statement is not None:
+            for node in iterate(context.compiled.statement):
+                if isinstance(node, CTE):
+                    stages[node.name] = node
+
+    event.listen(lineage_scan_engine, "before_cursor_execute", capture)
+    try:
+        assert set(_scan_translation_work(lineage_scan_engine)) == {10, 1002}
+    finally:
+        event.remove(lineage_scan_engine, "before_cursor_execute", capture)
+    with Session(lineage_scan_engine) as session:
+        views = stages["translation_discovery_eligible_views"]
+        assert set(session.scalars(select(views.c.id))) == {20, 1002, 1003}
+        candidates = stages["translation_discovery_candidates"]
+        assert {
+            tuple(row)
+            for row in session.execute(
+                select(candidates.c.conversation_id, candidates.c.description_id)
+            )
+        } == {
+            (10, 501),
+            (1002, 1002),
+            (1003, 1003),
+        }
+
+
+def test_obsolete_translation_work_does_not_starve_later_live_work(
+    lineage_scan_engine: Engine,
+) -> None:
+    with Session(lineage_scan_engine) as session:
+        _seed_translation_locale_correlation_case(session, eager=True)
+        session.execute(
+            select(OpinionGroupDescriptionTranslationWork)
+        ).scalar_one().locale = DisplayLanguageCode.fr
+        for key in range(2000, 2050):
+            session.add(
+                OpinionGroupDescription(
+                    id=key,
+                    locale=DisplayLanguageCode.en,
+                    label="Historical",
+                    summary="Historical",
+                    created_at=NOW,
+                )
+            )
+            session.add(
+                OpinionGroupDescriptionTranslationWork(
+                    id=key,
+                    conversation_id=10,
+                    description_id=key,
+                    locale=DisplayLanguageCode.fr,
+                    attempt_count=0,
+                    created_at=NOW - timedelta(days=1),
+                    updated_at=NOW - timedelta(days=1),
+                )
+            )
+        session.commit()
+    assert fetch_claimable_ai_description_work_conversation_ids(
+        lineage_scan_engine,
+        limit=1,
+        ai_description_epoch=1,
+        translation_enabled=True,
+        include_lineage_descriptions=False,
+        require_activated_view_snapshot=True,
+    ) == [10]
 
 
 def _seed_live_description_repair(session: Session) -> None:
@@ -2845,7 +3394,10 @@ def test_materialize_requested_translation_work_includes_checkpoints_when_enable
     assert translation_work.description_id == 501
 
 
-def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled() -> None:
+@pytest.mark.parametrize("locale", [DisplayLanguageCode.en, DisplayLanguageCode.fr])
+def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled(
+    locale: DisplayLanguageCode,
+) -> None:
     engine = _create_engine()
     with Session(engine) as session:
         _insert_non_processable_ai_work_state(session)
@@ -2856,6 +3408,10 @@ def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled() 
         view_snapshot.activated_at = NOW
         lineage = session.execute(select(OpinionGroupLineage)).scalar_one()
         lineage.system_description_id = None
+        request = session.execute(
+            select(OpinionGroupCandidateDescriptionLocaleRequest)
+        ).scalar_one()
+        request.locale = locale
         session.add(
             ConversationViewSnapshotCheckpointReason(
                 conversation_view_snapshot_id=20,
@@ -3827,6 +4383,161 @@ def test_extend_postgres_leases_only_extends_active_owned_claims() -> None:
     assert work_states[0].lease_expires_at is not None
     assert work_states[0].lease_expires_at > original_expires_at
     assert work_states[1].lease_expires_at == original_expires_at
+
+
+@pytest.mark.parametrize("locked_kind", ["lineage", "translation"])
+def test_ai_heartbeat_skips_locked_work_and_renews_other_claims(
+    lineage_scan_engine: Engine,
+    locked_kind: str,
+) -> None:
+    if lineage_scan_engine.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL row locks")
+    original_expiry = datetime.now(UTC) + timedelta(seconds=45)
+    with Session(lineage_scan_engine) as session:
+        _insert_non_processable_ai_work_state(session, leased_lineage_work=True)
+        lineage = session.get(OpinionGroupLineageDescriptionWork, 201)
+        assert lineage is not None
+        lineage.lease_expires_at = original_expiry
+        translation = session.get(OpinionGroupDescriptionTranslationWork, 202)
+        assert translation is not None
+        translation.lease_token = "translation-token"
+        translation.lease_owner = "translation-worker"
+        translation.lease_expires_at = original_expiry
+        for work_id in (203, 204):
+            session.add(
+                OpinionGroupLineageDescriptionWork(
+                    id=work_id,
+                    lineage_id=work_id + 100,
+                    conversation_id=10,
+                    source_candidate_id=401,
+                    attempt_count=1,
+                    lease_owner="worker-1",
+                    lease_token=f"lineage-{work_id}",
+                    lease_expires_at=original_expiry,
+                    created_at=NOW,
+                    updated_at=NOW,
+                )
+            )
+            session.add(
+                OpinionGroupDescriptionTranslationWork(
+                    id=work_id,
+                    description_id=work_id + 500,
+                    conversation_id=10,
+                    locale=DisplayLanguageCode.fr,
+                    attempt_count=1,
+                    lease_owner="translation-worker",
+                    lease_token=f"translation-{work_id}",
+                    lease_expires_at=original_expiry,
+                    created_at=NOW,
+                    updated_at=NOW,
+                )
+            )
+        session.commit()
+    claims = [
+        ClaimedLineageDescriptionWorkItem(
+            id=201,
+            conversation_id=10,
+            conversation_slug_id="test",
+            lineage_id=301,
+            source_candidate_id=401,
+            locale="en",
+            attempt_count=1,
+            lease_token="token-1",
+        ),
+        ClaimedDescriptionTranslationWorkItem(
+            id=202,
+            conversation_id=10,
+            conversation_slug_id="test",
+            description_id=501,
+            locale="fr",
+            attempt_count=1,
+            lease_token="translation-token",
+        ),
+    ]
+    for work_id in (203, 204):
+        claims.extend(
+            [
+                ClaimedLineageDescriptionWorkItem(
+                    id=work_id,
+                    conversation_id=10,
+                    conversation_slug_id="test",
+                    lineage_id=work_id + 100,
+                    source_candidate_id=401,
+                    locale="en",
+                    attempt_count=1,
+                    lease_token=f"lineage-{work_id}",
+                ),
+                ClaimedDescriptionTranslationWorkItem(
+                    id=work_id,
+                    conversation_id=10,
+                    conversation_slug_id="test",
+                    description_id=work_id + 500,
+                    locale="fr",
+                    attempt_count=1,
+                    lease_token=f"translation-{work_id}",
+                ),
+            ]
+        )
+    options = lineage_scan_engine.url.query.get("options", "")
+    assert isinstance(options, str)
+    heartbeat_engine = create_engine(
+        lineage_scan_engine.url.update_query_dict(
+            {
+                "options": f"{options} -c lock_timeout=200ms",
+            }
+        )
+    )
+    locked_table = (
+        OpinionGroupLineageDescriptionWork
+        if locked_kind == "lineage"
+        else OpinionGroupDescriptionTranslationWork
+    )
+    locked_id = 201 if locked_kind == "lineage" else 202
+    try:
+        with Session(lineage_scan_engine) as completing:
+            # Simulate a completion that has cleared its token but is still
+            # scanning/materializing before commit, as in the production lock tree.
+            completing.execute(
+                update(locked_table)
+                .where(
+                    locked_table.id == locked_id,
+                )
+                .values(lease_owner=None, lease_token=None, lease_expires_at=None)
+            )
+            result = extend_ai_description_locale_work_leases(
+                heartbeat_engine,
+                claims=claims,
+                lease_ttl_seconds=120,
+            )
+            assert result.extended_lineage_work_ids == (
+                [203, 204] if locked_kind == "lineage" else [201, 203, 204]
+            )
+            assert result.extended_translation_work_ids == (
+                [203, 204] if locked_kind == "translation" else [202, 203, 204]
+            )
+            with Session(heartbeat_engine) as observer:
+                for model in (
+                    OpinionGroupLineageDescriptionWork,
+                    OpinionGroupDescriptionTranslationWork,
+                ):
+                    siblings = observer.scalars(select(model).where(model.id.in_([203, 204]))).all()
+                    assert len(siblings) == 2
+                    assert all(
+                        row.lease_expires_at is not None
+                        and row.lease_expires_at > original_expiry.replace(tzinfo=None)
+                        for row in siblings
+                    )
+            completing.rollback()
+        # Skipping a busy row must not lose it from subsequent heartbeat rounds.
+        result = extend_ai_description_locale_work_leases(
+            heartbeat_engine,
+            claims=claims,
+            lease_ttl_seconds=120,
+        )
+        assert result.extended_lineage_work_ids == [201, 203, 204]
+        assert result.extended_translation_work_ids == [202, 203, 204]
+    finally:
+        heartbeat_engine.dispose()
 
 
 def test_extend_ai_description_locale_work_leases_only_extends_active_claims() -> None:

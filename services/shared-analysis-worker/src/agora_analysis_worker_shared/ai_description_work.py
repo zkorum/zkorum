@@ -8,7 +8,21 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Integer, and_, false, func, or_, select, true, tuple_, type_coerce, update
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Integer,
+    and_,
+    case,
+    false,
+    func,
+    or_,
+    select,
+    true,
+    tuple_,
+    type_coerce,
+    update,
+)
 from sqlalchemy import insert as sqlalchemy_insert
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
@@ -103,6 +117,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Engine, Select
     from sqlalchemy.orm.attributes import InstrumentedAttribute
     from sqlalchemy.sql.elements import ColumnElement, UnaryExpression
+    from sqlalchemy.sql.selectable import CTE
 
     from agora_analysis_worker_shared.description_generation import (
         DescriptionFailure,
@@ -642,6 +657,326 @@ def finalize_first_pass_ai_description_work_batch(
     )
 
 
+def _pending_translation_work_filter(
+    *,
+    ai_description_epoch: int,
+    retry_cooldown_seconds: int,
+) -> ColumnElement[bool]:
+    return and_(
+        OpinionGroupDescriptionTranslationWork.lease_token.is_(None),
+        select(Conversation.id)
+        .join(PolisConversationConfig, PolisConversationConfig.id == Conversation.polis_config_id)
+        .where(
+            Conversation.id == OpinionGroupDescriptionTranslationWork.conversation_id,
+            Conversation.current_content_id.is_not(None),
+            PolisConversationConfig.ai_labeling_enabled.is_(True),
+        )
+        .correlate(OpinionGroupDescriptionTranslationWork)
+        .exists(),
+        _retry_cooldown_filter(
+            last_error_code=OpinionGroupDescriptionTranslationWork.last_error_code,
+            last_error_at=OpinionGroupDescriptionTranslationWork.last_error_at,
+            retry_cooldown_seconds=retry_cooldown_seconds,
+        ),
+        ~select(OpinionGroupDescriptionTranslation.id)
+        .where(
+            OpinionGroupDescriptionTranslation.description_id
+            == OpinionGroupDescriptionTranslationWork.description_id,
+            OpinionGroupDescriptionTranslation.locale
+            == OpinionGroupDescriptionTranslationWork.locale,
+        )
+        .correlate(OpinionGroupDescriptionTranslationWork)
+        .exists(),
+        or_(
+            OpinionGroupDescriptionTranslationWork.non_retryable_ai_description_epoch.is_(None),
+            ai_description_epoch
+            > func.coalesce(
+                OpinionGroupDescriptionTranslationWork.non_retryable_ai_description_epoch, 0
+            ),
+        ),
+    )
+
+
+def _latest_analysis_views_query(
+    *,
+    dialect_name: str,
+    conversation_filter: ColumnElement[bool],
+) -> Select[tuple[int, int, int, datetime]]:
+    views = select(
+        ConversationViewSnapshot.conversation_id,
+        ConversationViewSnapshot.opinion_group_spec_id,
+        ConversationViewSnapshot.id,
+        ConversationViewSnapshot.created_at,
+    ).where(
+        conversation_filter,
+        ConversationViewSnapshot.view_reason
+        == ConversationViewSnapshotReasonEnum.analysis_completed,
+    )
+    ordering = (
+        ConversationViewSnapshot.created_at.desc(),
+        ConversationViewSnapshot.id.desc(),
+    )
+    if dialect_name == "postgresql":
+        return views.distinct(
+            ConversationViewSnapshot.conversation_id,
+            ConversationViewSnapshot.opinion_group_spec_id,
+        ).order_by(
+            ConversationViewSnapshot.conversation_id,
+            ConversationViewSnapshot.opinion_group_spec_id,
+            *ordering,
+        )
+    ranked_views = views.add_columns(
+        func.row_number()
+        .over(
+            partition_by=(
+                ConversationViewSnapshot.conversation_id,
+                ConversationViewSnapshot.opinion_group_spec_id,
+            ),
+            order_by=ordering,
+        )
+        .label("latest_rank"),
+    ).subquery()
+    return select(
+        type_coerce(ranked_views.c.conversation_id, Integer),
+        type_coerce(ranked_views.c.opinion_group_spec_id, Integer),
+        type_coerce(ranked_views.c.id, Integer),
+        type_coerce(ranked_views.c.created_at, DateTime),
+    ).where(ranked_views.c.latest_rank == 1)
+
+
+def _translation_discovery_eligible_views(
+    *,
+    dialect_name: str,
+    pending_work: CTE,
+    require_activated_view_snapshot: bool,
+) -> CTE:
+    pending_conversation_ids = select(pending_work.c.conversation_id).distinct()
+    conversation_filter = ConversationViewSnapshot.conversation_id.in_(pending_conversation_ids)
+    # Rank all views of each pending conversation before checking activation:
+    # an unpublished newer analysis must still supersede old non-checkpoint work.
+    latest_analysis_views = _latest_analysis_views_query(
+        dialect_name=dialect_name,
+        conversation_filter=conversation_filter,
+    ).subquery()
+    checkpoint_views = (
+        select(ConversationViewSnapshotCheckpointReason.conversation_view_snapshot_id)
+        .join(
+            ConversationViewSnapshot,
+            ConversationViewSnapshot.id
+            == ConversationViewSnapshotCheckpointReason.conversation_view_snapshot_id,
+        )
+        .where(conversation_filter)
+        .distinct()
+        .subquery()
+    )
+    is_checkpoint = checkpoint_views.c.conversation_view_snapshot_id.is_not(None)
+    no_newer_analysis_view = or_(
+        latest_analysis_views.c.id.is_(None),
+        tuple_(ConversationViewSnapshot.created_at, ConversationViewSnapshot.id)
+        >= tuple_(latest_analysis_views.c.created_at, latest_analysis_views.c.id),
+    )
+    return (
+        select(
+            ConversationViewSnapshot.id,
+            and_(~is_checkpoint, no_newer_analysis_view).label("is_latest"),
+        )
+        .outerjoin(
+            latest_analysis_views,
+            and_(
+                latest_analysis_views.c.conversation_id == ConversationViewSnapshot.conversation_id,
+                latest_analysis_views.c.opinion_group_spec_id
+                == ConversationViewSnapshot.opinion_group_spec_id,
+            ),
+        )
+        .outerjoin(
+            checkpoint_views,
+            checkpoint_views.c.conversation_view_snapshot_id == ConversationViewSnapshot.id,
+        )
+        .where(
+            conversation_filter,
+            or_(is_checkpoint, no_newer_analysis_view),
+            ConversationViewSnapshot.activated_at.is_not(None)
+            if require_activated_view_snapshot
+            else true(),
+        )
+        .cte("translation_discovery_eligible_views")
+        .prefix_with("MATERIALIZED", dialect="postgresql")
+    )
+
+
+def _translation_discovery_candidates(*, eligible_views: CTE, pending_work: CTE) -> CTE:
+    pending_descriptions = (
+        select(
+            pending_work.c.conversation_id,
+            pending_work.c.description_id,
+        )
+        .distinct()
+        .subquery()
+    )
+    return (
+        select(
+            AnalysisSnapshotResult.conversation_id,
+            OpinionGroupCandidate.id.label("candidate_id"),
+            OpinionGroupLineage.system_description_id.label("description_id"),
+            eligible_views.c.is_latest,
+            _effective_preferred_candidate_filter().label("is_preferred"),
+        )
+        .select_from(eligible_views)
+        .join(ConversationViewSnapshot, ConversationViewSnapshot.id == eligible_views.c.id)
+        .join(
+            AnalysisSnapshotResult,
+            and_(
+                ConversationViewSnapshot.conversation_id == AnalysisSnapshotResult.conversation_id,
+                ConversationViewSnapshot.analysis_snapshot_id
+                == AnalysisSnapshotResult.analysis_snapshot_id,
+                ConversationViewSnapshot.opinion_group_spec_id
+                == AnalysisSnapshotResult.opinion_group_spec_id,
+            ),
+        )
+        .join(
+            OpinionGroupCandidate,
+            OpinionGroupCandidate.snapshot_result_id == AnalysisSnapshotResult.id,
+        )
+        .join(Conversation, Conversation.id == AnalysisSnapshotResult.conversation_id)
+        .join(PolisConversationConfig, PolisConversationConfig.id == Conversation.polis_config_id)
+        .join(ConversationContent, ConversationContent.id == Conversation.current_content_id)
+        .join(
+            OpinionGroupVariant,
+            OpinionGroupVariant.id == OpinionGroupCandidate.opinion_group_variant_id,
+        )
+        .join(OpinionGroup, OpinionGroup.candidate_id == OpinionGroupCandidate.id)
+        .join(
+            OpinionGroupLineage,
+            OpinionGroupLineage.id == OpinionGroup.lineage_id,
+        )
+        .join(
+            pending_descriptions,
+            and_(
+                pending_descriptions.c.conversation_id == AnalysisSnapshotResult.conversation_id,
+                pending_descriptions.c.description_id == OpinionGroupLineage.system_description_id,
+            ),
+        )
+        .outerjoin(
+            OpinionGroupCandidateAssessment,
+            OpinionGroupCandidateAssessment.candidate_id == OpinionGroupCandidate.id,
+        )
+        .where(
+            PolisConversationConfig.ai_labeling_enabled.is_(True),
+            AnalysisSnapshotResult.outcome == AnalysisResultOutcomeEnum.success,
+            OpinionGroupCandidate.outcome == AnalysisResultOutcomeEnum.success,
+            OpinionGroupCandidateAssessment.hidden_reason.is_(None),
+            OpinionGroupLineage.system_description_id.is_not(None),
+        )
+        .cte("translation_discovery_candidates")
+        .prefix_with("MATERIALIZED", dialect="postgresql")
+    )
+
+
+def _translation_discovery_demands(candidates: CTE) -> CTE:
+    eager_demands = (
+        select(
+            candidates.c.conversation_id,
+            candidates.c.description_id,
+            ConversationTranslationTargetLanguage.language_code.label("locale"),
+            candidates.c.is_latest,
+        )
+        .join(
+            ConversationTranslationTargetLanguage,
+            ConversationTranslationTargetLanguage.conversation_id == candidates.c.conversation_id,
+        )
+        .where(
+            candidates.c.is_latest,
+            candidates.c.is_preferred,
+            ConversationTranslationTargetLanguage.deleted_at.is_(None),
+            ConversationTranslationTargetLanguage.language_code.in_(
+                sorted(SUPPORTED_EAGER_AI_DESCRIPTION_TARGET_LANGUAGE_CODES)
+            ),
+        )
+    )
+    explicit_demands = select(
+        candidates.c.conversation_id,
+        candidates.c.description_id,
+        OpinionGroupCandidateDescriptionLocaleRequest.locale,
+        candidates.c.is_latest,
+    ).join(
+        OpinionGroupCandidateDescriptionLocaleRequest,
+        OpinionGroupCandidateDescriptionLocaleRequest.candidate_id == candidates.c.candidate_id,
+    )
+    demands = eager_demands.union_all(explicit_demands).subquery()
+    return (
+        select(
+            demands.c.conversation_id,
+            demands.c.description_id,
+            demands.c.locale,
+            (func.max(case((demands.c.is_latest, 1), else_=0)) > 0).label("has_latest_candidate"),
+        )
+        .group_by(demands.c.conversation_id, demands.c.description_id, demands.c.locale)
+        .cte("translation_discovery_demands")
+    )
+
+
+def _translation_work_discovery_statement(
+    *,
+    dialect_name: str,
+    limit: int,
+    ai_description_epoch: int,
+    require_activated_view_snapshot: bool,
+    retry_cooldown_seconds: int,
+) -> Select[tuple[int, datetime, bool]]:
+    # Scope every materialized stage to runnable work without limiting first:
+    # obsolete rows must not starve later live demands in the same queue.
+    pending_work = (
+        select(
+            OpinionGroupDescriptionTranslationWork.id,
+            OpinionGroupDescriptionTranslationWork.conversation_id,
+            OpinionGroupDescriptionTranslationWork.description_id,
+            OpinionGroupDescriptionTranslationWork.locale,
+            OpinionGroupDescriptionTranslationWork.updated_at,
+        )
+        .where(
+            _pending_translation_work_filter(
+                ai_description_epoch=ai_description_epoch,
+                retry_cooldown_seconds=retry_cooldown_seconds,
+            )
+        )
+        .cte("translation_discovery_pending_work")
+        .prefix_with("MATERIALIZED", dialect="postgresql")
+    )
+    eligible_views = _translation_discovery_eligible_views(
+        dialect_name=dialect_name,
+        pending_work=pending_work,
+        require_activated_view_snapshot=require_activated_view_snapshot,
+    )
+    candidates = _translation_discovery_candidates(
+        eligible_views=eligible_views,
+        pending_work=pending_work,
+    )
+    unique_demands = _translation_discovery_demands(candidates)
+    # Resolve live locale demands once, then match pending work by its natural
+    # key. Historical work no longer repeats the candidate graph traversal.
+    return (
+        select(
+            type_coerce(pending_work.c.conversation_id, Integer),
+            type_coerce(pending_work.c.updated_at, DateTime),
+            type_coerce(unique_demands.c.has_latest_candidate, Boolean),
+        )
+        .select_from(pending_work)
+        .join(
+            unique_demands,
+            and_(
+                unique_demands.c.conversation_id == pending_work.c.conversation_id,
+                unique_demands.c.description_id == pending_work.c.description_id,
+                unique_demands.c.locale == pending_work.c.locale,
+            ),
+        )
+        .order_by(
+            pending_work.c.updated_at.asc(),
+            pending_work.c.id,
+        )
+        .limit(limit)
+    )
+
+
 def fetch_claimable_ai_description_work_conversation_ids(
     engine: Engine,
     *,
@@ -720,65 +1055,29 @@ def fetch_claimable_ai_description_work_conversation_ids(
                 for row in lineage_rows
             )
         if translation_enabled and include_translations:
-            translation_latest_candidate_exists = _translation_work_relevant_candidate_filter(
-                conversation_view_snapshot_ids=None,
-                require_activated_view_snapshot=require_activated_view_snapshot,
-                snapshot_scope="latest",
-            )
-            translation_rows = session.execute(
-                select(
-                    OpinionGroupDescriptionTranslationWork.conversation_id,
-                    OpinionGroupDescriptionTranslationWork.updated_at,
-                    translation_latest_candidate_exists.label("has_latest_candidate"),
-                )
-                .join(
-                    Conversation,
-                    Conversation.id == OpinionGroupDescriptionTranslationWork.conversation_id,
-                )
-                .join(
-                    PolisConversationConfig,
-                    PolisConversationConfig.id == Conversation.polis_config_id,
-                )
+            # Completed or leased queues are common between polls. Avoid planning
+            # and evaluating the historical candidate graph when no work is ready.
+            pending_work = session.execute(
+                select(OpinionGroupDescriptionTranslationWork.id)
                 .where(
-                    and_(
-                        PolisConversationConfig.ai_labeling_enabled.is_(True),
-                        OpinionGroupDescriptionTranslationWork.lease_token.is_(None),
-                        _retry_cooldown_filter(
-                            last_error_code=OpinionGroupDescriptionTranslationWork.last_error_code,
-                            last_error_at=OpinionGroupDescriptionTranslationWork.last_error_at,
-                            retry_cooldown_seconds=retry_cooldown_seconds,
-                        ),
-                        _translation_work_relevant_candidate_filter(
-                            conversation_view_snapshot_ids=None,
-                            require_activated_view_snapshot=require_activated_view_snapshot,
-                        ),
-                        ~select(OpinionGroupDescriptionTranslation.id)
-                        .where(
-                            and_(
-                                OpinionGroupDescriptionTranslation.description_id
-                                == OpinionGroupDescriptionTranslationWork.description_id,
-                                OpinionGroupDescriptionTranslation.locale
-                                == OpinionGroupDescriptionTranslationWork.locale,
-                            )
-                        )
-                        .exists(),
-                        or_(
-                            OpinionGroupDescriptionTranslationWork.non_retryable_ai_description_epoch.is_(
-                                None
-                            ),
-                            ai_description_epoch
-                            > func.coalesce(
-                                OpinionGroupDescriptionTranslationWork.non_retryable_ai_description_epoch,
-                                0,
-                            ),
-                        ),
+                    _pending_translation_work_filter(
+                        ai_description_epoch=ai_description_epoch,
+                        retry_cooldown_seconds=retry_cooldown_seconds,
                     )
                 )
-                .order_by(
-                    OpinionGroupDescriptionTranslationWork.updated_at.asc(),
-                    OpinionGroupDescriptionTranslationWork.id,
+                .limit(1)
+            ).first()
+        else:
+            pending_work = None
+        if pending_work is not None:
+            translation_rows = session.execute(
+                _translation_work_discovery_statement(
+                    dialect_name=engine.dialect.name,
+                    limit=limit,
+                    ai_description_epoch=ai_description_epoch,
+                    require_activated_view_snapshot=require_activated_view_snapshot,
+                    retry_cooldown_seconds=retry_cooldown_seconds,
                 )
-                .limit(limit)
             )
             rows.extend(
                 ClaimableAiDescriptionWorkConversationRow(
@@ -2231,6 +2530,38 @@ def _fetch_eager_description_candidates(
         if conversation_ids is not None
         else true()
     )
+    # Prune historical views before preferred-candidate and missing-translation
+    # checks. Otherwise a poll can walk every historical candidate to return none.
+    view_ids_filter: ColumnElement[bool] = true()
+    if conversation_view_snapshot_ids is None:
+        latest_views = _latest_analysis_views_query(
+            dialect_name=session.get_bind().dialect.name,
+            conversation_filter=(
+                ConversationViewSnapshot.conversation_id.in_(sorted(set(conversation_ids)))
+                if conversation_ids is not None
+                else true()
+            ),
+        ).subquery()
+        view_ids_filter = ConversationViewSnapshot.id.in_(select(latest_views.c.id))
+    eligible_views = (
+        select(ConversationViewSnapshot.id)
+        .where(
+            view_ids_filter,
+            ConversationViewSnapshot.conversation_id.in_(sorted(set(conversation_ids)))
+            if conversation_ids is not None
+            else true(),
+            ConversationViewSnapshot.view_reason
+            == ConversationViewSnapshotReasonEnum.analysis_completed,
+            _latest_or_checkpoint_view_snapshot_filter(
+                conversation_view_snapshot_ids=conversation_view_snapshot_ids,
+                require_activated_view_snapshot=require_activated_view_snapshot,
+                require_unactivated_view_snapshot=require_unactivated_view_snapshot,
+                scope="latest",
+            ),
+        )
+        .cte("eager_description_eligible_views")
+        .prefix_with("MATERIALIZED", dialect="postgresql")
+    )
     query = (
         select(
             AnalysisSnapshotResult.conversation_id,
@@ -2260,6 +2591,7 @@ def _fetch_eager_description_candidates(
                 == AnalysisSnapshotResult.opinion_group_spec_id,
             ),
         )
+        .join(eligible_views, eligible_views.c.id == ConversationViewSnapshot.id)
         .where(
             and_(
                 conversation_filter,
@@ -2271,14 +2603,6 @@ def _fetch_eager_description_candidates(
                     _eager_candidate_missing_translation_work_filter()
                     if require_missing_translation_work
                     else true()
-                ),
-                ConversationViewSnapshot.view_reason
-                == ConversationViewSnapshotReasonEnum.analysis_completed,
-                _latest_or_checkpoint_view_snapshot_filter(
-                    conversation_view_snapshot_ids=conversation_view_snapshot_ids,
-                    require_activated_view_snapshot=require_activated_view_snapshot,
-                    require_unactivated_view_snapshot=require_unactivated_view_snapshot,
-                    scope="latest",
                 ),
             )
         )
@@ -2571,6 +2895,9 @@ def _translation_work_candidate_relevance_conditions(
                 == OpinionGroupDescriptionTranslationWork.locale,
             )
         )
+        # Work is two query levels out; automatic correlation only sees the
+        # immediate candidate query and otherwise introduces a new work table.
+        .correlate(OpinionGroupCandidate, OpinionGroupDescriptionTranslationWork)
         .exists()
     )
     eager_target_language_candidate = and_(
@@ -2587,6 +2914,7 @@ def _translation_work_candidate_relevance_conditions(
                 ConversationTranslationTargetLanguage.deleted_at.is_(None),
             )
         )
+        .correlate(Conversation, OpinionGroupDescriptionTranslationWork)
         .exists(),
     )
     eager_snapshot_filter = _latest_or_checkpoint_view_snapshot_filter(
@@ -3272,14 +3600,22 @@ def extend_ai_description_locale_work_leases(
             lineage_keys,
             chunk_size=_max_rows_per_insert(column_count=2),
         ):
-            rows = session.execute(
-                update(OpinionGroupLineageDescriptionWork)
+            # Completion can hold one claim's row lock while materializing
+            # follow-up work. Do not let that row stall every other heartbeat.
+            renewable_ids = (
+                select(OpinionGroupLineageDescriptionWork.id)
                 .where(
                     tuple_(
                         OpinionGroupLineageDescriptionWork.id,
                         OpinionGroupLineageDescriptionWork.lease_token,
                     ).in_(chunk)
                 )
+                .order_by(OpinionGroupLineageDescriptionWork.id)
+                .with_for_update(skip_locked=True, of=OpinionGroupLineageDescriptionWork)
+            )
+            rows = session.execute(
+                update(OpinionGroupLineageDescriptionWork)
+                .where(OpinionGroupLineageDescriptionWork.id.in_(renewable_ids))
                 .values(
                     lease_expires_at=lease_expires_at,
                     updated_at=func.now(),
@@ -3292,14 +3628,20 @@ def extend_ai_description_locale_work_leases(
             translation_keys,
             chunk_size=_max_rows_per_insert(column_count=2),
         ):
-            rows = session.execute(
-                update(OpinionGroupDescriptionTranslationWork)
+            renewable_ids = (
+                select(OpinionGroupDescriptionTranslationWork.id)
                 .where(
                     tuple_(
                         OpinionGroupDescriptionTranslationWork.id,
                         OpinionGroupDescriptionTranslationWork.lease_token,
                     ).in_(chunk)
                 )
+                .order_by(OpinionGroupDescriptionTranslationWork.id)
+                .with_for_update(skip_locked=True, of=OpinionGroupDescriptionTranslationWork)
+            )
+            rows = session.execute(
+                update(OpinionGroupDescriptionTranslationWork)
+                .where(OpinionGroupDescriptionTranslationWork.id.in_(renewable_ids))
                 .values(
                     lease_expires_at=lease_expires_at,
                     updated_at=func.now(),

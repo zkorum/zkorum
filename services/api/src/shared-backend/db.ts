@@ -55,6 +55,17 @@ export async function createPostgresClient(
         useReadReplica && config.CONNECTION_STRING_READ
             ? config.CONNECTION_STRING_READ
             : config.CONNECTION_STRING;
+    const resourceOptions = {
+        connect_timeout: 10,
+        max: config.DB_POOL_MAX,
+        keep_alive: 15,
+        connection: {
+            statement_timeout: config.DB_STATEMENT_TIMEOUT_MS,
+            lock_timeout: config.DB_LOCK_TIMEOUT_MS,
+            idle_in_transaction_session_timeout:
+                config.DB_IDLE_TRANSACTION_TIMEOUT_MS,
+        },
+    };
 
     if (
         config.NODE_ENV === "production" &&
@@ -109,9 +120,7 @@ export async function createPostgresClient(
                     username: credentials.username,
                     password: credentials.password,
                     ssl: "require",
-                    connect_timeout: 10,
-                    // Using postgres-js default max: 10 (optimal for our 4 vCPU database)
-                    // Connection lifecycle managed automatically (45-90 min lifetime)
+                    ...resourceOptions,
                 });
             } catch {
                 log.error(
@@ -128,9 +137,7 @@ export async function createPostgresClient(
     } else if (connectionString !== undefined) {
         try {
             return postgres(connectionString, {
-                connect_timeout: 10,
-                // Using postgres-js default max: 10 (optimal for our 4 vCPU database)
-                // Connection lifecycle managed automatically (45-90 min lifetime)
+                ...resourceOptions,
                 ssl: config.NODE_ENV === "production" ? "require" : undefined,
             });
         } catch {

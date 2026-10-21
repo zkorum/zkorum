@@ -7,12 +7,13 @@ ARG PIP_INSTALL_TARGET=.
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git build-essential python3-dev && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git build-essential python3-dev && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419~deb12u2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN python -m pip install --no-cache-dir --upgrade "pip>=26.1.1" "setuptools>=78.1.1" "wheel>=0.46.2"
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2" "setuptools>=78.1.1" "wheel>=0.46.2"
 
 COPY pyproject.toml uv.lock ./
 COPY src/ src/
@@ -24,10 +25,11 @@ FROM python:3.13-slim-bookworm
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tini && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates tini && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419~deb12u2 && \
     rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --no-cache-dir --upgrade "pip>=26.1.1" "setuptools>=78.1.1" "wheel>=0.46.2"
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2"
 
 WORKDIR /app
 

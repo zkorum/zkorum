@@ -1,12 +1,127 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, assert, describe, it, expect, vi } from "vitest";
 import {
     verifyWebhookSignature,
     mapGitHubStateToLifecycle,
     buildExternalId,
     parseWebhookPayload,
     convertMarkdownToHtml,
+    createGitHubClient,
 } from "./github.js";
 import { createHmac } from "node:crypto";
+
+describe("GitHub client request boundary", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it.each([
+        "https://attacker.example/repo",
+        "owner/../secrets",
+        "owner/..",
+        "owner/.",
+        "owner/repo?redirect=evil",
+        "owner/repo#fragment",
+        "owner/repo\\..",
+        "owner/%2e%2e",
+        "owner/repo/extra",
+        "owner/",
+        `${"a".repeat(40)}/repo`,
+        `owner/${"a".repeat(101)}`,
+        "/".repeat(141),
+    ])(
+        "rejects an invalid repository before sending credentials: %s",
+        async (repo) => {
+            const fetchMock = vi.fn<typeof fetch>();
+            vi.stubGlobal("fetch", fetchMock);
+            const client = createGitHubClient({ accessToken: "test-token" });
+
+            await expect(
+                client.listIssues({ repo, label: "roadmap" }),
+            ).rejects.toThrow();
+            expect(fetchMock).not.toHaveBeenCalled();
+        },
+    );
+
+    it("keeps labels in the query and refuses redirects", async () => {
+        const fetchMock = vi
+            .fn<typeof fetch>()
+            .mockResolvedValueOnce(Response.json([]))
+            .mockResolvedValueOnce(Response.json([]));
+        vi.stubGlobal("fetch", fetchMock);
+        const client = createGitHubClient({ accessToken: "test-token" });
+
+        await expect(
+            client.listIssues({
+                repo: "zkorum/agora",
+                label: "roadmap&state=all#fragment",
+            }),
+        ).resolves.toEqual([]);
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        for (const [input, options] of fetchMock.mock.calls) {
+            assert(input instanceof URL);
+            expect(input.origin).toBe("https://api.github.com");
+            expect(input.pathname).toBe("/repos/zkorum/agora/issues");
+            expect(input.searchParams.get("labels")).toBe(
+                "roadmap&state=all#fragment",
+            );
+            expect(input.hash).toBe("");
+            expect(options?.redirect).toBe("error");
+        }
+    });
+
+    it("paginates before filtering pull requests and resets the page for closed issues", async () => {
+        const issue = {
+            number: 1,
+            title: "Roadmap item",
+            body: null,
+            state: "open",
+            html_url: "https://github.com/owner/repo/issues/1",
+            labels: [{ name: "roadmap" }],
+            assignees: [],
+        };
+        const fetchMock = vi
+            .fn<typeof fetch>()
+            .mockResolvedValueOnce(
+                Response.json([
+                    issue,
+                    ...Array.from({ length: 99 }, (_, index) => ({
+                        ...issue,
+                        number: index + 2,
+                        pull_request: {},
+                    })),
+                ]),
+            )
+            .mockResolvedValueOnce(Response.json([]))
+            .mockResolvedValueOnce(
+                Response.json([{ ...issue, number: 101, state: "closed" }]),
+            );
+        vi.stubGlobal("fetch", fetchMock);
+
+        const issues = await createGitHubClient({
+            accessToken: "test-token",
+        }).listIssues({ repo: "owner/repo", label: "roadmap" });
+
+        expect(issues.map(({ number, state }) => ({ number, state }))).toEqual([
+            { number: 1, state: "open" },
+            { number: 101, state: "closed" },
+        ]);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        expect(
+            fetchMock.mock.calls.map(([input]) => {
+                assert(input instanceof URL);
+                return {
+                    state: input.searchParams.get("state"),
+                    page: input.searchParams.get("page"),
+                };
+            }),
+        ).toEqual([
+            { state: "open", page: "1" },
+            { state: "open", page: "2" },
+            { state: "closed", page: "1" },
+        ]);
+    });
+});
 
 describe("verifyWebhookSignature", () => {
     const secret = "test-secret-123";

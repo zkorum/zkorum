@@ -372,6 +372,7 @@ class AiDescriptionWorkerSettings(_LayeredPythonWorkerSettings):
 
 class DescriptionTranslationWorkerSettings(_LayeredPythonWorkerSettings):
     worker_env_prefix: ClassVar[str] = "DESCRIPTION_TRANSLATION_RETRY_WORKER_"
+    db_materialization_interval_seconds: float = Field(default=5.0, gt=0, allow_inf_nan=False)
     aws_description_translation_read_timeout_seconds: float = Field(
         default=DEFAULT_AWS_RETRY_WORKER_READ_TIMEOUT_SECONDS,
         gt=0,

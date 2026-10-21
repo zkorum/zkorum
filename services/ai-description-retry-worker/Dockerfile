@@ -5,12 +5,13 @@ WORKDIR /build
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends git build-essential python3-dev && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git build-essential python3-dev && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419~deb12u2 && \
     rm -rf /var/lib/apt/lists/*
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-RUN python -m pip install --no-cache-dir --upgrade "pip>=26.1.1" "setuptools>=78.1.1" "wheel>=0.46.2"
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2" "setuptools>=78.1.1" "wheel>=0.46.2"
 
 COPY services/shared-language/ services/shared-language/
 RUN pip install --no-cache-dir services/shared-language
@@ -26,13 +27,17 @@ FROM python:3.13-slim-bookworm
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade -y && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tini libgomp1 && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates tini libgomp1 && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419~deb12u2 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+RUN python -m pip install --no-cache-dir --upgrade "pip>=26.2.2"
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+# Google Translation uses gRPC, whose bundled roots are independent of certifi.
+ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH="/etc/ssl/certs/ca-certificates.crt"
 
 RUN groupadd --system --gid 1000 appuser && \
     useradd --system --uid 1000 --gid appuser appuser && \

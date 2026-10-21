@@ -17,6 +17,9 @@ const CEF_SHARP_CRAWLER_ERROR =
   /^Non-Error promise rejection captured with value: Object Not Found Matching Id:\d+, MethodName:[^,\s]+, ParamCount:\d+$/;
 const META_INJECTED_PAGE_HIDE_ERROR =
   "undefined is not an object (evaluating 'window.webkit.messageHandlers')";
+const INJECTED_POST_EVENT_ERROR = "Error invoking postEvent: Method not found";
+const SENTRY_HELPER_PATH =
+  /(?:\/node_modules\/.*@sentry\/browser\/.*\/helpers\.js|\/assets\/sentry-[^/]+\.js)(?:[?#]|$)/;
 const JAVASCRIPT_ASSET_PATH = /\.(?:c|m)?js(?:[?#]|$)/i;
 const APPLICATION_SOURCE_PATH = /\.(?:vue|[cm]?[jt]sx?)(?:[?#]|$)/i;
 const MIN_INJECTED_STACK_OVERFLOW_FRAMES = 20;
@@ -227,11 +230,38 @@ function isInjectedDocumentStackOverflow(event: Event): boolean {
   return true;
 }
 
+function isInjectedPostEventError(event: Event): boolean {
+  const exceptions = event.exception?.values;
+  if (exceptions?.length !== 1) return false;
+
+  const exception = exceptions[0];
+  if (
+    exception?.type !== "Error" ||
+    exception.value !== INJECTED_POST_EVENT_ERROR
+  ) {
+    return false;
+  }
+
+  // A native WebView bridge can inject this anonymous script. Ignore only its
+  // observed stack shape: an anonymous origin wrapped by Sentry, with no app frame.
+  const frames = exception.stacktrace?.frames;
+  if (frames?.length !== 2) return false;
+  const [wrapper, origin] = frames;
+  return (
+    wrapper?.filename !== undefined &&
+    SENTRY_HELPER_PATH.test(wrapper.filename) &&
+    origin !== undefined &&
+    origin.filename === "<anonymous>" &&
+    (origin.function === "?" || origin.function === undefined)
+  );
+}
+
 export function shouldIgnoreSentryEvent(event: Event): boolean {
   return (
     isCefSharpCrawlerEvent(event) ||
     isMetaInjectedPageHideError(event) ||
     isInjectedDocumentStackOverflow(event) ||
+    isInjectedPostEventError(event) ||
     isBenignResizeObserverEvent(event)
   );
 }

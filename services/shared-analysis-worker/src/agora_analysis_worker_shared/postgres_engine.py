@@ -62,6 +62,8 @@ def create_postgres_engine(
     return create_engine(
         url,
         pool_pre_ping=True,
+        pool_size=3,
+        max_overflow=0,
         pool_timeout=10,
         hide_parameters=True,
     )

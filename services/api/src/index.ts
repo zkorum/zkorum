@@ -239,6 +239,7 @@ import {
 import twilio from "twilio";
 import { initializeValkey } from "./shared-backend/valkey.js";
 import { createVoteBuffer } from "./service/voteBuffer.js";
+import { parseRealtimeCursor } from "./shared/utils/realtimeCursor.js";
 import { editOpinion } from "./service/opinionEdit.js";
 import {
     consumeContentTranslationUserRateLimit,
@@ -1628,6 +1629,7 @@ const voteBuffer = createVoteBuffer({
     valkeyRef: queueValkeyRef,
     flushIntervalMs: config.VOTE_BUFFER_FLUSH_INTERVAL_MS,
     valkeyBatchLimit: config.VOTE_BUFFER_VALKEY_BATCH_LIMIT,
+    stallWarningMs: config.VOTE_BUFFER_STALL_WARNING_MS,
     realtimeSSEManager,
 });
 log.info(
@@ -2022,12 +2024,8 @@ async function replaySubscribedRealtimeEvents({
     reply: FastifyReply;
     subscription: RealtimeSubscriptionRequest;
 }): Promise<void> {
-    if (reply.sse.lastEventId === null) {
-        return;
-    }
-
-    const lastEventId = Number(reply.sse.lastEventId);
-    if (!Number.isSafeInteger(lastEventId) || lastEventId <= 0) {
+    const lastEventId = parseRealtimeCursor(reply.sse.lastEventId);
+    if (lastEventId === undefined) {
         return;
     }
 
@@ -5480,11 +5478,9 @@ server.after(() => {
             >["questions"] = [];
             for (const question of surveyForm.questions) {
                 const questionDisplayContent =
-                    question.questionSlugId === undefined
-                        ? undefined
-                        : displayContentsByQuestionSlugId.get(
-                              question.questionSlugId,
-                          );
+                    displayContentsByQuestionSlugId.get(
+                        question.questionSlugId,
+                    );
                 const formSourceContent =
                     getSurveyQuestionConfigContent(question);
                 if (
@@ -5569,6 +5565,9 @@ server.after(() => {
                 db,
                 conversationSlugId: request.body.conversationSlugId,
                 questionSlugId: request.body.questionSlugId,
+                expectedQuestionSemanticVersion:
+                    request.body.expectedQuestionSemanticVersion,
+                knownSurveyRevision: request.body.knownSurveyRevision,
                 answer: request.body.answer,
                 didWrite,
                 userAgent: request.headers["user-agent"] ?? "Unknown device",
@@ -5599,6 +5598,9 @@ server.after(() => {
                 userAgent: request.headers["user-agent"] ?? "Unknown device",
                 now: nowZeroMs(),
                 currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                skipEmailUpdateConsent: request.body.skipEmailUpdateConsent,
+                getEmailUpdateOnboardingAction:
+                    conversationEmailUpdateService.getParticipationOnboardingAction,
                 valkey: queueValkeyRef.current,
             });
         },
@@ -6394,26 +6396,7 @@ server.after(() => {
             body: Dto.addUserOrganizationMappingRequest,
         },
         handler: async (request) => {
-            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
-                db,
-                request,
-                {
-                    expectedKnownDeviceStatus: {
-                        isRegistered: true,
-                        isLoggedIn: true,
-                    },
-                },
-            );
-            const isOrgAdmin = await isSiteOrgAdminAccount({
-                db: db,
-                userId: deviceStatus.userId,
-            });
-
-            if (!isOrgAdmin) {
-                throw server.httpErrors.unauthorized(
-                    "User is not a site org admin",
-                );
-            }
+            await requireSiteOrgAdmin(request);
 
             await addUserOrganizationMapping({
                 db: db,
@@ -6510,26 +6493,7 @@ server.after(() => {
             },
         },
         handler: async (request) => {
-            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
-                db,
-                request,
-                {
-                    expectedKnownDeviceStatus: {
-                        isRegistered: true,
-                        isLoggedIn: true,
-                    },
-                },
-            );
-            const isOrgAdmin = await isSiteOrgAdminAccount({
-                db: db,
-                userId: deviceStatus.userId,
-            });
-
-            if (!isOrgAdmin) {
-                throw server.httpErrors.unauthorized(
-                    "User is not a site org admin",
-                );
-            }
+            await requireSiteOrgAdmin(request);
 
             return await getAllOrganizations({
                 db: db,

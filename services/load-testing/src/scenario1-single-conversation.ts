@@ -30,10 +30,12 @@ import {
     fetchSurveyForm,
     saveSurveyAnswer,
     type CreateOpinionResponse,
-    type SurveyAnswerSubmission,
-    type SurveyQuestionFormItem,
     type VoteResponse,
 } from "./utils/api.js";
+import type {
+    SurveyAnswerSubmission,
+    SurveyQuestionFormItem,
+} from "./shared/types/zod.js";
 import { logLoadEvent } from "./utils/semanticLog.js";
 import { performUserActions } from "./utils/userActions.js";
 import type {
@@ -318,11 +320,7 @@ function buildSurveyAnswer({
         case "choice": {
             const optionSlugIds = [...question.options]
                 .sort((a, b) => a.displayOrder - b.displayOrder)
-                .map((option) => option.optionSlugId)
-                .filter(
-                    (optionSlugId): optionSlugId is string =>
-                        optionSlugId !== undefined,
-                );
+                .map((option) => option.optionSlugId);
             const selectionCount = Math.max(
                 question.constraints.minSelections,
                 1,
@@ -459,9 +457,9 @@ async function fillSurveyForConversation({
         };
     }
 
-    const surveyGate = surveyForm.surveyGate;
+    let surveyGate = surveyForm.surveyGate;
     console.log(
-        `[${userId}] Survey form for ${conversationSlugId}: hasSurvey=${String(surveyGate?.hasSurvey === true)} status=${surveyGate?.status ?? "unknown"} questions=${String(surveyForm.questions.length)}`,
+        `[${userId}] Survey form for ${conversationSlugId}: hasSurvey=${String(surveyGate.hasSurvey)} status=${surveyGate.status} questions=${String(surveyForm.questions.length)}`,
     );
     logLoadEvent({
         phase: "survey_fill",
@@ -473,24 +471,23 @@ async function fillSurveyForConversation({
         count: surveyForm.questions.length,
         responseTimeMs: surveyForm.responseTime,
         metadata: {
-            hasSurvey: surveyGate?.hasSurvey === true,
-            status: surveyGate?.status ?? null,
-            isOptional: surveyGate?.isOptional ?? null,
-            canParticipate: surveyGate?.canParticipate ?? null,
+            hasSurvey: surveyGate.hasSurvey,
+            status: surveyGate.status,
+            isOptional: surveyGate.isOptional,
+            canParticipate: surveyGate.canParticipate,
         },
     });
 
     if (
-        surveyGate?.hasSurvey !== true ||
+        !surveyGate.hasSurvey ||
         surveyForm.questions.length === 0 ||
         surveyGate.status === "complete_valid"
     ) {
-        const skipReason =
-            surveyGate?.hasSurvey !== true
-                ? "no_survey"
-                : surveyForm.questions.length === 0
-                  ? "empty_survey"
-                  : "already_complete";
+        const skipReason = !surveyGate.hasSurvey
+            ? "no_survey"
+            : surveyForm.questions.length === 0
+              ? "empty_survey"
+              : "already_complete";
         console.log(
             `[${userId}] Skipping survey fill for ${conversationSlugId}: ${skipReason}`,
         );
@@ -501,10 +498,10 @@ async function fillSurveyForConversation({
             questionCount: surveyForm.questions.length,
             responseTime,
             justCompleted: false,
-            status: surveyGate?.status,
+            status: surveyGate.status,
             skipReason,
-            isOptional: surveyGate?.isOptional,
-            canParticipate: surveyGate?.canParticipate,
+            isOptional: surveyGate.isOptional,
+            canParticipate: surveyGate.canParticipate,
         };
     }
 
@@ -513,21 +510,6 @@ async function fillSurveyForConversation({
     for (const question of [...surveyForm.questions].sort(
         (a, b) => a.displayOrder - b.displayOrder,
     )) {
-        if (question.questionSlugId === undefined) {
-            return {
-                skipped: false,
-                success: false,
-                questionsAnswered,
-                questionCount: surveyForm.questions.length,
-                responseTime,
-                justCompleted,
-                status: surveyGate.status,
-                isOptional: surveyGate.isOptional,
-                canParticipate: surveyGate.canParticipate,
-                error: "Survey question is missing questionSlugId",
-            };
-        }
-
         const answerResult = buildSurveyAnswer({ question, iterationIndex });
         if (!answerResult.success) {
             return {
@@ -550,6 +532,8 @@ async function fillSurveyForConversation({
         const saveResult = await saveSurveyAnswer({
             conversationSlugId,
             questionSlugId: question.questionSlugId,
+            expectedQuestionSemanticVersion: question.currentSemanticVersion,
+            knownSurveyRevision: surveyForm.currentRevision,
             answer: answerResult.answer,
             did,
             prefixedKey,
@@ -572,7 +556,8 @@ async function fillSurveyForConversation({
         }
 
         questionsAnswered += 1;
-        justCompleted ||= saveResult.justCompleted === true;
+        justCompleted ||= saveResult.justCompleted;
+        surveyGate = saveResult.surveyGate;
         logLoadEvent({
             phase: "survey_fill",
             action: "save_survey_answer",
@@ -585,8 +570,8 @@ async function fillSurveyForConversation({
             metadata: {
                 questionSlugId: question.questionSlugId,
                 questionType: question.questionType,
-                justCompleted: saveResult.justCompleted === true,
-                status: saveResult.surveyGate?.status ?? null,
+                justCompleted: saveResult.justCompleted,
+                status: saveResult.surveyGate.status,
             },
         });
     }

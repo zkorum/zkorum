@@ -2,6 +2,7 @@ import "dotenv/config";
 import { hostname } from "node:os";
 import { z } from "zod";
 import type { SharedConfigSchema } from "@/shared-backend/config.js";
+import { databaseResourceConfigSchema } from "@/shared-backend/databaseResources.js";
 
 const environmentBoolean = (defaultValue: boolean) =>
     z
@@ -11,6 +12,7 @@ const environmentBoolean = (defaultValue: boolean) =>
 
 const environmentSchema = z
     .object({
+        ...databaseResourceConfigSchema.shape,
         NODE_ENV: z
             .enum(["development", "staging", "production", "test"])
             .default("development"),
@@ -214,6 +216,10 @@ export const databaseConfig = {
     DB_HOST: environment.DB_HOST,
     DB_PORT: environment.DB_PORT,
     DB_NAME: environment.DB_NAME,
+    DB_POOL_MAX: environment.DB_POOL_MAX,
+    DB_STATEMENT_TIMEOUT_MS: environment.DB_STATEMENT_TIMEOUT_MS,
+    DB_LOCK_TIMEOUT_MS: environment.DB_LOCK_TIMEOUT_MS,
+    DB_IDLE_TRANSACTION_TIMEOUT_MS: environment.DB_IDLE_TRANSACTION_TIMEOUT_MS,
     AWS_SECRET_ID_READ: environment.AWS_SECRET_ID_READ,
     AWS_SECRET_REGION_READ: environment.AWS_SECRET_REGION_READ,
     DB_HOST_READ: environment.DB_HOST_READ,

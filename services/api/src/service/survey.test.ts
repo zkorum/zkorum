@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { drizzle } from "drizzle-orm/postgres-js";
 import type {
     ActiveSurveyQuestionRecord,
     StoredSurveyAnswer,
@@ -22,22 +23,9 @@ vi.mock("./participationGate.js", () => ({
 
 const surveyModulePromise = import("./survey.js");
 
-function createSurveyDbStub(): {
-    db: Parameters<
-        Awaited<typeof surveyModulePromise>["saveSurveyAnswer"]
-    >[0]["db"];
-    transactionMock: ReturnType<typeof vi.fn>;
-} {
-    const transactionMock = vi.fn();
-
-    return {
-        db: {
-            transaction: transactionMock,
-        } as unknown as Parameters<
-            Awaited<typeof surveyModulePromise>["saveSurveyAnswer"]
-        >[0]["db"],
-        transactionMock,
-    };
+function createSurveyDbStub() {
+    const db = drizzle.mock();
+    return { db, transactionMock: vi.spyOn(db, "transaction") };
 }
 
 function createFreeTextQuestion({
@@ -290,6 +278,8 @@ describe("saveSurveyAnswer", () => {
             db,
             conversationSlugId: "conv-1",
             questionSlugId: "question-1",
+            expectedQuestionSemanticVersion: 1,
+            knownSurveyRevision: 1,
             answer: null,
             didWrite: "did:test:1",
             userAgent: "Vitest",
@@ -337,6 +327,8 @@ describe("withdrawSurveyResponse", () => {
             userAgent: "Vitest",
             now: new Date("2026-01-02T00:00:00.000Z"),
             currentDisplayLanguage: "es",
+            skipEmailUpdateConsent: false,
+            getEmailUpdateOnboardingAction: () => Promise.resolve(undefined),
         });
 
         expect(result).toEqual({

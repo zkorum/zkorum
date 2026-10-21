@@ -164,11 +164,12 @@ import { useConversationOnboardingExit } from "src/composables/conversation/useC
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useSurveyAnswerDraft } from "src/composables/conversation/useSurveyAnswerDraft";
-import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
-import type { SurveyAnswerSaveResponse } from "src/shared/types/dto";
-import type { ParticipationBlockedReason } from "src/shared/types/zod";
+import type {
+  ConversationParticipationRejection,
+  SurveyAnswerSaveResponse,
+} from "src/shared/types/dto";
 import { useLanguageStore } from "src/stores/language";
 import {
   type SurveyFormData,
@@ -186,6 +187,7 @@ import {
   isSingleSelectionChoiceQuestion,
 } from "src/utils/survey/config";
 import {
+  getConversationOnboardingStepPath,
   getConversationPath,
   getConversationSurveyCompletePath,
   getConversationSurveyContinuePath,
@@ -214,7 +216,14 @@ type SurveyDraftSaveResult =
       kind: "saved";
       response: Extract<SurveyAnswerSaveResponse, { success: true }>;
     }
-  | { kind: "blocked"; reason: ParticipationBlockedReason }
+  | {
+      kind: "blocked";
+      response: ConversationParticipationRejection;
+    }
+  | {
+      kind: "changed";
+      response: Extract<SurveyAnswerSaveResponse, { reason: "survey_changed" }>;
+    }
   | { kind: "failed" };
 
 defineProps<{ sheet: DismissalController }>();
@@ -226,8 +235,6 @@ const { safeNavigateBack } = useGoBackButtonHandler();
 const { showNotifyMessage } = useNotify();
 const { exitToConversation } = useConversationOnboardingExit();
 const { completeOnboarding } = useConversationOnboardingCompletion();
-const { navigateToNextSurveyStep, navigateToSurveyRoot } =
-  useSurveyNavigation();
 const { displayLanguage } = storeToRefs(useLanguageStore());
 const { t } = useComponentI18n<ConversationSurveyQuestionTranslations>(
   conversationSurveyQuestionTranslations
@@ -288,16 +295,10 @@ const originalQuestionContent = computed(() => {
     questionText: currentQuestion?.questionText ?? "",
     options:
       currentQuestion?.questionType === "choice"
-        ? currentQuestion.options.flatMap((option) =>
-            option.optionSlugId === undefined
-              ? []
-              : [
-                  {
-                    optionSlugId: option.optionSlugId,
-                    optionText: option.optionText,
-                  },
-                ]
-          )
+        ? currentQuestion.options.map((option) => ({
+            optionSlugId: option.optionSlugId,
+            optionText: option.optionText,
+          }))
         : [],
   };
 });
@@ -367,19 +368,11 @@ const choiceOptions = computed(() => {
       option.optionText,
     ])
   );
-  return currentQuestion.options.flatMap((option) =>
-    option.optionSlugId === undefined
-      ? []
-      : [
-          {
-            label:
-              displayedTextBySlugId.get(option.optionSlugId) ??
-              option.optionText,
-            value: option.optionSlugId,
-            allowsText: option.allowsText === true,
-          },
-        ]
-  );
+  return currentQuestion.options.map((option) => ({
+    label: displayedTextBySlugId.get(option.optionSlugId) ?? option.optionText,
+    value: option.optionSlugId,
+    allowsText: option.allowsText === true,
+  }));
 });
 
 const displayedQuestionText = computed(
@@ -661,30 +654,20 @@ watch(
 );
 
 async function handleBlockedReason(
-  reason: ParticipationBlockedReason
+  response: ConversationParticipationRejection
 ): Promise<void> {
-  switch (reason) {
-    case "survey_required":
-    case "survey_outdated":
-      await navigateToNextSurveyStep({
+  const status = response.participationStatus;
+  if (status.status === "onboarding_required") {
+    await router.replace({
+      path: getConversationOnboardingStepPath({
         conversationSlugId: conversationSlugId.value,
         routeContext: routeContext.value,
-      });
-      break;
-    case "account_required":
-    case "strong_verification_required":
-    case "email_verification_required":
-    case "event_ticket_required":
-      await navigateToSurveyRoot({
-        conversationSlugId: conversationSlugId.value,
-        routeContext: routeContext.value,
-      });
-      break;
-    case "conversation_closed":
-    case "conversation_locked":
-      showNotifyMessage(t("conversationClosedMessage"));
-      await handleBackToConversation();
-      break;
+        nextStep: status.nextStep,
+      }),
+    });
+  } else {
+    showNotifyMessage(t("conversationClosedMessage"));
+    await handleBackToConversation();
   }
 }
 
@@ -733,7 +716,8 @@ async function saveCurrentDraftIfNeeded(
   isCurrentView: () => boolean
 ): Promise<SurveyDraftSaveResult> {
   const currentQuestion = question.value;
-  if (currentQuestion?.questionSlugId === undefined) {
+  const form = surveyForm.value;
+  if (currentQuestion === undefined || form === undefined) {
     return { kind: "failed" };
   }
 
@@ -755,12 +739,18 @@ async function saveCurrentDraftIfNeeded(
   try {
     const response = await saveMutation.mutateAsync({
       questionSlugId: currentQuestion.questionSlugId,
+      expectedQuestionSemanticVersion: currentQuestion.currentSemanticVersion,
+      knownSurveyRevision: form.currentRevision,
       answer: answer ?? null,
     });
     if (response === undefined) return { kind: "cancelled" };
+    if (!isCurrentView()) return { kind: "cancelled" };
+    if (!response.success && response.reason === "survey_changed") {
+      return { kind: "changed", response };
+    }
     return response.success
       ? { kind: "saved", response }
-      : { kind: "blocked", reason: response.reason };
+      : { kind: "blocked", response };
   } catch {
     if (!isCurrentView()) return { kind: "cancelled" };
     showNotifyMessage(t("failedToSaveAnswerMessage"));
@@ -779,8 +769,26 @@ async function handleNavigation(
     const result = await saveCurrentDraftIfNeeded(isCurrentView);
     if (!isCurrentView()) return;
     if (result.kind === "failed" || result.kind === "cancelled") return;
+    if (result.kind === "changed") {
+      const response = result.response;
+      showNotifyMessage(t("surveyChangedMessage"));
+      if (response.recovery.kind === "no_survey") {
+        await handleBackToConversation();
+      } else {
+        await router.replace({
+          path: getConversationSurveyContinuePath({
+            conversationSlugId: conversationSlugId.value,
+            routeContext: routeContext.value,
+            routeResolution: response.recovery.routeResolution,
+            firstQuestionSlugId:
+              response.recovery.form.questions[0]?.questionSlugId,
+          }),
+        });
+      }
+      return;
+    }
     if (result.kind === "blocked") {
-      await handleBlockedReason(result.reason);
+      await handleBlockedReason(result.response);
       return;
     }
 

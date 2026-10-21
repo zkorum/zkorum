@@ -94,3 +94,14 @@ make dev-content-translation-worker-scenario SCENARIO=simulated-success
 ```
 
 Simulation uses `CONTENT_TRANSLATION_WORKER_TRANSLATION_PROVIDER=simulated` and never initializes Google credentials. The worker still claims durable `content_translation_work` rows and writes normal translation result rows/events.
+
+## Docker
+
+```bash
+make image-buildx TAG=YOUR_TAG
+make image-push TAG=YOUR_TAG
+```
+
+Add `NO_CACHE=1` for a fresh rebuild: `make image-buildx TAG=YOUR_TAG NO_CACHE=1`.
+See the [worker image deployment guide](../../README.md#building-worker-images)
+for when to bypass Docker's build cache, including package and certificate security updates.

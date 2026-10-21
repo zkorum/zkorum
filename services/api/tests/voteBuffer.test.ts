@@ -1,10 +1,17 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
-import { Decoder, GlideClient, Script } from "@valkey/valkey-glide";
+import {
+    Decoder,
+    GlideClient,
+    RequestError,
+    Script,
+    TimeoutError,
+} from "@valkey/valkey-glide";
 import { z } from "zod";
 import {
     ADD_VOTE_SCRIPT,
     CLEANUP_VOTES_SCRIPT,
+    READ_VOTES_SCRIPT,
 } from "../src/service/voteBuffer.js";
 
 describe("Vote buffer atomic queue and statement lookup", () => {
@@ -12,6 +19,7 @@ describe("Vote buffer atomic queue and statement lookup", () => {
     let client: GlideClient;
     let addScript: Script;
     let cleanupScript: Script;
+    let readScript: Script;
     const indexKey = "test:votes:index";
     const dataKey = "test:votes:data";
     const opinionPrefix = "test:votes:opinion:";
@@ -32,10 +40,12 @@ describe("Vote buffer atomic queue and statement lookup", () => {
         });
         addScript = new Script(ADD_VOTE_SCRIPT);
         cleanupScript = new Script(CLEANUP_VOTES_SCRIPT);
+        readScript = new Script(READ_VOTES_SCRIPT);
     }, 60_000);
     afterAll(async () => {
         addScript.release();
         cleanupScript.release();
+        readScript.release();
         client.close();
         await container.stop();
     });
@@ -63,6 +73,174 @@ describe("Vote buffer atomic queue and statement lookup", () => {
             args: entries.flatMap(({ member, data }) => [member, data]),
         });
     }
+    async function read(limit: number) {
+        return z.array(z.tuple([z.string(), z.string()])).parse(
+            await client.invokeScript(readScript, {
+                keys: [indexKey, dataKey],
+                args: [String(limit)],
+            }),
+        );
+    }
+
+    it("reads an empty queue without changing its structures", async () => {
+        expect(await read(10)).toEqual([]);
+        expect(await client.zcard(indexKey)).toBe(0);
+        expect(await client.hlen(dataKey)).toBe(0);
+    });
+
+    it("reads a bounded timestamp-ordered batch without consuming votes", async () => {
+        await add({ member: "user3:3", timestamp: 3000, data: "third" });
+        await add({ member: "user1:1", timestamp: 1000, data: "first" });
+        await add({ member: "user2:2", timestamp: 2000, data: "second" });
+
+        const expected = [
+            ["user1:1", "first"],
+            ["user2:2", "second"],
+        ];
+        expect(await read(2)).toEqual(expected);
+        expect(await read(2)).toEqual(expected);
+        expect(await client.zcard(indexKey)).toBe(3);
+        expect(await client.hlen(dataKey)).toBe(3);
+    });
+
+    it("preserves a same-timestamp replacement after reading an older payload", async () => {
+        const timestamp = 1792528027000;
+        await add({ timestamp, data: "agree" });
+        const captured = await read(1);
+        expect(captured).toEqual([["user1:1", "agree"]]);
+
+        await add({ timestamp, data: "cancel" });
+        expect(
+            await cleanup(captured.map(([member, data]) => ({ member, data }))),
+        ).toBe(0);
+        expect(await read(1)).toEqual([["user1:1", "cancel"]]);
+        expect(await cleanup([{ member: "user1:1", data: "cancel" }])).toBe(1);
+        expect(await read(1)).toEqual([]);
+    });
+
+    it("returns exact payload bytes for conditional cleanup", async () => {
+        const data = JSON.stringify({
+            userId: "user1",
+            opinionId: 1,
+            vote: "agree",
+            timestamp: "2026-10-20T20:27:07.000Z",
+            content: "Égalité שלום مرحبا 中文 ".repeat(1000),
+        });
+        await add({ timestamp: 1792528027000, data });
+        expect(await read(1)).toEqual([["user1:1", data]]);
+        expect(await cleanup([{ member: "user1:1", data }])).toBe(1);
+        expect(await read(1)).toEqual([]);
+    });
+
+    it("reloads reusable scripts after the server script cache is cleared", async () => {
+        await add();
+        expect(await read(1)).toEqual([["user1:1", "voteA"]]);
+        await client.scriptFlush();
+        expect(await read(1)).toEqual([["user1:1", "voteA"]]);
+        expect(await cleanup([{ member: "user1:1", data: "voteA" }])).toBe(1);
+        await client.scriptFlush();
+        expect(await add()).toBe(1);
+        expect(await read(1)).toEqual([["user1:1", "voteA"]]);
+    });
+
+    it("does not wait for a future timestamp before returning a queued vote", async () => {
+        const timestamp = 8_000_000_000_000;
+        await add({ timestamp, data: "future-vote" });
+        expect(await read(1)).toEqual([["user1:1", "future-vote"]]);
+        expect(await client.zscore(indexKey, "user1:1")).toBe(timestamp);
+    });
+
+    it("completes concurrent read-script cache misses", async () => {
+        await add();
+        await client.scriptFlush();
+        const batches = await Promise.all(
+            Array.from({ length: 50 }, () => read(1)),
+        );
+        for (const batch of batches)
+            expect(batch).toEqual([["user1:1", "voteA"]]);
+        expect(await cleanup([{ member: "user1:1", data: "voteA" }])).toBe(1);
+    });
+
+    it("defers Lua syntax checking until server loading and returns a rejection", async () => {
+        const malformed = new Script("return {");
+        try {
+            await expect(client.invokeScript(malformed)).rejects.toBeInstanceOf(
+                RequestError,
+            );
+            expect(await client.ping()).toBe("PONG");
+        } finally {
+            malformed.release();
+        }
+    });
+
+    it.each([
+        { name: "add", key: indexKey, invoke: () => add() },
+        { name: "read", key: indexKey, invoke: () => read(1) },
+        {
+            name: "cleanup",
+            key: dataKey,
+            invoke: () => cleanup([{ member: "user1:1", data: "voteA" }]),
+        },
+    ])(
+        "rejects a wrong-type key in $name without hanging",
+        async ({ key, invoke }) => {
+            await client.set(key, "wrong-type");
+            await expect(invoke()).rejects.toBeInstanceOf(RequestError);
+            expect(await client.ping()).toBe("PONG");
+        },
+    );
+
+    it("exposes partial writes when the final add-script command fails", async () => {
+        await client.set(`${opinionPrefix}1`, "wrong-type");
+        await expect(add()).rejects.toBeInstanceOf(RequestError);
+        // Lua is atomic with respect to other clients, but errors do not roll
+        // back earlier commands. These entries remain available for flushing.
+        expect(await client.zscore(indexKey, "user1:1")).toBe(1000);
+        expect(await read(1)).toEqual([["user1:1", "voteA"]]);
+    });
+
+    it("demonstrates orphaned-head starvation separately from a pending script", async () => {
+        await client.zadd(indexKey, [{ element: "orphan:1", score: 0 }]);
+        await add({ timestamp: 1000 });
+        expect(await read(1)).toEqual([]);
+        expect(await read(1)).toEqual([]);
+        expect(await read(2)).toEqual([["user1:1", "voteA"]]);
+        expect(await client.ping()).toBe("PONG");
+    });
+
+    it("times out an executing Lua loop while the server reports BUSY to other commands", async () => {
+        const impatient = await GlideClient.createClient({
+            addresses: [
+                {
+                    host: container.getHost(),
+                    port: container.getMappedPort(6379),
+                },
+            ],
+            requestTimeout: 100,
+        });
+        const endless = new Script("while true do end");
+        await client.customCommand(["CONFIG", "SET", "lua-time-limit", "50"]);
+        try {
+            await expect(
+                impatient.invokeScript(endless),
+            ).rejects.toBeInstanceOf(TimeoutError);
+            await expect(client.ping()).rejects.toBeInstanceOf(RequestError);
+        } finally {
+            try {
+                await client.scriptKill();
+                await client.customCommand([
+                    "CONFIG",
+                    "SET",
+                    "lua-time-limit",
+                    "5000",
+                ]);
+            } finally {
+                endless.release();
+                impatient.close();
+            }
+        }
+        expect(await client.ping()).toBe("PONG");
+    });
 
     it("publishes the queue and per-statement lookup together", async () => {
         expect(await add()).toBe(1);

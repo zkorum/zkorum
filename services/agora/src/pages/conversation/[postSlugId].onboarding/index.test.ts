@@ -1,11 +1,30 @@
+import type { ParticipationStatus } from "src/utils/api/participation/useParticipationStatusQuery";
+import type { useSurveyPrefetch } from "src/utils/api/survey/useSurveyQueries";
 import { createDismissalController } from "src/utils/ui/dismissalController";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { type App, createApp, defineComponent, h, ref } from "vue";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  type App,
+  createApp,
+  defineComponent,
+  h,
+  nextTick,
+  ref,
+  toValue,
+} from "vue";
 
 const push = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 const preloadStatus = vi.hoisted(() => vi.fn());
+const preloadRoute = vi.hoisted(() => vi.fn().mockResolvedValue(undefined));
+const prefetchSurvey = vi.hoisted(() => vi.fn<typeof useSurveyPrefetch>());
+const participationStatus = ref<ParticipationStatus>({ status: "checking" });
 
-vi.mock("vue-router", () => ({ useRouter: () => ({ push }) }));
+vi.mock("vue-router", () => ({
+  useRouter: () => ({ push, resolve: (path: string) => ({ fullPath: path }) }),
+  loadRouteLocation: preloadRoute,
+}));
+vi.mock("src/utils/api/survey/useSurveyQueries", () => ({
+  useSurveyPrefetch: prefetchSurvey,
+}));
 vi.mock("src/composables/conversation/useConversationOnboardingRoute", () => ({
   useConversationOnboardingRoute: () => ({
     routeConversationSlugId: ref("example"),
@@ -54,6 +73,11 @@ vi.mock("src/components/onboarding/ui/InfoHeader.vue", () => ({
 import Welcome from "./index.vue";
 
 let app: App | undefined;
+beforeEach(() => {
+  participationStatus.value = { status: "checking" };
+  preloadStatus.mockReturnValue({ participationStatus });
+  preloadRoute.mockResolvedValue(undefined);
+});
 afterEach(() => {
   app?.unmount();
   document.body.replaceChildren();
@@ -80,4 +104,87 @@ describe("immediate onboarding welcome", () => {
       })
     );
   });
+
+  it("prepares the backend-selected question and opens it from cache without waiting for imports", async () => {
+    participationStatus.value = {
+      status: "onboarding_required",
+      nextStep: {
+        kind: "survey",
+        routeResolution: {
+          kind: "question",
+          questionSlugId: "server-question",
+        },
+      },
+    };
+    preloadRoute.mockReturnValue(new Promise(() => {}));
+    const root = mountWelcome();
+    expect(preloadRoute).toHaveBeenCalledWith({
+      fullPath: "/conversation/example/onboarding/question/server-question",
+    });
+    expect(push).not.toHaveBeenCalled();
+    const params = prefetchSurvey.mock.calls[0]?.[0];
+    expect(params !== undefined && toValue(params.enabled)).toBe(true);
+    root.querySelector("button")?.click();
+    await vi.waitFor(() =>
+      expect(push).toHaveBeenCalledExactlyOnceWith({
+        path: "/conversation/example/onboarding/question/server-question",
+      })
+    );
+  });
+
+  it("uses the latest snapshot if the next step changes while preloading", async () => {
+    participationStatus.value = {
+      status: "onboarding_required",
+      nextStep: {
+        kind: "survey",
+        routeResolution: { kind: "question", questionSlugId: "obsolete" },
+      },
+    };
+    const pending = Promise.withResolvers<void>();
+    preloadRoute.mockReturnValue(pending.promise);
+    const root = mountWelcome();
+    participationStatus.value = {
+      status: "onboarding_required",
+      nextStep: { kind: "account", purpose: "login" },
+    };
+    await nextTick();
+    root.querySelector("button")?.click();
+    pending.resolve();
+    await vi.waitFor(() =>
+      expect(push).toHaveBeenCalledExactlyOnceWith({
+        path: "/conversation/example/onboarding/verify/hard",
+      })
+    );
+    const params = prefetchSurvey.mock.calls[0]?.[0];
+    expect(params !== undefined && toValue(params.enabled)).toBe(false);
+  });
+
+  it("keeps speculative failures silent and avoids fetching answers for verification", async () => {
+    participationStatus.value = {
+      status: "onboarding_required",
+      nextStep: { kind: "email", purpose: "login" },
+    };
+    preloadRoute.mockRejectedValue(new Error("Background import failed"));
+    const root = mountWelcome();
+    await nextTick();
+    expect(root.querySelector("h1")?.textContent).toBe("welcomeTitle");
+    const params = prefetchSurvey.mock.calls[0]?.[0];
+    expect(params !== undefined && toValue(params.enabled)).toBe(false);
+    root.querySelector("button")?.click();
+    await vi.waitFor(() =>
+      expect(push).toHaveBeenCalledExactlyOnceWith({
+        path: "/conversation/example/onboarding/verify/email",
+      })
+    );
+  });
 });
+
+function mountWelcome(): HTMLElement {
+  app = createApp(Welcome, {
+    sheet: createDismissalController({ fallbackDismiss: async () => {} }),
+  });
+  const root = document.createElement("div");
+  document.body.append(root);
+  app.mount(root);
+  return root;
+}

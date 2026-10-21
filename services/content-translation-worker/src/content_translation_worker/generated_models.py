@@ -874,6 +874,7 @@ class RealtimeEventOutbox(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     event_type: Mapped[str] = mapped_column(String(100))
     payload: Mapped[Any] = mapped_column(JSON(none_as_null=True))
+    delivery_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime)
 
 

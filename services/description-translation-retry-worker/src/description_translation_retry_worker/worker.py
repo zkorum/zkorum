@@ -4,6 +4,9 @@ import logging
 import signal
 import time
 import uuid
+from contextlib import ExitStack
+from threading import Event
+from typing import TYPE_CHECKING
 
 from agora_analysis_worker_shared.ai_description_work import (
     fetch_claimable_ai_description_work_conversation_ids,
@@ -30,36 +33,222 @@ from agora_analysis_worker_shared.simulation_providers import (
     build_simulation_runtime,
     log_simulation_startup,
 )
+from agora_analysis_worker_shared.worker_progress import monitor_worker_progress
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
-logging.basicConfig(
-    level=logging.INFO,
-    format=LOG_FORMAT,
-)
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from agora_analysis_worker_shared.description_services import DescriptionTranslator
+    from agora_analysis_worker_shared.simulation_providers import SimulationRuntime
+
 log = logging.getLogger(__name__)
 
-_running = True
 LOG_PREFIX = "[DescriptionTranslationRetryWorker]"
 NO_CLAIM_LOG_INTERVAL_SECONDS = 60.0
+DATABASE_RETRY_INITIAL_SECONDS = 5.0
+DATABASE_RETRY_MAX_SECONDS = 60.0
+IDLE_BACKOFF_MAX_SECONDS = 5.0
 
 
-def _sleep_before_retry(seconds: float) -> None:
-    deadline = time.monotonic() + seconds
-    while _running:
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
+def run_worker(
+    *,
+    settings: DescriptionTranslationWorkerSettings,
+    worker_id: str,
+    translate: DescriptionTranslator,
+    simulation_runtime: SimulationRuntime | None,
+    should_continue: Callable[[], bool],
+    sleep: Callable[[float], None],
+) -> None:
+    with (
+        monitor_worker_progress(logger=log, log_prefix=LOG_PREFIX) as report_phase,
+        ExitStack() as resources,
+    ):
+        phase = "connecting-primary"
+
+        def set_phase(next_phase: str) -> None:
+            nonlocal phase
+            phase = next_phase
+            report_phase(next_phase)
+
+        set_phase("connecting-primary")
+        primary_engine = create_ready_postgres_engine(
+            connection_string=settings.connection_string,
+            role="primary",
+            logger=log,
+            log_prefix=LOG_PREFIX,
+            retry_interval_seconds=DATABASE_RETRY_INITIAL_SECONDS,
+            should_continue=should_continue,
+            sleep_fn=sleep,
+            statement_timeout_seconds=settings.db_statement_timeout_seconds,
+            idle_transaction_timeout_seconds=settings.db_idle_transaction_timeout_seconds,
+        )
+        if primary_engine is None:
             return
-        time.sleep(min(0.5, remaining))
+        resources.callback(primary_engine.dispose)
+        read_engine = primary_engine
+        if settings.read_dsn != settings.connection_string:
+            set_phase("connecting-read")
+            read_engine = create_ready_postgres_engine(
+                connection_string=settings.read_dsn,
+                role="read",
+                logger=log,
+                log_prefix=LOG_PREFIX,
+                retry_interval_seconds=DATABASE_RETRY_INITIAL_SECONDS,
+                should_continue=should_continue,
+                sleep_fn=sleep,
+                statement_timeout_seconds=settings.db_statement_timeout_seconds,
+                idle_transaction_timeout_seconds=settings.db_idle_transaction_timeout_seconds,
+            )
+            if read_engine is None:
+                return
+            resources.callback(read_engine.dispose)
+        log.info(
+            "%s PostgreSQL connected statement_timeout_default_seconds=%d "
+            "idle_transaction_timeout_default_seconds=%d materialization_interval_seconds=%.1f",
+            LOG_PREFIX,
+            settings.db_statement_timeout_seconds,
+            settings.db_idle_transaction_timeout_seconds,
+            settings.db_materialization_interval_seconds,
+        )
+        last_recover = time.monotonic() - settings.running_recovery_interval_seconds
+        last_materialize = time.monotonic() - settings.db_materialization_interval_seconds
+        last_no_claim_warning = time.monotonic() - NO_CLAIM_LOG_INTERVAL_SECONDS
+        consecutive_failures = 0
+        retry_delay = DATABASE_RETRY_INITIAL_SECONDS
+        idle_delay = settings.worker_poll_idle_sleep_seconds
 
+        while should_continue():
+            cycle_started_at = time.monotonic()
+            try:
+                if cycle_started_at - last_recover >= settings.running_recovery_interval_seconds:
+                    set_phase("recovering-primary")
+                    recovered_ids = recover_expired_ai_description_work(
+                        primary_engine,
+                        translation_enabled=True,
+                        include_lineage_descriptions=False,
+                        include_translations=True,
+                        require_activated_view_snapshot=True,
+                    )
+                    last_recover = time.monotonic()
+                    if recovered_ids:
+                        log.info(
+                            "%s Recovered expired translation work for %d conversation(s)",
+                            LOG_PREFIX,
+                            len(recovered_ids),
+                        )
 
-def _handle_signal(signum: int, frame: object) -> None:
-    global _running
-    log.info("%s Received signal %d, shutting down", LOG_PREFIX, signum)
-    _running = False
+                materialized_ids: list[int] = []
+                if (
+                    time.monotonic() - last_materialize
+                    >= settings.db_materialization_interval_seconds
+                ):
+                    set_phase("materializing-primary")
+                    materialized_ids = materialize_requested_description_translation_work(
+                        primary_engine,
+                        limit=settings.db_claim_batch_size,
+                        require_activated_view_snapshot=True,
+                        include_checkpoints=True,
+                    )
+                    last_materialize = time.monotonic()
+                    if materialized_ids:
+                        log.info(
+                            "%s Materialized requested translation work for %d conversation(s)",
+                            LOG_PREFIX,
+                            len(materialized_ids),
+                        )
+
+                # Read our newly committed demand from the writer, otherwise use
+                # the replica. A second full scan adds load and can reorder work.
+                scan_engine = primary_engine if materialized_ids else read_engine
+                set_phase("scanning-primary" if scan_engine is primary_engine else "scanning-read")
+                claimable_ids = fetch_claimable_ai_description_work_conversation_ids(
+                    scan_engine,
+                    limit=settings.db_claim_batch_size,
+                    ai_description_epoch=settings.ai_description_epoch,
+                    translation_enabled=True,
+                    include_lineage_descriptions=False,
+                    include_translations=True,
+                    require_activated_view_snapshot=True,
+                    retry_cooldown_seconds=settings.retry_cooldown_seconds,
+                )
+                if not should_continue():
+                    return
+                processed_count = 0
+                if claimable_ids:
+                    set_phase("processing-translations")
+                    processed_count = process_ai_description_conversation_ids(
+                        primary_engine=primary_engine,
+                        worker_id=worker_id,
+                        conversation_ids=claimable_ids,
+                        lease_ttl_seconds=settings.lease_ttl_seconds,
+                        heartbeat_interval_seconds=settings.heartbeat_interval_seconds,
+                        claim_limit=settings.db_claim_batch_size,
+                        max_workers=settings.max_ai_description_concurrency,
+                        ai_description_epoch=settings.ai_description_epoch,
+                        retry_cooldown_seconds=settings.retry_cooldown_seconds,
+                        work=TranslateDescriptions(translate=translate),
+                        simulation_runtime=simulation_runtime,
+                        log_prefix=LOG_PREFIX,
+                    )
+            except SQLAlchemyError as error:
+                consecutive_failures += 1
+                log_database_error(
+                    logger=log,
+                    message=f"{LOG_PREFIX} Database operation failed; retrying",
+                    error=error,
+                    context={
+                        "phase": phase,
+                        "consecutive_failures": consecutive_failures,
+                        "cycle_seconds": round(time.monotonic() - cycle_started_at, 1),
+                        "retry_seconds": retry_delay,
+                    },
+                )
+                set_phase("database-backoff")
+                sleep(retry_delay)
+                retry_delay = min(retry_delay * 2, DATABASE_RETRY_MAX_SECONDS)
+                continue
+
+            if consecutive_failures:
+                log.info(
+                    "%s Database polling recovered after %d failed cycle(s) claimable_count=%d",
+                    LOG_PREFIX,
+                    consecutive_failures,
+                    len(claimable_ids),
+                )
+                consecutive_failures = 0
+                retry_delay = DATABASE_RETRY_INITIAL_SECONDS
+
+            if processed_count:
+                idle_delay = settings.worker_poll_idle_sleep_seconds
+                log.info(
+                    "%s Processed %d translation work item(s) cycle_seconds=%.1f",
+                    LOG_PREFIX,
+                    processed_count,
+                    time.monotonic() - cycle_started_at,
+                )
+            else:
+                now = time.monotonic()
+                if claimable_ids and now - last_no_claim_warning >= NO_CLAIM_LOG_INTERVAL_SECONDS:
+                    log.warning(
+                        "%s Claimable translation conversations yielded no claimed work; "
+                        "conversation_count=%d cycle_seconds=%.1f",
+                        LOG_PREFIX,
+                        len(claimable_ids),
+                        now - cycle_started_at,
+                    )
+                    last_no_claim_warning = now
+                set_phase("idle")
+                sleep(idle_delay)
+                idle_delay = min(
+                    idle_delay * 2,
+                    max(IDLE_BACKOFF_MAX_SECONDS, settings.worker_poll_idle_sleep_seconds),
+                )
 
 
 def main() -> None:
+    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
     try:
         settings = DescriptionTranslationWorkerSettings()
     except ValidationError:
@@ -67,8 +256,17 @@ def main() -> None:
         raise SystemExit(1) from None
     configure_worker_logging(log_level=settings.effective_log_level)
 
-    signal.signal(signal.SIGTERM, _handle_signal)
-    signal.signal(signal.SIGINT, _handle_signal)
+    stop = Event()
+
+    def handle_signal(signum: int, frame: object) -> None:
+        log.info("%s Received signal %d, shutting down", LOG_PREFIX, signum)
+        stop.set()
+
+    def sleep(seconds: float) -> None:
+        stop.wait(seconds)
+
+    signal.signal(signal.SIGTERM, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
 
     worker_id = f"desc-trans:{uuid.uuid4()}"
     log.info(
@@ -109,181 +307,14 @@ def main() -> None:
         settings.max_ai_description_concurrency,
     )
 
-    primary_engine = create_ready_postgres_engine(
-        connection_string=settings.connection_string,
-        role="primary",
-        logger=log,
-        log_prefix=LOG_PREFIX,
-        retry_interval_seconds=settings.valkey_retry_interval_seconds,
-        should_continue=lambda: _running,
-        sleep_fn=_sleep_before_retry,
+    run_worker(
+        settings=settings,
+        worker_id=worker_id,
+        translate=translator_bundle.translate,
+        simulation_runtime=simulation_runtime,
+        should_continue=lambda: not stop.is_set(),
+        sleep=sleep,
     )
-    if primary_engine is None:
-        log.info("%s Shutdown complete", LOG_PREFIX)
-        return
-    read_engine = create_ready_postgres_engine(
-        connection_string=settings.read_dsn,
-        role="read",
-        logger=log,
-        log_prefix=LOG_PREFIX,
-        retry_interval_seconds=settings.valkey_retry_interval_seconds,
-        should_continue=lambda: _running,
-        sleep_fn=_sleep_before_retry,
-    )
-    if read_engine is None:
-        primary_engine.dispose()
-        log.info("%s Shutdown complete", LOG_PREFIX)
-        return
-    log.info("%s PostgreSQL connected", LOG_PREFIX)
-    monotonic_start = time.monotonic()
-    last_recover = monotonic_start - settings.running_recovery_interval_seconds
-    last_no_claim_warning = monotonic_start - NO_CLAIM_LOG_INTERVAL_SECONDS
-
-    while _running:
-        monotonic_now = time.monotonic()
-
-        if monotonic_now - last_recover >= settings.running_recovery_interval_seconds:
-            try:
-                recovered_ids = recover_expired_ai_description_work(
-                    primary_engine,
-                    translation_enabled=True,
-                    include_lineage_descriptions=False,
-                    include_translations=True,
-                    require_activated_view_snapshot=True,
-                )
-                if recovered_ids:
-                    log.info(
-                        "%s Recovered %d expired translation work items",
-                        LOG_PREFIX,
-                        len(recovered_ids),
-                    )
-            except Exception:
-                log.exception("%s Running-work recovery failed", LOG_PREFIX)
-            last_recover = monotonic_now
-
-        materialized_ids: list[int] = []
-        try:
-            materialized_ids = materialize_requested_description_translation_work(
-                primary_engine,
-                limit=settings.db_claim_batch_size,
-                require_activated_view_snapshot=True,
-                include_checkpoints=True,
-            )
-            if materialized_ids:
-                log.info(
-                    "%s Created or reassigned translation work for %d conversation(s) ids=%s",
-                    LOG_PREFIX,
-                    len(materialized_ids),
-                    ",".join(str(conversation_id) for conversation_id in materialized_ids),
-                )
-        except Exception:
-            log.exception("%s Translation request materialization failed", LOG_PREFIX)
-
-        try:
-            read_scan_ids = fetch_claimable_ai_description_work_conversation_ids(
-                read_engine,
-                limit=settings.db_claim_batch_size,
-                ai_description_epoch=settings.ai_description_epoch,
-                translation_enabled=True,
-                include_lineage_descriptions=False,
-                include_translations=True,
-                require_activated_view_snapshot=True,
-                retry_cooldown_seconds=settings.retry_cooldown_seconds,
-            )
-            primary_scan_ids: list[int] = []
-            if materialized_ids:
-                primary_scan_ids = fetch_claimable_ai_description_work_conversation_ids(
-                    primary_engine,
-                    limit=settings.db_claim_batch_size,
-                    ai_description_epoch=settings.ai_description_epoch,
-                    translation_enabled=True,
-                    include_lineage_descriptions=False,
-                    include_translations=True,
-                    require_activated_view_snapshot=True,
-                    retry_cooldown_seconds=settings.retry_cooldown_seconds,
-                )
-            claimable_ids = sorted({*read_scan_ids, *primary_scan_ids})[
-                : settings.db_claim_batch_size
-            ]
-        except Exception:
-            log.exception("%s Claimable translation scan failed", LOG_PREFIX)
-            time.sleep(settings.worker_poll_idle_sleep_seconds)
-            continue
-        if not claimable_ids:
-            time.sleep(settings.worker_poll_idle_sleep_seconds)
-            continue
-
-        log.debug(
-            "%s Found claimable translation conversation(s) read_scan_count=%d "
-            "primary_scan_count=%d materialized_count=%d selected_count=%d selected_ids=%s",
-            LOG_PREFIX,
-            len(read_scan_ids),
-            len(primary_scan_ids),
-            len(materialized_ids),
-            len(claimable_ids),
-            ",".join(str(conversation_id) for conversation_id in claimable_ids),
-        )
-
-        batch_started_at = time.perf_counter()
-        try:
-            processed_count = process_ai_description_conversation_ids(
-                primary_engine=primary_engine,
-                worker_id=worker_id,
-                conversation_ids=claimable_ids,
-                lease_ttl_seconds=settings.lease_ttl_seconds,
-                heartbeat_interval_seconds=settings.heartbeat_interval_seconds,
-                claim_limit=settings.db_claim_batch_size,
-                max_workers=settings.max_ai_description_concurrency,
-                ai_description_epoch=settings.ai_description_epoch,
-                retry_cooldown_seconds=settings.retry_cooldown_seconds,
-                work=TranslateDescriptions(translate=translator_bundle.translate),
-                simulation_runtime=simulation_runtime,
-                log_prefix=LOG_PREFIX,
-            )
-        except SQLAlchemyError as error:
-            log_database_error(
-                logger=log,
-                message=f"{LOG_PREFIX} Translation processing failed; retrying later",
-                error=error,
-                context={
-                    "conversation_count": len(claimable_ids),
-                    "ids": ",".join(str(conversation_id) for conversation_id in claimable_ids),
-                },
-            )
-            _sleep_before_retry(settings.worker_poll_idle_sleep_seconds)
-            continue
-        if processed_count:
-            log.info(
-                "%s Processed %d translation work item(s) batch_ms=%.1f",
-                LOG_PREFIX,
-                processed_count,
-                (time.perf_counter() - batch_started_at) * 1000,
-            )
-        else:
-            elapsed_ms = (time.perf_counter() - batch_started_at) * 1000
-            if monotonic_now - last_no_claim_warning >= NO_CLAIM_LOG_INTERVAL_SECONDS:
-                log.warning(
-                    "%s Claimable translation conversations yielded no claimed work; "
-                    "sleeping idle interval conversation_count=%d ids=%s batch_ms=%.1f",
-                    LOG_PREFIX,
-                    len(claimable_ids),
-                    ",".join(str(conversation_id) for conversation_id in claimable_ids),
-                    elapsed_ms,
-                )
-                last_no_claim_warning = monotonic_now
-            else:
-                log.debug(
-                    "%s No translation work item processed "
-                    "conversation_count=%d ids=%s batch_ms=%.1f",
-                    LOG_PREFIX,
-                    len(claimable_ids),
-                    ",".join(str(conversation_id) for conversation_id in claimable_ids),
-                    elapsed_ms,
-                )
-            _sleep_before_retry(settings.worker_poll_idle_sleep_seconds)
-
-    primary_engine.dispose()
-    read_engine.dispose()
     log.info("%s Shutdown complete", LOG_PREFIX)
 
 

@@ -407,7 +407,6 @@ defineExpose({
 <style scoped lang="scss">
 .one-at-a-time {
   min-height: 13rem;
-  padding-block: 0 5rem;
 }
 .caught-up {
   display: flex;
