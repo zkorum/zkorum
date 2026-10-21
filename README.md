@@ -27,10 +27,25 @@ Install:
 - [jq](https://jqlang.github.io/jq/)
 - sed
 - bash
-- [Node.js](https://nodejs.org/) 24 (matches the Docker builds)
+- [Node.js](https://nodejs.org/) 24.22.1 (matches `.nvmrc` and the Docker builds)
 - [pnpm](https://pnpm.io/) 12.4.1
 - [watchman](https://facebook.github.io/watchman/)
 - [docker](https://www.docker.com/)
+
+### Node.js version
+
+From the repository root, use [nvm](https://github.com/nvm-sh/nvm) to install and
+select the pinned runtime:
+
+```bash
+nvm install
+nvm use
+nvm alias default 24.22.1
+```
+
+Restart running development services after switching Node; existing processes keep
+their original runtime. CI reads `.nvmrc`; Netlify and Docker builds pin the same
+version explicitly.
 
 ### Package-manager configuration
 

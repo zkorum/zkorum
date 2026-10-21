@@ -4,7 +4,9 @@
 
 ### NPM
 
-Recommended: Install [nvm](https://github.com/nvm-sh/nvm) and install npm LTS using `nvm install lts/*` and make this default.
+Install [nvm](https://github.com/nvm-sh/nvm), then run `nvm install` and `nvm use`
+from the repository root to select the Node.js version pinned in `.nvmrc` (24.22.1).
+Use `nvm alias default 24.22.1` for new shells and restart running dev services.
 
 Or follow [npm documentation](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm/)
 

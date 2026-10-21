@@ -1,7 +1,7 @@
 # Pin the target-platform base before the native build stage resolves the same
 # multi-architecture tag. Reuse the stage so Podman cannot select the host Node
 # binary for the runtime after installing target-platform native dependencies.
-FROM --platform=$TARGETPLATFORM node:24.14.1-trixie-slim AS runtime-base
+FROM --platform=$TARGETPLATFORM node:24.22.1-trixie-slim AS runtime-base
 
 # ---- Dependencies (production only) ----
 FROM --platform=$TARGETPLATFORM runtime-base AS deps
@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile --prod
 # ---- Build ----
 # Only JavaScript output crosses into the runtime image. Compile natively to
 # avoid Rosetta/QEMU child-process hangs during esbuild's install checks.
-FROM --platform=$BUILDPLATFORM node:24.14.1-trixie-slim AS build
+FROM --platform=$BUILDPLATFORM node:24.22.1-trixie-slim AS build
 WORKDIR /app
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
