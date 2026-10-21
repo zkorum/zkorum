@@ -8,7 +8,8 @@ FROM --platform=$TARGETPLATFORM runtime-base AS deps
 WORKDIR /app
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 make g++ && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates python3 make g++ && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419+deb13u1 && \
     rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
 COPY package.json pnpm-lock.yaml ./
@@ -23,7 +24,8 @@ FROM --platform=$BUILDPLATFORM node:24.22.1-trixie-slim AS build
 WORKDIR /app
 # Builds have no TTY; noninteractive debconf avoids prompts and frontend fallback warnings.
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 make g++ && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates python3 make g++ && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419+deb13u1 && \
     rm -rf /var/lib/apt/lists/*
 RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
 COPY package.json pnpm-lock.yaml ./
@@ -43,6 +45,7 @@ ARG TARGETARCH
 RUN test "$(dpkg --print-architecture)" = "$TARGETARCH" && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates tini && \
+    dpkg --compare-versions "$(dpkg-query -W -f='${Version}' ca-certificates)" ge 20250419+deb13u1 && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY --chown=node:node --from=deps /app/node_modules ./node_modules

@@ -47,6 +47,13 @@ Restart running development services after switching Node; existing processes ke
 their original runtime. CI reads `.nvmrc`; Netlify and Docker builds pin the same
 version explicitly.
 
+### Python TLS trust updates
+
+Python worker and experiments projects require uv 0.13.4 or newer and certifi
+2026.10.19 or newer for the October 2026 eMudhra CA compromise. See the
+[remediation and deployment notes](doc/tls-ca-remediation-2026-10.md) for container
+CA package requirements, environment refreshes, and runtime verification.
+
 ### Package-manager configuration
 
 All nine JavaScript services pin `pnpm@12.4.1` in `package.json`, and the API,

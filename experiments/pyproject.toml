@@ -4,8 +4,12 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "boto3>=1.43.47",
+    "certifi>=2026.10.19",
     "mlflow>=3.14.0",
     "pandas>=2.3.3",
     "py3langid>=0.3.0",
     "requests>=2.34.2",
 ]
+
+[tool.uv]
+required-version = ">=0.13.4"
