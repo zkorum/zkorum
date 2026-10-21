@@ -764,6 +764,26 @@ export async function syncGitHubIssues({
 
 // --- Production GitHub client ---
 
+const zodGitHubRepository = z
+    .string()
+    .max(39 + 1 + 100)
+    .transform((repo) => repo.split("/"))
+    .pipe(
+        z.tuple([
+            z
+                .string()
+                .min(1)
+                .max(39)
+                .regex(/^[a-zA-Z0-9-]+$/),
+            z
+                .string()
+                .min(1)
+                .max(100)
+                .regex(/^[a-zA-Z0-9_.-]+$/)
+                .refine((name) => name !== "." && name !== ".."),
+        ]),
+    );
+
 export function createGitHubClient({
     accessToken,
 }: {
@@ -771,16 +791,27 @@ export function createGitHubClient({
 }): GitHubClient {
     return {
         listIssues: async ({ repo, label }) => {
+            const [owner, repository] = zodGitHubRepository.parse(repo);
             const issues: GitHubIssue[] = [];
-            let page = 1;
 
             // Paginate through all issues (open + closed)
             for (const state of ["open", "closed"] as const) {
-                page = 1;
+                let page = 1;
                 let hasMore = true;
                 while (hasMore) {
-                    const url = `https://api.github.com/repos/${repo}/issues?labels=${encodeURIComponent(label)}&state=${state}&per_page=100&page=${String(page)}`;
+                    const url = new URL(
+                        `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/issues`,
+                    );
+                    url.search = new URLSearchParams({
+                        labels: label,
+                        state,
+                        per_page: "100",
+                        page: String(page),
+                    }).toString();
                     const response = await fetch(url, {
+                        // A repository rename may redirect; require its canonical name
+                        // rather than following a destination outside this API boundary.
+                        redirect: "error",
                         headers: {
                             Authorization: `Bearer ${accessToken}`,
                             Accept: "application/vnd.github+json",
