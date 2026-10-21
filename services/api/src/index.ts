@@ -6394,26 +6394,7 @@ server.after(() => {
             body: Dto.addUserOrganizationMappingRequest,
         },
         handler: async (request) => {
-            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
-                db,
-                request,
-                {
-                    expectedKnownDeviceStatus: {
-                        isRegistered: true,
-                        isLoggedIn: true,
-                    },
-                },
-            );
-            const isOrgAdmin = await isSiteOrgAdminAccount({
-                db: db,
-                userId: deviceStatus.userId,
-            });
-
-            if (!isOrgAdmin) {
-                throw server.httpErrors.unauthorized(
-                    "User is not a site org admin",
-                );
-            }
+            await requireSiteOrgAdmin(request);
 
             await addUserOrganizationMapping({
                 db: db,
@@ -6510,26 +6491,7 @@ server.after(() => {
             },
         },
         handler: async (request) => {
-            const { deviceStatus } = await verifyUcanAndKnownDeviceStatus(
-                db,
-                request,
-                {
-                    expectedKnownDeviceStatus: {
-                        isRegistered: true,
-                        isLoggedIn: true,
-                    },
-                },
-            );
-            const isOrgAdmin = await isSiteOrgAdminAccount({
-                db: db,
-                userId: deviceStatus.userId,
-            });
-
-            if (!isOrgAdmin) {
-                throw server.httpErrors.unauthorized(
-                    "User is not a site org admin",
-                );
-            }
+            await requireSiteOrgAdmin(request);
 
             return await getAllOrganizations({
                 db: db,

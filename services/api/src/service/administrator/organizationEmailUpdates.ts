@@ -68,7 +68,6 @@ async function getOrganizationEmailUpdateContext({
         .where(
             and(
                 eq(organizationTable.slug, organizationSlug),
-                eq(organizationTable.directoryVisibility, "listed"),
                 isNull(organizationTable.deletedAt),
             ),
         )
@@ -107,7 +106,10 @@ function buildNoProjectContainerQuery({
         )
         .where(
             and(
-                eq(projectTable.autoProvisionedForOrganizationId, organizationId),
+                eq(
+                    projectTable.autoProvisionedForOrganizationId,
+                    organizationId,
+                ),
                 isNull(projectTable.deletedAt),
             ),
         )
@@ -140,7 +142,10 @@ async function lockNoProjectContainer({
         .from(projectTable)
         .where(
             and(
-                eq(projectTable.autoProvisionedForOrganizationId, organizationId),
+                eq(
+                    projectTable.autoProvisionedForOrganizationId,
+                    organizationId,
+                ),
                 isNull(projectTable.deletedAt),
             ),
         )
