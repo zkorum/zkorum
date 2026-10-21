@@ -220,6 +220,11 @@ fields @timestamp, event, outcome, attemptId, testAttemptId, deliveryId, error.c
 
 The production image runs the compiled worker as an unprivileged Node.js user. See the [production Compose configuration](../../scripts/infra/docker-compose-production.yml) for the deployment wiring. Production must provide AWS credentials with permission to call `ses:SendEmail`; the AWS SDK default credential provider chain supports environment credentials and workload roles.
 
+For a fresh image rebuild, use `make image-buildx TAG=YOUR_TAG NO_CACHE=1`, then
+`make image-push TAG=YOUR_TAG`. See the
+[worker image deployment guide](../../README.md#building-worker-images) for when
+to bypass Docker's build cache, including package and certificate security updates.
+
 Enable Email Updates and disarm the kill switch deliberately in both the API and worker deployments. Keeping either service fail-closed prevents new delivery work from being processed end to end.
 
 ```bash

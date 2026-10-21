@@ -14,3 +14,7 @@ Build and push:
 make image-buildx TAG=1.0.0
 make image-push TAG=1.0.0
 ```
+
+For a fresh rebuild, use `make image-buildx TAG=1.0.0 NO_CACHE=1`. See the
+[worker image deployment guide](../../README.md#building-worker-images) for when
+to bypass Docker's build cache, including package and certificate security updates.

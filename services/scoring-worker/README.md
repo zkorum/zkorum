@@ -234,6 +234,12 @@ docker run --rm \
 The optional GPU build enables `LBFGSUniformGBT` for the separate pairwise path
 when `torch` is available. Both builds use the same native BWS learner.
 
+Both build targets accept `NO_CACHE=1`, for example
+`make image-buildx TAG=YOUR_TAG NO_CACHE=1` or
+`make image-buildx-gpu GPU_TAG=YOUR_GPU_TAG NO_CACHE=1`. See the
+[worker image deployment guide](../../README.md#building-worker-images) for when
+to bypass Docker's build cache, including package and certificate security updates.
+
 ## Scaling
 
 Multiple identical workers can share the same Valkey sorted set. `ZPOPMIN` claims
