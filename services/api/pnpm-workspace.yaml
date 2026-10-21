@@ -27,3 +27,4 @@ overrides:
 
 patchedDependencies:
     "@zk-kit/eddsa-poseidon@1.1.0": patches/@zk-kit__eddsa-poseidon@1.1.0.patch
+    "postgres@3.4.9": patches/postgres@3.4.9.patch

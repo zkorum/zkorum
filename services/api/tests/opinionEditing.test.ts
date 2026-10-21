@@ -46,6 +46,12 @@ import {
     UNKNOWN_CONTENT_LANGUAGE_METADATA,
 } from "../src/service/contentLanguageMetadata.js";
 import { createEagerContentTranslationWorkForOpinion } from "../src/service/contentTranslation.js";
+import {
+    assertNativeValkeyTimeoutRecovery,
+    assertValkeyStallSessionState,
+    assertVoteReadSerialization,
+} from "./voteBufferReadStallCase.js";
+import { assertPostgresVoteFlushRecovery } from "./postgresVoteFlushRecoveryCase.js";
 
 vi.mock("../src/shared-backend/conversationCounters.js", async () => ({
     ...(await vi.importActual("../src/shared-backend/conversationCounters.js")),
@@ -869,5 +875,56 @@ describe("statement editing and seed deletion", () => {
             valkey.close();
             await cacheContainer.stop();
         }
+    }, 120_000);
+
+    it("retains writer serialization and newer payloads during a stalled Valkey recheck", async () => {
+        const { opinion, content } = await statement();
+        await assertVoteReadSerialization({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("recovers from a real Valkey pause through the native client timeout", async () => {
+        const { opinion, content } = await statement();
+        await assertNativeValkeyTimeoutRecovery({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("shows idle-in-transaction ClientRead while awaiting the Valkey recheck", async () => {
+        const { opinion, content } = await statement();
+        await assertValkeyStallSessionState({
+            db,
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
+    }, 120_000);
+
+    it("recovers vote persistence and cancellation after a real PostgreSQL connection reset", async () => {
+        if (container === undefined) throw new Error("Missing test database");
+        const { opinion, content } = await statement();
+        await assertPostgresVoteFlushRecovery({
+            db,
+            host: container.getHost(),
+            port: container.getMappedPort(5432),
+            opinionId: opinion.id,
+            opinionContentId: content.id,
+            conversationId,
+            authorId,
+            createBuffer: createVoteBuffer,
+        });
     }, 120_000);
 });

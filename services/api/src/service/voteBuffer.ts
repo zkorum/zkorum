@@ -99,6 +99,7 @@ import {
     getNotificationRecipients,
 } from "./notification.js";
 import { createConversationViewSnapshotsFromCurrentState } from "./conversationViewSnapshot.js";
+import { createVoteBufferProgress } from "./voteBufferProgress.js";
 
 // ============================================================================
 // Lua Scripts (inline for bundling - no separate files needed)
@@ -136,7 +137,7 @@ redis.call('HSET', KEYS[3] .. opinionId, member, data)
 return 1
 `;
 
-const READ_VOTES_SCRIPT = `
+export const READ_VOTES_SCRIPT = `
 local members = redis.call('ZRANGE', KEYS[1], 0, tonumber(ARGV[1]) - 1)
 local votes = {}
 for _, member in ipairs(members) do
@@ -219,8 +220,13 @@ interface CreateVoteBufferParams {
     valkeyRef: ValkeyRef;
     flushIntervalMs: number;
     valkeyBatchLimit: number;
+    stallWarningMs?: number;
     realtimeSSEManager?: RealtimeSSEManager;
 }
+
+type VoteTransaction = Parameters<
+    Parameters<PostgresJsDatabase["transaction"]>[0]
+>[0];
 
 // ============================================================================
 // Vote Buffer Implementation
@@ -249,6 +255,7 @@ export function createVoteBuffer({
     valkeyRef,
     flushIntervalMs,
     valkeyBatchLimit,
+    stallWarningMs = 30_000,
     realtimeSSEManager,
 }: CreateVoteBufferParams): VoteBuffer {
     // Encapsulated mutable state (private to closure)
@@ -412,7 +419,9 @@ export function createVoteBuffer({
      * Flush all buffered votes to database
      * Groups votes by opinion to UPDATE each opinion counter only once
      */
-    const flushBatch = async (): Promise<void> => {
+    const flushBatch = async (
+        progress: ReturnType<typeof createVoteBufferProgress>,
+    ): Promise<void> => {
         // Get votes from in-memory buffer and validate with safeParse
         const localVotes = Array.from(pendingVotes.values());
         inFlightVotes = new Map(pendingVotes);
@@ -440,6 +449,7 @@ export function createVoteBuffer({
         // Get votes from Valkey sorted set + hash (if configured)
         const valkey = getValkey();
         if (valkey !== undefined) {
+            progress.enterStage("fetch_votes");
             try {
                 const entries = z
                     .array(z.tuple([z.string(), z.string()]))
@@ -452,6 +462,7 @@ export function createVoteBuffer({
                             args: [String(valkeyBatchLimit)],
                         }),
                     );
+                progress.completeStage();
 
                 if (entries.length > 0) {
                     for (const [member, voteJson] of entries) {
@@ -504,9 +515,12 @@ export function createVoteBuffer({
                     event: {
                         event: "vote_buffer",
                         voteBufferOperation: "fetch",
+                        ...progress.context(),
                     },
                     error,
                 });
+            } finally {
+                progress.stop();
             }
         }
 
@@ -567,7 +581,11 @@ export function createVoteBuffer({
                     "[VoteBuffer] Processing transaction",
                 );
 
-                await db.transaction(async (tx) => {
+                progress.enterStage("begin_transaction");
+                const persistVoteBatch = async (
+                    tx: VoteTransaction,
+                ): Promise<void> => {
+                    progress.enterStage("lock_conversations");
                     await tx
                         .select({ id: conversationTable.id })
                         .from(conversationTable)
@@ -582,6 +600,7 @@ export function createVoteBuffer({
                         )
                         .orderBy(conversationTable.id)
                         .for("no key update");
+                    progress.enterStage("recheck_votes");
                     // A different instance may have committed a newer action
                     // while this batch waited for the conversation lock.
                     const sharedMembers = voteBatch
@@ -612,7 +631,10 @@ export function createVoteBuffer({
                             currentSharedPayloads.get(key) === expected
                         );
                     });
-                    if (applicableVotes.length === 0) return;
+                    if (applicableVotes.length === 0) {
+                        progress.enterStage("commit_transaction");
+                        return;
+                    }
                     const counterDeltas = new Map<number, CounterDelta>();
                     const conversationIds = new Set<number>();
 
@@ -635,6 +657,7 @@ export function createVoteBuffer({
                             ),
                         );
 
+                        progress.enterStage("read_existing_votes");
                         const existingVotesResult = await tx
                             .select({
                                 userId: voteTable.authorId,
@@ -670,6 +693,7 @@ export function createVoteBuffer({
                         );
                     }
 
+                    progress.enterStage("persist_votes");
                     // Step 1: Separate new votes from existing votes
                     const newVotes: BufferedVote[] = [];
                     const existingVotes: {
@@ -1002,7 +1026,30 @@ export function createVoteBuffer({
                             }
                         }
                     }
+                    progress.enterStage("commit_transaction");
+                };
+                await db.transaction(async (tx) => {
+                    try {
+                        await persistVoteBatch(tx);
+                    } catch (error) {
+                        // Capture the failed operation before the driver starts
+                        // rollback, which is a separate asynchronous wait.
+                        logApiError({
+                            logger: log,
+                            level: "error",
+                            event: {
+                                event: "vote_buffer",
+                                voteBufferOperation: "flush",
+                                ...progress.context(),
+                            },
+                            error,
+                        });
+                        progress.stop();
+                        progress.enterStage("rollback_transaction");
+                        throw error;
+                    }
                 });
+                progress.completeStage();
 
                 for (const vote of voteBatch)
                     inFlightVotes.delete(
@@ -1050,6 +1097,7 @@ export function createVoteBuffer({
 
             // Create vote notifications AFTER all transactions committed
             // Wrapped in try/catch to never fail the flush
+            progress.enterStage("notify");
             try {
                 // Use newVotersPerOpinion (collected during transactions) instead
                 // of re-scanning the batch. This ensures only genuinely first-time
@@ -1154,6 +1202,7 @@ export function createVoteBuffer({
                         "[VoteBuffer] Created vote notifications",
                     );
                 }
+                progress.completeStage();
             } catch (notifError: unknown) {
                 logApiError({
                     logger: log,
@@ -1161,9 +1210,12 @@ export function createVoteBuffer({
                     event: {
                         event: "vote_buffer",
                         voteBufferOperation: "notify",
+                        ...progress.context(),
                     },
                     error: notifError,
                 });
+            } finally {
+                progress.stop();
             }
 
             // At-least-once: Delete from Valkey only after successful processing
@@ -1174,6 +1226,7 @@ export function createVoteBuffer({
                 cleanupVotesScript !== undefined &&
                 processedValkeyEntries.length > 0
             ) {
+                progress.enterStage("cleanup");
                 try {
                     const cleanupArgs: string[] = [];
                     for (const entry of processedValkeyEntries) {
@@ -1190,6 +1243,7 @@ export function createVoteBuffer({
                             args: cleanupArgs,
                         }),
                     );
+                    progress.completeStage();
 
                     log.info(
                         {
@@ -1206,16 +1260,23 @@ export function createVoteBuffer({
                         event: {
                             event: "vote_buffer",
                             voteBufferOperation: "cleanup",
+                            ...progress.context(),
                         },
                         error,
                     });
+                } finally {
+                    progress.stop();
                 }
             }
         } catch (error: unknown) {
             logApiError({
                 logger: log,
                 level: "error",
-                event: { event: "vote_buffer", voteBufferOperation: "flush" },
+                event: {
+                    event: "vote_buffer",
+                    voteBufferOperation: "flush",
+                    ...progress.context(),
+                },
                 error,
             });
             for (const [key, vote] of inFlightVotes) {
@@ -1235,9 +1296,14 @@ export function createVoteBuffer({
     const flush = (): Promise<void> => {
         if (flushInProgress !== undefined) return flushInProgress;
         const run = async (): Promise<void> => {
+            const progress = createVoteBufferProgress({
+                log,
+                stallWarningMs,
+            });
             try {
-                await flushBatch();
+                await flushBatch(progress);
             } finally {
+                progress.stop();
                 flushInProgress = undefined;
             }
         };
@@ -1278,6 +1344,8 @@ export function createVoteBuffer({
 
     // Start automatic flush interval
     const scheduledFlush = async (): Promise<void> => {
+        // Joining a stuck promise on every tick would accumulate waiters forever.
+        if (flushInProgress !== undefined) return;
         try {
             await flush();
         } catch (error: unknown) {

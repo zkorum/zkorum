@@ -115,10 +115,13 @@ type ApiErrorEvent =
       }
     | { event: "email_deliverability_check_failed"; provider: "reacher" }
     | { event: "application_error" }
-    | {
+    | ({
           event: "vote_buffer";
           voteBufferOperation: NonNullable<LogContext["voteBufferOperation"]>;
-      }
+      } & Pick<
+          LogContext,
+          "voteBufferFlushId" | "voteBufferStage" | "durationMs"
+      >)
     | { event: "server_start_failed" }
     | {
           event: "seed_suggestion_failed";

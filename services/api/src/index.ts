@@ -1628,6 +1628,7 @@ const voteBuffer = createVoteBuffer({
     valkeyRef: queueValkeyRef,
     flushIntervalMs: config.VOTE_BUFFER_FLUSH_INTERVAL_MS,
     valkeyBatchLimit: config.VOTE_BUFFER_VALKEY_BATCH_LIMIT,
+    stallWarningMs: config.VOTE_BUFFER_STALL_WARNING_MS,
     realtimeSSEManager,
 });
 log.info(

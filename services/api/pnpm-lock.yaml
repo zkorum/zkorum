@@ -178,6 +178,7 @@ overrides:
 
 patchedDependencies:
   '@zk-kit/eddsa-poseidon@1.1.0': 4049661c2e98ec863141b2f2eea762769fa54e06da58a7cfe63080b1ac7a19ec
+  postgres@3.4.9: 8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883
 
 importers:
 
@@ -260,7 +261,7 @@ importers:
         version: 17.4.1
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@libsql/client-wasm@0.14.0)(@types/pg@8.20.0)(gel@2.1.0(supports-color@7.2.0))(pg@8.20.0)(postgres@3.4.9)
+        version: 0.45.2(@libsql/client-wasm@0.14.0)(@types/pg@8.20.0)(gel@2.1.0(supports-color@7.2.0))(pg@8.20.0)(postgres@3.4.9(patch_hash=8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883))
       esm-module-alias:
         specifier: ^2.2.1
         version: 2.2.1
@@ -335,7 +336,7 @@ importers:
         version: 8.20.0
       postgres:
         specifier: ^3.4.9
-        version: 3.4.9
+        version: 3.4.9(patch_hash=8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883)
       sanitize-html:
         specifier: 2.18.1
         version: 2.18.1
@@ -7238,13 +7239,13 @@ snapshots:
       esbuild: 0.28.2
       tsx: 4.21.0
 
-  drizzle-orm@0.45.2(@libsql/client-wasm@0.14.0)(@types/pg@8.20.0)(gel@2.1.0(supports-color@7.2.0))(pg@8.20.0)(postgres@3.4.9):
+  drizzle-orm@0.45.2(@libsql/client-wasm@0.14.0)(@types/pg@8.20.0)(gel@2.1.0(supports-color@7.2.0))(pg@8.20.0)(postgres@3.4.9(patch_hash=8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883)):
     optionalDependencies:
       '@libsql/client-wasm': 0.14.0
       '@types/pg': 8.20.0
       gel: 2.1.0(supports-color@7.2.0)
       pg: 8.20.0
-      postgres: 3.4.9
+      postgres: 3.4.9(patch_hash=8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883)
 
   dunder-proto@1.0.1:
     dependencies:
@@ -8834,7 +8835,7 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  postgres@3.4.9: {}
+  postgres@3.4.9(patch_hash=8e053c66cce0cd302ad216ec8cb008342b50da43a2825971dfa40536ace1a883): {}
 
   prelude-ls@1.2.1: {}
 
