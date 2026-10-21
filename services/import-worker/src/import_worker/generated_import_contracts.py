@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, RootModel
 
@@ -106,10 +106,15 @@ class UrlImportRequest(BaseModel):
 
 class MinimalImportRequest(BaseModel):
     model_config = ConfigDict(
+        extra="allow",
         validate_by_name=True,
     )
     import_slug_id: str = Field(..., alias="importSlugId")
     user_id: str = Field(..., alias="userId")
+
+
+MinimalImportRequest.__annotations__["__pydantic_extra__"] = dict[str, Any]
+MinimalImportRequest.model_rebuild(force=True)
 
 
 class FailureReason(StrEnum):
