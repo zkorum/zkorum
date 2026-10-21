@@ -5244,6 +5244,7 @@ export const realtimeEventOutboxTable = pgTable(
         id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
         eventType: varchar("event_type", { length: 100 }).notNull(),
         payload: jsonb("payload").notNull(),
+        deliveryId: integer("delivery_id").unique(),
         createdAt: timestamp("created_at", {
             mode: "date",
             precision: 0,
@@ -5253,14 +5254,44 @@ export const realtimeEventOutboxTable = pgTable(
     },
     (t) => [
         index("realtime_event_outbox_created_at_idx").on(t.createdAt),
+        index("realtime_event_outbox_pending_delivery_idx")
+            .on(t.id)
+            .where(isNull(t.deliveryId)),
         index("realtime_event_outbox_conversation_replay_idx")
-            .using("btree", sql`(${t.payload}->>'conversationSlugId')`, t.id)
+            .using(
+                "btree",
+                sql`(${t.payload}->>'conversationSlugId')`,
+                t.deliveryId,
+            )
             .where(
-                sql`${t.eventType} IN ('conversation_analysis_updated', 'conversation_settings_updated', 'conversation_survey_updated', 'opinion_updated')`,
+                sql`${t.eventType} IN ('conversation_analysis_updated', 'conversation_settings_updated', 'conversation_survey_updated', 'opinion_updated', 'conversation_comment_stats_updated', 'opinion_vote_counts_updated')`,
             ),
         index("realtime_event_outbox_ranking_replay_idx")
-            .using("btree", sql`(${t.payload}->>'conversationSlugId')`, t.id)
+            .using(
+                "btree",
+                sql`(${t.payload}->>'conversationSlugId')`,
+                t.deliveryId,
+            )
             .where(sql`${t.eventType} = 'conversation_ranking_stats_updated'`),
+    ],
+);
+
+/** @service api */
+export const realtimeEventDispatchStateTable = pgTable(
+    "realtime_event_dispatch_state",
+    {
+        id: integer("id").primaryKey(),
+        lastDeliveryId: integer("last_delivery_id").notNull().default(0),
+    },
+    (t) => [
+        check(
+            "realtime_event_dispatch_state_singleton_check",
+            sql`${t.id} = 1`,
+        ),
+        check(
+            "realtime_event_dispatch_state_sequence_check",
+            sql`${t.lastDeliveryId} >= 0`,
+        ),
     ],
 );
 

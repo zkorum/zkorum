@@ -2845,7 +2845,10 @@ def test_materialize_requested_translation_work_includes_checkpoints_when_enable
     assert translation_work.description_id == 501
 
 
-def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled() -> None:
+@pytest.mark.parametrize("locale", [DisplayLanguageCode.en, DisplayLanguageCode.fr])
+def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled(
+    locale: DisplayLanguageCode,
+) -> None:
     engine = _create_engine()
     with Session(engine) as session:
         _insert_non_processable_ai_work_state(session)
@@ -2856,6 +2859,10 @@ def test_materialize_requested_lineage_work_includes_checkpoints_when_enabled() 
         view_snapshot.activated_at = NOW
         lineage = session.execute(select(OpinionGroupLineage)).scalar_one()
         lineage.system_description_id = None
+        request = session.execute(
+            select(OpinionGroupCandidateDescriptionLocaleRequest)
+        ).scalar_one()
+        request.locale = locale
         session.add(
             ConversationViewSnapshotCheckpointReason(
                 conversation_view_snapshot_id=20,

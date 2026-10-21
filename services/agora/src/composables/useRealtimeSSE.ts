@@ -17,6 +17,7 @@ import type {
   ExtendedConversation,
   ParticipationMode,
 } from "src/shared/types/zod";
+import { advanceRealtimeCursor } from "src/shared/utils/realtimeCursor";
 import { useAuthenticationStore } from "src/stores/authentication";
 import { useHomeFeedStore } from "src/stores/homeFeed";
 import { useLanguageStore } from "src/stores/language";
@@ -72,6 +73,7 @@ import {
   parseRawSSEFrame,
   splitCompleteSSEFrames,
 } from "src/utils/sse/frameParser";
+import { createOpinionVoteCountsTracker } from "src/utils/sse/opinionVoteCounts";
 import { publishContentTranslationEvent } from "src/utils/translation/contentTranslationEvents";
 import { useNotify } from "src/utils/ui/notify";
 import { type MaybeRefOrGetter, onUnmounted, ref, toValue, watch } from "vue";
@@ -353,6 +355,7 @@ export function useRealtimeSSE({
   let heartbeatWatchdog: ReturnType<typeof setTimeout> | null = null;
   const processedSSEEventIds = new Set<string>();
   const processedSSEEventIdOrder: string[] = [];
+  const opinionVoteCountsTracker = createOpinionVoteCountsTracker();
   const latestAnalysisEventTimestampByConversationSlugId = new Map<
     string,
     number
@@ -618,29 +621,6 @@ export function useRealtimeSSE({
     }
   }
 
-  function updateLastEventId(id: string): void {
-    if (id === "") {
-      lastEventId = null;
-      return;
-    }
-
-    const numericId = Number(id);
-    if (Number.isSafeInteger(numericId) && numericId > 0) {
-      const numericLastEventId =
-        lastEventId === null ? null : Number(lastEventId);
-      if (
-        numericLastEventId === null ||
-        !Number.isSafeInteger(numericLastEventId) ||
-        numericId > numericLastEventId
-      ) {
-        lastEventId = id;
-      }
-      return;
-    }
-
-    lastEventId = id;
-  }
-
   function rememberProcessedSSEEventId(id: string): void {
     if (processedSSEEventIds.has(id)) {
       return;
@@ -664,7 +644,7 @@ export function useRealtimeSSE({
       rememberProcessedSSEEventId(parsed.id);
     }
 
-    handleSSEEvent(parsed.event);
+    handleSSEEvent(parsed);
   }
 
   function parseSSEEvent(raw: string): ParsedRealtimeSSEEvent | undefined {
@@ -678,7 +658,10 @@ export function useRealtimeSSE({
     }
 
     if (frame.id !== null) {
-      updateLastEventId(frame.id);
+      lastEventId = advanceRealtimeCursor({
+        current: lastEventId,
+        incoming: frame.id,
+      });
     }
     if (frame.retry !== null) {
       sseRetryHintMs = Math.min(frame.retry, SSE_MAX_SERVER_RETRY_HINT_MS);
@@ -775,6 +758,18 @@ export function useRealtimeSSE({
           zodSSEEventDataByType.conversation_comment_stats_updated.safeParse(
             rawData
           );
+        if (!result.success) {
+          logInvalidSSEPayload({ event: frame.event, error: result.error });
+          return undefined;
+        }
+        return {
+          id: frame.id,
+          event: { event: frame.event, data: result.data },
+        };
+      }
+      case "opinion_vote_counts_updated": {
+        const result =
+          zodSSEEventDataByType.opinion_vote_counts_updated.safeParse(rawData);
         if (!result.success) {
           logInvalidSSEPayload({ event: frame.event, error: result.error });
           return undefined;
@@ -1065,7 +1060,10 @@ export function useRealtimeSSE({
     return locales.includes(languageStore.displayLanguage);
   }
 
-  function handleSSEEvent(sseEvent: AnySSEEvent): void {
+  function handleSSEEvent({
+    event: sseEvent,
+    id,
+  }: ParsedRealtimeSSEEvent): void {
     try {
       switch (sseEvent.event) {
         case "connected": {
@@ -1153,7 +1151,14 @@ export function useRealtimeSSE({
           break;
         }
         case "conversation_comment_stats_updated": {
-          updateCommentStatsFromEvent(sseEvent.data);
+          updateCommentStatsFromEvent({ data: sseEvent.data, eventId: id });
+          break;
+        }
+        case "opinion_vote_counts_updated": {
+          updateVotedVisibleOpinionCountsFromEvent({
+            data: sseEvent.data,
+            eventId: id,
+          });
           break;
         }
         case "conversation_ranking_stats_updated": {
@@ -1186,6 +1191,11 @@ export function useRealtimeSSE({
 
           const checkpointChanged = data.checkpointChanged === true;
           updateConversationCountsFromAnalysisEvent(data);
+          if (data.changeKind !== "descriptions") {
+            void queryClient.invalidateQueries({
+              queryKey: ["commentStats", data.conversationSlugId],
+            });
+          }
           void queryClient.invalidateQueries({
             queryKey: ["conversation", data.conversationSlugId],
             refetchType: "none",
@@ -1710,9 +1720,14 @@ export function useRealtimeSSE({
     });
   }
 
-  function updateCommentStatsFromEvent(
-    data: SSEConversationCommentStatsUpdatedData
-  ): void {
+  function updateCommentStatsFromEvent({
+    data,
+    eventId,
+  }: {
+    data: SSEConversationCommentStatsUpdatedData;
+    eventId: string | null;
+  }): void {
+    updateVotedVisibleOpinionCountsFromEvent({ data, eventId });
     if (!recordConversationStatsEventTimestamp(data)) {
       return;
     }
@@ -1766,8 +1781,6 @@ export function useRealtimeSSE({
         };
       },
     });
-
-    updateVotedVisibleOpinionCountsFromEvent(data);
   }
 
   function recordConversationStatsEventTimestamp(data: {
@@ -1813,9 +1826,17 @@ export function useRealtimeSSE({
     }
   }
 
-  function updateVotedVisibleOpinionCountsFromEvent(
-    data: SSEConversationCommentStatsUpdatedData
-  ): void {
+  function updateVotedVisibleOpinionCountsFromEvent({
+    data: incoming,
+    eventId,
+  }: {
+    data: Pick<
+      SSEConversationCommentStatsUpdatedData,
+      "conversationSlugId" | "opinionVoteCounts"
+    >;
+    eventId: string | null;
+  }): void {
+    const data = opinionVoteCountsTracker.retain({ data: incoming, eventId });
     if (data.opinionVoteCounts.length === 0) {
       return;
     }

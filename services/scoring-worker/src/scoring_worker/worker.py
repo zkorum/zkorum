@@ -238,6 +238,8 @@ def _create_engine_with_retry(
             engine = create_engine(
                 _postgres_dsn(connection_string),
                 pool_pre_ping=True,
+                pool_size=3,
+                max_overflow=0,
                 hide_parameters=True,
             )
             with engine.connect() as connection:

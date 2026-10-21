@@ -239,6 +239,7 @@ import {
 import twilio from "twilio";
 import { initializeValkey } from "./shared-backend/valkey.js";
 import { createVoteBuffer } from "./service/voteBuffer.js";
+import { parseRealtimeCursor } from "./shared/utils/realtimeCursor.js";
 import { editOpinion } from "./service/opinionEdit.js";
 import {
     consumeContentTranslationUserRateLimit,
@@ -2023,12 +2024,8 @@ async function replaySubscribedRealtimeEvents({
     reply: FastifyReply;
     subscription: RealtimeSubscriptionRequest;
 }): Promise<void> {
-    if (reply.sse.lastEventId === null) {
-        return;
-    }
-
-    const lastEventId = Number(reply.sse.lastEventId);
-    if (!Number.isSafeInteger(lastEventId) || lastEventId <= 0) {
+    const lastEventId = parseRealtimeCursor(reply.sse.lastEventId);
+    if (lastEventId === undefined) {
         return;
     }
 
@@ -5481,11 +5478,9 @@ server.after(() => {
             >["questions"] = [];
             for (const question of surveyForm.questions) {
                 const questionDisplayContent =
-                    question.questionSlugId === undefined
-                        ? undefined
-                        : displayContentsByQuestionSlugId.get(
-                              question.questionSlugId,
-                          );
+                    displayContentsByQuestionSlugId.get(
+                        question.questionSlugId,
+                    );
                 const formSourceContent =
                     getSurveyQuestionConfigContent(question);
                 if (

@@ -44,6 +44,10 @@ import {
     type RealtimeSSEManager,
 } from "./realtimeSSE.js";
 import { authStateChangedPayload } from "./authSession.js";
+import {
+    fetchDeliveredEventUpperBound,
+    initializeRealtimeDispatch,
+} from "./realtimeEventDispatch.js";
 
 const REALTIME_EVENT_OUTBOX_CHANNEL = "realtime_event_outbox";
 const EVENT_CATCHUP_INTERVAL_MS = 30 * 1000;
@@ -77,9 +81,10 @@ const zodConversationCommentStatsUpdatedData = z.object({
     timestamp: z.number().int().nonnegative(),
 });
 
-const zodRealtimeEventOutboxNotification = z.object({
-    id: z.number().int().positive(),
-});
+const zodRealtimeEventOutboxNotification = z.union([
+    z.object({ id: z.number().int().positive() }),
+    z.object({ deliveryAssigned: z.literal(true) }),
+]);
 
 const zodLegacyContentTranslationUpdatedData = z
     .object({
@@ -173,6 +178,11 @@ function parseContentTranslationUpdatedData(payload: unknown) {
 }
 
 type RealtimeReplayEvent =
+    | {
+          id: number;
+          event: "opinion_vote_counts_updated";
+          data: SSEEventDataByType["opinion_vote_counts_updated"];
+      }
     | {
           id: number;
           event: "opinion_updated";
@@ -384,6 +394,31 @@ export async function queueConversationSettingsUpdatedEvent({
 
     await primaryDb.insert(realtimeEventOutboxTable).values({
         eventType: "conversation_settings_updated",
+        payload,
+    });
+}
+
+export async function queueOpinionVoteCountsUpdatedEvent({
+    db,
+    conversationSlugId,
+    opinionIds,
+}: {
+    db: PostgresJsDatabase;
+    conversationSlugId: string;
+    opinionIds: number[];
+}): Promise<void> {
+    const opinionVoteCounts = await fetchLiveOpinionVoteCounts({
+        db,
+        opinionIds,
+    });
+    if (opinionVoteCounts.length === 0) return;
+    const payload: SSEEventDataByType["opinion_vote_counts_updated"] = {
+        conversationSlugId,
+        opinionVoteCounts,
+        timestamp: Date.now(),
+    };
+    await db.insert(realtimeEventOutboxTable).values({
+        eventType: "opinion_vote_counts_updated",
         payload,
     });
 }
@@ -801,11 +836,21 @@ function parseRealtimeEventOutboxRow({
     eventType,
     payload,
 }: {
-    id: number;
+    id: number | null;
     eventType: string;
     payload: unknown;
 }): ParsedRealtimeOutboxEvent | undefined {
+    if (id === null) return undefined;
     switch (eventType) {
+        case "opinion_vote_counts_updated": {
+            const result =
+                zodSSEEventDataByType.opinion_vote_counts_updated.safeParse(
+                    payload,
+                );
+            return result.success
+                ? { id, event: eventType, data: result.data }
+                : undefined;
+        }
         case "opinion_updated": {
             const result =
                 zodSSEEventDataByType.opinion_updated.safeParse(payload);
@@ -914,15 +959,16 @@ export async function fetchConversationRealtimeEventsAfterId({
     const primaryDb = getPrimaryDatabase(db);
     const rows = await primaryDb
         .select({
-            id: realtimeEventOutboxTable.id,
+            id: realtimeEventOutboxTable.deliveryId,
             eventType: realtimeEventOutboxTable.eventType,
             payload: realtimeEventOutboxTable.payload,
         })
         .from(realtimeEventOutboxTable)
         .where(
             and(
-                gt(realtimeEventOutboxTable.id, lastEventId),
+                gt(realtimeEventOutboxTable.deliveryId, lastEventId),
                 inArray(realtimeEventOutboxTable.eventType, [
+                    "opinion_vote_counts_updated",
                     "conversation_analysis_updated",
                     "conversation_ranking_stats_updated",
                     "conversation_settings_updated",
@@ -932,7 +978,7 @@ export async function fetchConversationRealtimeEventsAfterId({
                 sql`${realtimeEventOutboxTable.payload}->>'conversationSlugId' = ${conversationSlugId}`,
             ),
         )
-        .orderBy(realtimeEventOutboxTable.id)
+        .orderBy(realtimeEventOutboxTable.deliveryId)
         .limit(limit);
 
     const events: RealtimeReplayEvent[] = [];
@@ -963,7 +1009,7 @@ export async function fetchRealtimeTopicEventsAfterId({
     const primaryDb = getPrimaryDatabase(db);
     const rows = await primaryDb
         .select({
-            id: realtimeEventOutboxTable.id,
+            id: realtimeEventOutboxTable.deliveryId,
             eventType: realtimeEventOutboxTable.eventType,
             payload: realtimeEventOutboxTable.payload,
         })
@@ -977,16 +1023,17 @@ export async function fetchRealtimeTopicEventsAfterId({
         )
         .where(
             and(
-                gt(realtimeEventOutboxTable.id, lastEventId),
+                gt(realtimeEventOutboxTable.deliveryId, lastEventId),
                 inArray(realtimeEventOutboxTopicTable.topic, topics),
             ),
         )
-        .orderBy(realtimeEventOutboxTable.id)
+        .orderBy(realtimeEventOutboxTable.deliveryId)
         .limit(limit);
 
     const seenEventIds = new Set<number>();
     const events: RealtimeReplayEvent[] = [];
     for (const row of rows) {
+        if (row.id === null) continue;
         if (seenEventIds.has(row.id)) {
             continue;
         }
@@ -997,27 +1044,6 @@ export async function fetchRealtimeTopicEventsAfterId({
         }
     }
     return events;
-}
-
-export async function fetchSafeOutboxUpperBound({
-    db,
-}: {
-    db: PostgresJsDatabase;
-}): Promise<number> {
-    const primaryDb = getPrimaryDatabase(db);
-    return primaryDb.transaction(async (transaction) => {
-        // INSERT takes ROW EXCLUSIVE, so this waits for prior inserts to commit
-        // or roll back and briefly prevents new IDs from being allocated.
-        await transaction.execute(
-            sql`LOCK TABLE ${realtimeEventOutboxTable} IN SHARE MODE`,
-        );
-        const rows = await transaction
-            .select({ id: realtimeEventOutboxTable.id })
-            .from(realtimeEventOutboxTable)
-            .orderBy(desc(realtimeEventOutboxTable.id))
-            .limit(1);
-        return rows.at(0)?.id ?? 0;
-    });
 }
 
 export function createRealtimeEventOutboxBridge({
@@ -1046,7 +1072,7 @@ export function createRealtimeEventOutboxBridge({
         eventType,
         payload,
     }: {
-        id: number;
+        id: number | null;
         eventType: string;
         payload: unknown;
     }): void => {
@@ -1063,6 +1089,15 @@ export function createRealtimeEventOutboxBridge({
         }
 
         switch (realtimeEvent.event) {
+            case "opinion_vote_counts_updated": {
+                realtimeSSEManager.broadcastToConversationSubscribers({
+                    conversationSlugId: realtimeEvent.data.conversationSlugId,
+                    id: realtimeEvent.id,
+                    event: realtimeEvent.event,
+                    data: realtimeEvent.data,
+                });
+                break;
+            }
             case "conversation_analysis_updated": {
                 realtimeSSEManager.broadcastToConversationSubscribers({
                     conversationSlugId: realtimeEvent.data.conversationSlugId,
@@ -1164,34 +1199,40 @@ export function createRealtimeEventOutboxBridge({
     };
 
     const processPendingEvents = async (): Promise<void> => {
-        const safeUpperBound = await fetchSafeOutboxUpperBound({
-            db: primaryDb,
-        });
+        const safeUpperBound = await fetchDeliveredEventUpperBound(primaryDb);
 
         while (lastCaughtUpOutboxId < safeUpperBound) {
             const rows = await primaryDb
                 .select({
-                    id: realtimeEventOutboxTable.id,
+                    id: realtimeEventOutboxTable.deliveryId,
                     eventType: realtimeEventOutboxTable.eventType,
                     payload: realtimeEventOutboxTable.payload,
                 })
                 .from(realtimeEventOutboxTable)
                 .where(
                     and(
-                        gt(realtimeEventOutboxTable.id, lastCaughtUpOutboxId),
-                        lte(realtimeEventOutboxTable.id, safeUpperBound),
+                        gt(
+                            realtimeEventOutboxTable.deliveryId,
+                            lastCaughtUpOutboxId,
+                        ),
+                        lte(
+                            realtimeEventOutboxTable.deliveryId,
+                            safeUpperBound,
+                        ),
                     ),
                 )
-                .orderBy(realtimeEventOutboxTable.id)
+                .orderBy(realtimeEventOutboxTable.deliveryId)
                 .limit(EVENT_CATCHUP_BATCH_SIZE);
 
             if (rows.length === 0) {
-                // The lock proves any missing IDs through the bound rolled back.
+                // Delivery assignments and their upper bound commit together;
+                // late business commits receive a later delivery ID.
                 lastCaughtUpOutboxId = safeUpperBound;
                 return;
             }
 
             for (const row of rows) {
+                if (row.id === null) continue;
                 try {
                     broadcastOutboxRow(row);
                 } catch (error: unknown) {
@@ -1243,6 +1284,7 @@ export function createRealtimeEventOutboxBridge({
             listenerClient = await createPostgresClient(config, log, false);
             isAcceptingNotifications = true;
             try {
+                await initializeRealtimeDispatch(primaryDb);
                 listenerSubscription = await listenerClient.listen(
                     REALTIME_EVENT_OUTBOX_CHANNEL,
                     (payload) => {
@@ -1252,9 +1294,8 @@ export function createRealtimeEventOutboxBridge({
                         requestCatchupForNotification({ payload });
                     },
                 );
-                lastCaughtUpOutboxId = await fetchSafeOutboxUpperBound({
-                    db: primaryDb,
-                });
+                lastCaughtUpOutboxId =
+                    await fetchDeliveredEventUpperBound(primaryDb);
                 isCatchupInitialized = true;
                 isStarted = true;
                 if (catchupRequestedDuringInitialization) {

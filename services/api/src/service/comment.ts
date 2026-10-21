@@ -10,6 +10,7 @@ import {
     opinionGroupDescriptionTranslationTable,
     opinionGroupCandidateAssessmentTable,
     opinionGroupCandidateTable,
+    opinionGroupCandidateDescriptionLocaleRequestTable,
     opinionGroupCandidateOpinionMetricsTable,
     opinionGroupLineageTable,
     opinionGroupOpinionStatsTable,
@@ -99,7 +100,6 @@ import {
     getOpinionGroupAnalysisSelection,
     getSelectedOpinionGroupCandidate,
 } from "./opinionGroupAnalysis.js";
-import { ensureAiDescriptionLocaleRequestForConversationViewSnapshot } from "./conversationViewSnapshot.js";
 import {
     htmlToCountedTextWithWarning,
     normalizeUserRichTextInput,
@@ -2372,27 +2372,6 @@ async function fetchSelectedOpinionGroupCandidateById({
     candidateId: number;
     frameMode: AnalysisFrameKey["mode"];
 }): Promise<SelectedAnalysisFrameCandidate | undefined> {
-    const latestConversationViewSnapshotTable = alias(
-        conversationViewSnapshotTable,
-        "latest_analysis_conversation_view_snapshot",
-    );
-    const latestConversationViewSnapshotId = db
-        .select({ id: latestConversationViewSnapshotTable.id })
-        .from(latestConversationViewSnapshotTable)
-        .where(
-            and(
-                eq(
-                    latestConversationViewSnapshotTable.conversationId,
-                    conversationTable.id,
-                ),
-                isNotNull(latestConversationViewSnapshotTable.activatedAt),
-            ),
-        )
-        .orderBy(
-            desc(latestConversationViewSnapshotTable.createdAt),
-            desc(latestConversationViewSnapshotTable.id),
-        )
-        .limit(1);
     const rows = await db
         .select({
             conversationId: conversationTable.id,
@@ -2492,10 +2471,7 @@ async function fetchSelectedOpinionGroupCandidateById({
                     ? isNotNull(
                           conversationViewSnapshotCheckpointReasonTable.id,
                       )
-                    : eq(
-                          conversationViewSnapshotTable.id,
-                          latestConversationViewSnapshotId,
-                      ),
+                    : undefined,
             ),
         )
         .limit(1);
@@ -2641,31 +2617,6 @@ function createAnalysisFrameManifest({
     };
 }
 
-async function ensureAiDescriptionRequestForAnalysisFrameManifest({
-    db,
-    conversationSlugId,
-    manifest,
-    requestedLocale,
-}: {
-    db: PostgresJsDatabase;
-    conversationSlugId: string;
-    manifest: AnalysisFrameManifest;
-    requestedLocale: SupportedDisplayLanguageCodes;
-}): Promise<void> {
-    if (manifest.frameKey === undefined || !manifest.aiLabelsExpected) {
-        return;
-    }
-
-    await ensureAiDescriptionLocaleRequestForConversationViewSnapshot({
-        db,
-        conversationSlugId,
-        conversationViewSnapshotId:
-            manifest.frameKey.conversationViewSnapshotId,
-        candidateId: manifest.frameKey.candidateId,
-        requestedLocale,
-    });
-}
-
 export async function fetchAnalysisFrameManifestByConversationSlugId({
     db,
     conversationSlugId,
@@ -2683,7 +2634,6 @@ export async function fetchAnalysisFrameManifestByConversationSlugId({
     checkpointViewSnapshotId?: number;
     freshnessOptions: AnalysisFreshnessOptions | null;
 }): Promise<AnalysisFrameManifest> {
-    const requestedLocale = getSupportedDisplayLanguage(displayLanguage);
     const manifest = await fetchAnalysisFrameManifestByConversationSlugIdFromDb(
         {
             db,
@@ -2694,13 +2644,6 @@ export async function fetchAnalysisFrameManifestByConversationSlugId({
             checkpointViewSnapshotId,
         },
     );
-
-    await ensureAiDescriptionRequestForAnalysisFrameManifest({
-        db: getPrimaryDatabase(db),
-        conversationSlugId,
-        manifest,
-        requestedLocale,
-    });
 
     if (
         isAnalysisFrameManifestFreshEnough({ manifest, freshnessOptions }) ||
@@ -2722,12 +2665,6 @@ export async function fetchAnalysisFrameManifestByConversationSlugId({
             analysisView,
             checkpointViewSnapshotId,
         });
-    await ensureAiDescriptionRequestForAnalysisFrameManifest({
-        db: getPrimaryDatabase(db),
-        conversationSlugId,
-        manifest: primaryManifest,
-        requestedLocale,
-    });
     if (
         isAnalysisFrameManifestFreshEnough({
             manifest: primaryManifest,
@@ -3099,7 +3036,13 @@ async function fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
     conversationSlugId: string;
     frameKey: AnalysisFrameKey;
     displayLanguage: string;
-}): Promise<AnalysisFrameGroupLabels | undefined> {
+}): Promise<
+    | {
+          groupLabels: AnalysisFrameGroupLabels;
+          needsDescriptionRequest: boolean;
+      }
+    | undefined
+> {
     const requestedLocale = getSupportedDisplayLanguage(displayLanguage);
     const selectedCandidate = await fetchSelectedFrameCandidateByKey({
         db,
@@ -3112,11 +3055,12 @@ async function fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
 
     if (!selectedCandidate.aiLabelingEnabled) {
         return {
-            frameKey,
-            groupDescriptionDisplay: {
-                displayedLocale: null,
+            groupLabels: {
+                frameKey,
+                groupDescriptionDisplay: { displayedLocale: null },
+                labels: {},
             },
-            labels: {},
+            needsDescriptionRequest: false,
         };
     }
 
@@ -3134,31 +3078,37 @@ async function fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
               });
     if (requestedLabels !== undefined) {
         return {
-            frameKey,
-            groupDescriptionDisplay: {
-                displayedLocale: requestedLocale,
+            groupLabels: {
+                frameKey,
+                groupDescriptionDisplay: { displayedLocale: requestedLocale },
+                labels: requestedLabels,
             },
-            labels: requestedLabels,
+            needsDescriptionRequest: false,
         };
     }
 
-    const englishLabels = await fetchEnglishGroupLabels({ db, groups });
+    const englishLabels =
+        requestedLocale === "en"
+            ? undefined
+            : await fetchEnglishGroupLabels({ db, groups });
     if (englishLabels !== undefined) {
         return {
-            frameKey,
-            groupDescriptionDisplay: {
-                displayedLocale: "en",
+            groupLabels: {
+                frameKey,
+                groupDescriptionDisplay: { displayedLocale: "en" },
+                labels: englishLabels,
             },
-            labels: englishLabels,
+            needsDescriptionRequest: true,
         };
     }
 
     return {
-        frameKey,
-        groupDescriptionDisplay: {
-            displayedLocale: null,
+        groupLabels: {
+            frameKey,
+            groupDescriptionDisplay: { displayedLocale: null },
+            labels: {},
         },
-        labels: {},
+        needsDescriptionRequest: groups.length > 0,
     };
 }
 
@@ -3176,45 +3126,46 @@ export async function fetchAnalysisFrameGroupLabelsByFrameKey({
     freshnessOptions: AnalysisFreshnessOptions | null;
 }): Promise<AnalysisFrameGroupLabels> {
     const requestedLocale = getSupportedDisplayLanguage(displayLanguage);
-    await ensureAiDescriptionLocaleRequestForConversationViewSnapshot({
-        db: getPrimaryDatabase(db),
-        conversationSlugId,
-        conversationViewSnapshotId: frameKey.conversationViewSnapshotId,
-        candidateId: frameKey.candidateId,
-        requestedLocale,
-    });
-
-    const groupLabels = await fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
+    let result = await fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
         db,
         conversationSlugId,
         frameKey,
         displayLanguage,
     });
     if (
-        groupLabels !== undefined &&
-        isAnalysisFrameGroupLabelsFreshEnough({ groupLabels, freshnessOptions })
+        (result === undefined ||
+            !isAnalysisFrameGroupLabelsFreshEnough({
+                groupLabels: result.groupLabels,
+                freshnessOptions,
+            })) &&
+        shouldTryPrimaryFallback({ db, freshnessOptions })
     ) {
-        return groupLabels;
-    }
-
-    if (shouldTryPrimaryFallback({ db, freshnessOptions })) {
-        const primaryGroupLabels =
-            await fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
+        result =
+            (await fetchAnalysisFrameGroupLabelsByFrameKeyFromDb({
                 db: getPrimaryDatabase(db),
                 conversationSlugId,
                 frameKey,
                 displayLanguage,
-            });
-        if (primaryGroupLabels !== undefined) {
-            return primaryGroupLabels;
-        }
+            })) ?? result;
+    }
+    if (result === undefined) {
+        throw httpErrors.notFound(
+            "Analysis frame group labels are not available.",
+        );
     }
 
-    if (groupLabels !== undefined) {
-        return groupLabels;
+    if (result.needsDescriptionRequest) {
+        // Workers materialize both English and translated work from durable
+        // demand. Readers never compete for worker-owned execution records.
+        await getPrimaryDatabase(db)
+            .insert(opinionGroupCandidateDescriptionLocaleRequestTable)
+            .values({
+                candidateId: frameKey.candidateId,
+                locale: requestedLocale,
+            })
+            .onConflictDoNothing();
     }
-
-    throw httpErrors.notFound("Analysis frame group labels are not available.");
+    return result.groupLabels;
 }
 
 async function fetchAnalysisFrameOpinionListByFrameKeyFromDb({

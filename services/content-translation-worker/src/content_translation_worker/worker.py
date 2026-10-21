@@ -110,6 +110,8 @@ def _create_engine_with_retry(
             engine = create_engine(
                 url,
                 pool_pre_ping=True,
+                pool_size=2,
+                max_overflow=0,
                 pool_timeout=10,
                 hide_parameters=True,
             )

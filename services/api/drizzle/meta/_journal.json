@@ -757,6 +757,13 @@
       "when": 1792256588408,
       "tag": "0107_petite_mesmero",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1792605163538,
+      "tag": "0108_faithful_whiplash",
+      "breakpoints": true
     }
   ]
 }

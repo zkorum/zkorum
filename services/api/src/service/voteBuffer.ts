@@ -98,8 +98,9 @@ import {
     createVoteNotifications,
     getNotificationRecipients,
 } from "./notification.js";
-import { createConversationViewSnapshotsFromCurrentState } from "./conversationViewSnapshot.js";
+import { queueOpinionVoteCountsUpdatedEvent } from "./realtimeEventOutbox.js";
 import { createVoteBufferProgress } from "./voteBufferProgress.js";
+import { partitionVoteBatches } from "./voteBatches.js";
 
 // ============================================================================
 // Lua Scripts (inline for bundling - no separate files needed)
@@ -540,15 +541,7 @@ export function createVoteBuffer({
             "[VoteBuffer] Flushing votes",
         );
 
-        // PostgreSQL parameter limit: ~65,535
-        // vote_content: 3 columns, vote_table: 3 columns
-        // Worst case: 3+3 = 6 params per vote
-        const MAX_VOTES_PER_TRANSACTION = 5000;
-        const batches: BufferedVote[][] = [];
-
-        for (let i = 0; i < batch.length; i += MAX_VOTES_PER_TRANSACTION) {
-            batches.push(batch.slice(i, i + MAX_VOTES_PER_TRANSACTION));
-        }
+        const batches = partitionVoteBatches(batch);
 
         log.info(
             {
@@ -569,7 +562,10 @@ export function createVoteBuffer({
         const analysisSchedules: AnalysisSchedule[] = [];
 
         try {
-            for (const [batchIndex, voteBatch] of batches.entries()) {
+            for (const [
+                batchIndex,
+                { conversationId, votes: voteBatch },
+            ] of batches.entries()) {
                 const transactionStartedAt = performance.now();
                 log.info(
                     {
@@ -589,16 +585,7 @@ export function createVoteBuffer({
                     await tx
                         .select({ id: conversationTable.id })
                         .from(conversationTable)
-                        .where(
-                            inArray(conversationTable.id, [
-                                ...new Set(
-                                    voteBatch.map(
-                                        (vote) => vote.conversationId,
-                                    ),
-                                ),
-                            ]),
-                        )
-                        .orderBy(conversationTable.id)
+                        .where(eq(conversationTable.id, conversationId))
                         .for("no key update");
                     progress.enterStage("recheck_votes");
                     // A different instance may have committed a newer action
@@ -950,31 +937,6 @@ export function createVoteBuffer({
                             } satisfies LogContext,
                             "[VoteBuffer] Updated conversation activity",
                         );
-
-                        for (const conversationId of conversationIds) {
-                            await createConversationViewSnapshotsFromCurrentState(
-                                {
-                                    db: tx,
-                                    conversationId,
-                                    viewReason: "conversation_content_updated",
-                                    emitCommentStatsRealtimeEvent: true,
-                                    changedOpinionIds: Array.from(
-                                        new Set(
-                                            applicableVotes
-                                                .filter(
-                                                    (vote) =>
-                                                        vote.conversationId ===
-                                                            conversationId &&
-                                                        counterDeltas.has(
-                                                            vote.opinionId,
-                                                        ),
-                                                )
-                                                .map((vote) => vote.opinionId),
-                                        ),
-                                    ),
-                                },
-                            );
-                        }
                     }
 
                     // Schedule opinion-group analysis once per affected conversation.
@@ -1003,6 +965,12 @@ export function createVoteBuffer({
                             "[VoteBuffer] Scheduled analysis",
                         );
                         analysisSchedules.push(analysisSchedule);
+                        await queueOpinionVoteCountsUpdatedEvent({
+                            db: tx,
+                            conversationSlugId:
+                                analysisSchedule.conversationSlugId,
+                            opinionIds: [...counterDeltas.keys()],
+                        });
                     }
 
                     // Track genuinely new voters for notification purposes.

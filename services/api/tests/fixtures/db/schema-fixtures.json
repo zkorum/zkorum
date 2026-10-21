@@ -1,4 +1,27 @@
 {
+    "analysis-frame-reads": [
+        "project",
+        "conversation",
+        "conversation_content",
+        "polis_conversation_config",
+        "analysis_spec",
+        "opinion_group_spec",
+        "opinion_group_variant",
+        "analysis_input_snapshot",
+        "analysis_snapshot",
+        "analysis_snapshot_result",
+        "opinion_group_lineage_scope",
+        "opinion_group_lineage",
+        "opinion_group",
+        "opinion_group_description",
+        "opinion_group_description_translation",
+        "opinion_group_candidate",
+        "opinion_group_candidate_assessment",
+        "opinion_group_candidate_description_locale_request",
+        "opinion_group_lineage_description_work",
+        "conversation_view_snapshot",
+        "conversation_view_snapshot_checkpoint_reason"
+    ],
     "feed-pagination": [
         "user",
         "user_mute_preference",
@@ -222,6 +245,7 @@
     ],
     "security-add-email-backfill": ["user", "email", "phone", "zk_passport"],
     "auth-otp": [
+        "realtime_event_dispatch_state",
         "user",
         "device",
         "email",

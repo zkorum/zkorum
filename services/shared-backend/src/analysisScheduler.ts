@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { BaseLogger } from "pino";
 import {
@@ -137,10 +137,7 @@ export async function scheduleAnalysisUpdate({
                     conversationTable.polisConfigId,
                 ),
             )
-            .where(eq(conversationTable.id, conversationId))
-            // FK checks from analysis workers take KEY SHARE on conversation.
-            // NO KEY UPDATE still serializes schedulers without blocking them.
-            .for("no key update", { of: conversationTable });
+            .where(eq(conversationTable.id, conversationId));
 
         if (conversations.length === 0) {
             throw new Error(
@@ -186,7 +183,25 @@ export async function scheduleAnalysisUpdate({
             );
         }
 
-        const dataGeneration = conversation.analysisDataGeneration + 1;
+        const updatedConfigs = await tx
+            .update(polisConversationConfigTable)
+            .set({
+                analysisDataGeneration: sql`${polisConversationConfigTable.analysisDataGeneration} + 1`,
+            })
+            .where(
+                eq(polisConversationConfigTable.id, conversation.polisConfigId),
+            )
+            .returning({
+                dataGeneration:
+                    polisConversationConfigTable.analysisDataGeneration,
+            });
+        const updatedConfig = updatedConfigs.at(0);
+        if (updatedConfig === undefined) {
+            throw new Error(
+                "Analysis configuration disappeared while scheduling",
+            );
+        }
+        const { dataGeneration } = updatedConfig;
         log.info(
             {
                 event: "analysis_schedule",
@@ -195,12 +210,6 @@ export async function scheduleAnalysisUpdate({
             } satisfies LogContext,
             "[AnalysisScheduler] Incrementing analysis generation",
         );
-        await tx
-            .update(polisConversationConfigTable)
-            .set({ analysisDataGeneration: dataGeneration })
-            .where(
-                eq(polisConversationConfigTable.id, conversation.polisConfigId),
-            );
 
         log.info(
             { event: "analysis_schedule", conversationId } satisfies LogContext,
@@ -243,31 +252,9 @@ export async function scheduleAnalysisUpdate({
             } satisfies LogContext,
             "[AnalysisScheduler] Ensuring analysis work-state rows",
         );
-        await tx
-            .insert(analysisWorkStateTable)
-            .values(
-                currentSpecIds.map((opinionGroupSpecId) => ({
-                    conversationId,
-                    opinionGroupSpecId,
-                    dirtySince: now,
-                    updatedAt: now,
-                })),
-            )
-            .onConflictDoNothing({
-                target: [
-                    analysisWorkStateTable.conversationId,
-                    analysisWorkStateTable.opinionGroupSpecId,
-                ],
-            });
-
-        log.info(
-            { event: "analysis_schedule", conversationId } satisfies LogContext,
-            "[AnalysisScheduler] Loading analysis work-state rows",
-        );
-        const workStateRows = await tx
+        const existingWorkStates = await tx
             .select({
-                id: analysisWorkStateTable.id,
-                dirtySince: analysisWorkStateTable.dirtySince,
+                opinionGroupSpecId: analysisWorkStateTable.opinionGroupSpecId,
             })
             .from(analysisWorkStateTable)
             .where(
@@ -278,27 +265,32 @@ export async function scheduleAnalysisUpdate({
                         currentSpecIds,
                     ),
                 ),
-            )
-            .for("update");
-        log.info(
-            {
-                event: "analysis_schedule",
-                conversationId,
-                count: workStateRows.length,
-            } satisfies LogContext,
-            "[AnalysisScheduler] Updating analysis work-state rows",
+            );
+        const existingSpecIds = new Set(
+            existingWorkStates.map((row) => row.opinionGroupSpecId),
         );
-
-        for (const row of workStateRows) {
-            const dirtySince = row.dirtySince ?? now;
-
+        const missingSpecIds = currentSpecIds.filter(
+            (id) => !existingSpecIds.has(id),
+        );
+        // The generation is the durable dirty signal. Existing work rows belong
+        // to the worker; updating them here would wait behind result persistence.
+        if (missingSpecIds.length > 0) {
             await tx
-                .update(analysisWorkStateTable)
-                .set({
-                    dirtySince,
-                    updatedAt: now,
-                })
-                .where(eq(analysisWorkStateTable.id, row.id));
+                .insert(analysisWorkStateTable)
+                .values(
+                    missingSpecIds.map((opinionGroupSpecId) => ({
+                        conversationId,
+                        opinionGroupSpecId,
+                        dirtySince: now,
+                        updatedAt: now,
+                    })),
+                )
+                .onConflictDoNothing({
+                    target: [
+                        analysisWorkStateTable.conversationId,
+                        analysisWorkStateTable.opinionGroupSpecId,
+                    ],
+                });
         }
 
         log.info(
@@ -306,7 +298,7 @@ export async function scheduleAnalysisUpdate({
                 event: "analysis_schedule",
                 conversationId,
                 dataGeneration,
-                count: workStateRows.length,
+                count: currentSpecIds.length,
             } satisfies LogContext,
             "[AnalysisScheduler] Scheduling analysis complete",
         );

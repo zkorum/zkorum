@@ -1931,7 +1931,7 @@ def _fetch_conversation_view_snapshot_counters_by_id(
     }
 
 
-def _fetch_previous_selected_view_snapshots_by_pair(
+def fetch_previous_selected_view_snapshots_by_pair(
     session: Session,
     *,
     pairs: list[tuple[int, int]],
@@ -1941,16 +1941,35 @@ def _fetch_previous_selected_view_snapshots_by_pair(
     if not pairs:
         return {}
 
-    conditions = [
-        tuple_(
-            ConversationViewSnapshot.conversation_id,
-            ConversationViewSnapshot.opinion_group_spec_id,
-        ).in_(pairs),
-        ConversationViewSnapshot.id.not_in(current_view_snapshot_ids),
-        ConversationViewSnapshot.activated_at.is_not(None),
+    candidate_conditions = [
         AnalysisSnapshotResult.outcome == AnalysisResultOutcomeEnum.success,
         OpinionGroupCandidate.outcome == AnalysisResultOutcomeEnum.success,
         OpinionGroupCandidateAssessment.hidden_reason.is_(None),
+    ]
+    has_visible_candidate = (
+        select(OpinionGroupCandidate.id)
+        .join(
+            AnalysisSnapshotResult,
+            AnalysisSnapshotResult.id == OpinionGroupCandidate.snapshot_result_id,
+        )
+        .outerjoin(
+            OpinionGroupCandidateAssessment,
+            OpinionGroupCandidateAssessment.candidate_id == OpinionGroupCandidate.id,
+        )
+        .where(
+            AnalysisSnapshotResult.analysis_snapshot_id
+            == ConversationViewSnapshot.analysis_snapshot_id,
+            AnalysisSnapshotResult.opinion_group_spec_id
+            == ConversationViewSnapshot.opinion_group_spec_id,
+            *candidate_conditions,
+        )
+        .correlate(ConversationViewSnapshot)
+        .exists()
+    )
+    conditions = [
+        ConversationViewSnapshot.id.not_in(current_view_snapshot_ids),
+        ConversationViewSnapshot.activated_at.is_not(None),
+        has_visible_candidate,
     ]
     if checkpoint_only:
         conditions.append(
@@ -1962,18 +1981,33 @@ def _fetch_previous_selected_view_snapshots_by_pair(
             .exists()
         )
 
+    # Use the latest-active-spec index to select one frame per pair before
+    # expanding candidates. Historical candidate graphs need no window sort.
+    latest_snapshot_ids = [
+        select(ConversationViewSnapshot.id)
+        .where(
+            *conditions,
+            ConversationViewSnapshot.conversation_id == conversation_id,
+            ConversationViewSnapshot.opinion_group_spec_id == spec_id,
+        )
+        .order_by(ConversationViewSnapshot.created_at.desc(), ConversationViewSnapshot.id.desc())
+        .limit(1)
+        .correlate(None)
+        .scalar_subquery()
+        for conversation_id, spec_id in sorted(set(pairs))
+    ]
     rows = session.execute(
         select(
-            ConversationViewSnapshot.id,
             ConversationViewSnapshot.conversation_id,
             ConversationViewSnapshot.opinion_group_spec_id,
-            ConversationViewSnapshot.analysis_snapshot_id,
+            AnalysisSnapshotResult.analysis_snapshot_id,
             ConversationViewSnapshot.is_closed,
             ConversationViewSnapshot.created_at,
             OpinionGroupCandidate.id.label("candidate_id"),
             OpinionGroupVariant.group_count,
             OpinionGroupCandidateAssessment.selection_score,
         )
+        .select_from(ConversationViewSnapshot)
         .join(
             AnalysisSnapshotResult,
             and_(
@@ -1995,21 +2029,14 @@ def _fetch_previous_selected_view_snapshots_by_pair(
             OpinionGroupCandidateAssessment,
             OpinionGroupCandidateAssessment.candidate_id == OpinionGroupCandidate.id,
         )
-        .where(and_(*conditions))
+        .where(ConversationViewSnapshot.id.in_(latest_snapshot_ids), *candidate_conditions)
     ).all()
 
-    latest_key_by_pair: dict[tuple[int, int], tuple[datetime, int]] = {}
-    options_by_pair_view: dict[tuple[int, int, int], list[_CheckpointCandidateOption]] = {}
-    is_closed_by_pair_view: dict[tuple[int, int, int], bool] = {}
+    options_by_pair: dict[tuple[int, int], tuple[bool, list[_CheckpointCandidateOption]]] = {}
     for row in rows:
         pair = (row.conversation_id, row.opinion_group_spec_id)
-        view_key = (row.conversation_id, row.opinion_group_spec_id, row.id)
-        latest_key = latest_key_by_pair.get(pair)
-        next_latest_key = (row.created_at, row.id)
-        if latest_key is None or next_latest_key > latest_key:
-            latest_key_by_pair[pair] = next_latest_key
-        is_closed_by_pair_view[view_key] = row.is_closed
-        options_by_pair_view.setdefault(view_key, []).append(
+        _is_closed, options = options_by_pair.setdefault(pair, (row.is_closed, []))
+        options.append(
             _CheckpointCandidateOption(
                 conversation_id=row.conversation_id,
                 opinion_group_spec_id=row.opinion_group_spec_id,
@@ -2023,13 +2050,12 @@ def _fetch_previous_selected_view_snapshots_by_pair(
         )
 
     previous_by_pair: dict[tuple[int, int], _PreviousSelectedViewSnapshot] = {}
-    for pair, (_created_at, view_snapshot_id) in latest_key_by_pair.items():
-        view_key = (pair[0], pair[1], view_snapshot_id)
-        selected = _select_checkpoint_candidate(options_by_pair_view.get(view_key, []))
+    for pair, (is_closed, options) in options_by_pair.items():
+        selected = _select_checkpoint_candidate(options)
         if selected is None:
             continue
         previous_by_pair[pair] = _PreviousSelectedViewSnapshot(
-            is_closed=is_closed_by_pair_view[view_key],
+            is_closed=is_closed,
             group_count=selected.group_count,
         )
 
@@ -2481,12 +2507,12 @@ def _checkpoint_reason_values(
         view_snapshot.view_snapshot_id
         for view_snapshot in persisted_view_snapshots_by_pair.values()
     ]
-    previous_selected_by_pair = _fetch_previous_selected_view_snapshots_by_pair(
+    previous_selected_by_pair = fetch_previous_selected_view_snapshots_by_pair(
         session,
         pairs=pairs,
         current_view_snapshot_ids=current_view_snapshot_ids,
     )
-    previous_checkpoint_selected_by_pair = _fetch_previous_selected_view_snapshots_by_pair(
+    previous_checkpoint_selected_by_pair = fetch_previous_selected_view_snapshots_by_pair(
         session,
         pairs=pairs,
         current_view_snapshot_ids=current_view_snapshot_ids,
