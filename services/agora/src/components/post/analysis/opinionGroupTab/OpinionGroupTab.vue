@@ -46,7 +46,7 @@
             :conversation-scroll-context="props.conversationScrollContext"
             :content-floor-element="groupContentFloorTarget"
             :secondary-content-merge-target="commentsHeaderElement"
-            @update:selected-cluster-key="selectClusterFromSelector"
+            @update:selected-cluster-key="handleClusterSelection"
             @update:is-secondary-content-merged="isScopeMerged = $event"
           >
             <template #secondary>
@@ -151,7 +151,6 @@ const props = withDefaults(
     conversationOrganizationName: string;
     clusters: Partial<PolisClusters>;
     totalParticipantCount: number;
-    analysisFrameKey: string | undefined;
     aiLabelingEnabled: boolean;
     compactMode?: boolean;
     conversationScrollContext: ConversationScrollContext;
@@ -178,8 +177,9 @@ const commentsRef = ref<OpinionGroupCommentsExposed | null>(null);
 const showClusterInformation = ref(false);
 const isScopeMerged = ref(false);
 const displayMode = ref<OpinionGroupDisplayMode>("current");
-let hasAppliedClusterDefault = false;
-let lastDefaultAnalysisFrameKey: string | undefined;
+let lastSelectionContext:
+  | { conversationSlugId: string; clusterCount: number }
+  | undefined;
 
 const clusterList = computed<ClusterItem[]>(() =>
   Object.values(props.clusters)
@@ -293,39 +293,31 @@ const groupContentFloorTarget = computed(
 );
 
 watch(
-  clusterList,
-  (clusters) => {
-    const stillExists = clusters.some(
-      (cluster) => cluster.key === currentClusterTab.value
-    );
-    if (stillExists) return;
-
-    const firstCluster = clusters[0];
-    if (firstCluster !== undefined) {
-      currentClusterTab.value = firstCluster.key;
+  [() => props.conversationSlugId, clusterList],
+  ([conversationSlugId, clusters]) => {
+    if (lastSelectionContext?.conversationSlugId !== conversationSlugId) {
+      lastSelectionContext = undefined;
+      displayMode.value = "current";
     }
-  },
-  { immediate: true }
-);
 
-watch(
-  [() => props.analysisFrameKey, clusterList],
-  ([analysisFrameKey, clusters]) => {
     if (clusters.length === 0) {
       return;
     }
 
-    if (
-      hasAppliedClusterDefault &&
-      analysisFrameKey === lastDefaultAnalysisFrameKey
-    ) {
-      return;
+    const canRetainSelection =
+      lastSelectionContext?.conversationSlugId === conversationSlugId &&
+      lastSelectionContext.clusterCount === clusters.length &&
+      clusters.some((cluster) => cluster.key === currentClusterTab.value);
+
+    if (!canRetainSelection) {
+      currentClusterTab.value = findInitialClusterKey(clusters);
+      displayMode.value = "current";
     }
 
-    currentClusterTab.value = findInitialClusterKey(clusters);
-    displayMode.value = "current";
-    hasAppliedClusterDefault = true;
-    lastDefaultAnalysisFrameKey = analysisFrameKey;
+    lastSelectionContext = {
+      conversationSlugId,
+      clusterCount: clusters.length,
+    };
   },
   { immediate: true }
 );
@@ -334,16 +326,8 @@ watch(currentClusterTab, () => {
   displayMode.value = "current";
 });
 
-function handleClusterSelection(clusterKey: PolisKey): void {
-  if (clusterKey === currentClusterTab.value) {
-    return;
-  }
-
-  currentClusterTab.value = clusterKey;
-}
-
-function selectClusterFromSelector(clusterKey: PolisKey | undefined): void {
-  if (clusterKey === undefined) {
+function handleClusterSelection(clusterKey: PolisKey | undefined): void {
+  if (clusterKey === undefined || clusterKey === currentClusterTab.value) {
     return;
   }
 

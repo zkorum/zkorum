@@ -144,7 +144,6 @@
                 "
                 :clusters="polisClusters"
                 :total-participant-count="analysisParticipantCount"
-                :analysis-frame-key="analysisFrameKey"
                 :ai-labeling-enabled="props.aiLabelingEnabled"
                 :compact-mode="currentTab === 'Summary'"
                 :conversation-scroll-context="props.conversationScrollContext"
@@ -703,19 +702,6 @@ const isInitialAnalysisLoading = computed(
       isAnalysisForegroundLoading.value) ||
     (!hasLoadedCheckpoints.value && isCheckpointTimelineLoading.value)
 );
-
-const analysisFrameKey = computed(() => {
-  const data = activeAnalysisData.value;
-  if (data === undefined) {
-    return undefined;
-  }
-
-  return [
-    data.conversationViewSnapshotId ?? "live",
-    data.analysisSnapshotId ?? "none",
-    data.analysisViewState?.resolvedCandidateId ?? "none",
-  ].join(":");
-});
 
 const noAnalysisViewOptions = computed<AnalysisViewOption[]>(() => {
   const variantsEnabled =
