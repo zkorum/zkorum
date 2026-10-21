@@ -70,6 +70,7 @@ describe("resolveSurveyForm", () => {
     };
     const surveyForm: SurveyFormData = {
       success: true,
+      surveyConfigId: 1,
       currentRevision: 1,
       questions: [],
       surveyGate: {

@@ -49,6 +49,7 @@ import {
   type ConversationDetail,
   updateConversationQueryCache,
 } from "src/utils/api/post/useConversationQuery";
+import { refreshSurveyConfigQueries } from "src/utils/api/survey/surveyConfigQuery";
 import { isLiveSurveyResultsQueryKey } from "src/utils/api/survey/surveyQueryKeys";
 import { buildAuthorizationHeader } from "src/utils/crypto/ucan/operation";
 import { processEnv } from "src/utils/processEnv";
@@ -1163,17 +1164,9 @@ export function useRealtimeSSE({
           const data = sseEvent.data;
           scheduleSurveyQueryRefresh(data.conversationSlugId);
           if (data.configChanged) {
-            void queryClient.invalidateQueries({
-              queryKey: ["conversation", data.conversationSlugId],
-              refetchType: "active",
-            });
-            void queryClient.invalidateQueries({
-              queryKey: ["survey-form", data.conversationSlugId],
-              refetchType: "active",
-            });
-            void queryClient.invalidateQueries({
-              queryKey: ["survey-status", data.conversationSlugId],
-              refetchType: "active",
+            void refreshSurveyConfigQueries({
+              queryClient,
+              conversationSlugId: data.conversationSlugId,
             });
           }
           break;

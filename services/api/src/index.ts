@@ -5569,6 +5569,9 @@ server.after(() => {
                 db,
                 conversationSlugId: request.body.conversationSlugId,
                 questionSlugId: request.body.questionSlugId,
+                expectedQuestionSemanticVersion:
+                    request.body.expectedQuestionSemanticVersion,
+                knownSurveyRevision: request.body.knownSurveyRevision,
                 answer: request.body.answer,
                 didWrite,
                 userAgent: request.headers["user-agent"] ?? "Unknown device",
@@ -5599,6 +5602,9 @@ server.after(() => {
                 userAgent: request.headers["user-agent"] ?? "Unknown device",
                 now: nowZeroMs(),
                 currentDisplayLanguage: getRequestDisplayLanguage({ request }),
+                skipEmailUpdateConsent: request.body.skipEmailUpdateConsent,
+                getEmailUpdateOnboardingAction:
+                    conversationEmailUpdateService.getParticipationOnboardingAction,
                 valkey: queueValkeyRef.current,
             });
         },

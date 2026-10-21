@@ -19,7 +19,7 @@ const saveAnswer = vi.hoisted(() =>
 const exitToConversation = vi.hoisted(() => vi.fn());
 const showNotifyMessage = vi.hoisted(() => vi.fn());
 const push = vi.hoisted(() => vi.fn());
-const navigateToSurveyRoot = vi.hoisted(() => vi.fn());
+const replace = vi.hoisted(() => vi.fn());
 const handleVueError = vi.hoisted(() => vi.fn());
 const state = vi.hoisted(() => ({
   optional: false,
@@ -39,7 +39,7 @@ vi.mock("src/stores/language", () => ({
   useLanguageStore: () => ({ displayLanguage: ref("en") }),
 }));
 vi.mock("vue-router", () => ({
-  useRouter: () => ({ push, replace: vi.fn() }),
+  useRouter: () => ({ push, replace }),
 }));
 vi.mock("src/composables/conversation/useConversationOnboardingRoute", () => ({
   useConversationOnboardingRoute: () => ({
@@ -50,12 +50,6 @@ vi.mock("src/composables/conversation/useConversationOnboardingRoute", () => ({
 }));
 vi.mock("src/composables/conversation/useConversationOnboardingExit", () => ({
   useConversationOnboardingExit: () => ({ exitToConversation }),
-}));
-vi.mock("src/composables/conversation/useSurveyNavigation", () => ({
-  useSurveyNavigation: () => ({
-    navigateToNextSurveyStep: vi.fn(),
-    navigateToSurveyRoot,
-  }),
 }));
 vi.mock("src/utils/nav/goBackButton", () => ({
   useGoBackButtonHandler: () => ({ safeNavigateBack: vi.fn() }),
@@ -92,6 +86,7 @@ vi.mock("src/composables/conversation/useConversationSurveyState", () => ({
         ? undefined
         : {
             success: true,
+            surveyConfigId: 1,
             currentRevision: 1,
             surveyGate: createSurveyGate(),
             questions: state.hasNextQuestion
@@ -229,6 +224,10 @@ function createSaveResponse({
   return {
     success: true,
     justCompleted,
+    surveyConfigId: 1,
+    currentRevision: 1,
+    savedQuestion: createQuestion(),
+    routeResolution: { kind: "summary" },
     participationStatus: { status: "ready" },
     surveyGate: {
       ...createSurveyGate(),
@@ -292,6 +291,79 @@ async function clickButton({
 }
 
 describe("questionnaire completion", () => {
+  it("recovers directly to the server-selected question when a cached draft is obsolete", async () => {
+    const updatedQuestion = {
+      ...createQuestion(),
+      questionSlugId: "updated-question",
+      currentSemanticVersion: 2,
+    };
+    saveAnswer.mockResolvedValue({
+      success: false,
+      reason: "survey_changed",
+      participationStatus:
+        participationRejectionFixture("survey_required").participationStatus,
+      recovery: {
+        kind: "survey",
+        form: {
+          success: true,
+          surveyConfigId: 1,
+          currentRevision: 2,
+          surveyGate: createSurveyGate(),
+          questions: [updatedQuestion],
+        },
+        routeResolution: {
+          kind: "question",
+          questionSlugId: "updated-question",
+        },
+      },
+    });
+    const target = mountQuestion();
+    await clickButton({ target, label: "Bicycle" });
+    await clickButton({ target, label: "Next" });
+    expect(replace).toHaveBeenCalledExactlyOnceWith({
+      path: "/project/project-one/conversation/conversation-one/onboarding/question/updated-question",
+    });
+    expect(showNotifyMessage).toHaveBeenCalledExactlyOnceWith(
+      "surveyChangedMessage"
+    );
+    expect(exitToConversation).not.toHaveBeenCalled();
+    expect(saveAnswer).toHaveBeenCalledOnce();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("dismisses a writer-confirmed removed survey without claiming that the rejected draft was saved", async () => {
+    saveAnswer.mockResolvedValue({
+      success: false,
+      reason: "survey_changed",
+      participationStatus: { status: "ready" },
+      recovery: {
+        kind: "no_survey",
+        surveyGate: {
+          hasSurvey: false,
+          isOptional: false,
+          canParticipate: true,
+          status: "no_survey",
+        },
+        routeResolution: { kind: "none" },
+      },
+    });
+    const target = mountQuestion();
+    await clickButton({ target, label: "Bicycle" });
+    await clickButton({ target, label: "Next" });
+    expect(exitToConversation).toHaveBeenCalledOnce();
+    expect(showNotifyMessage).toHaveBeenCalledExactlyOnceWith(
+      "surveyChangedMessage"
+    );
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("keeps a cached question visible while its background refresh is pending", () => {
+    state.surveyRefreshing = true;
+    const target = mountQuestion();
+    expect(target.textContent).toContain("Bicycle");
+    expect(exitToConversation).not.toHaveBeenCalled();
+  });
+
   it("waits for a stale cached no-survey response to refresh before dismissing", async () => {
     state.surveyRemoved = true;
     state.surveyRefreshing = true;
@@ -344,6 +416,8 @@ describe("questionnaire completion", () => {
 
     expect(saveAnswer).toHaveBeenCalledWith({
       questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
       answer: { questionType: "choice", optionSlugIds: ["bicycle"] },
     });
     expect(exitToConversation).toHaveBeenCalledWith({
@@ -365,6 +439,8 @@ describe("questionnaire completion", () => {
 
     expect(saveAnswer).toHaveBeenCalledWith({
       questionSlugId: "question-one",
+      expectedQuestionSemanticVersion: 1,
+      knownSurveyRevision: 1,
       answer: null,
     });
     expect(exitToConversation).toHaveBeenCalledOnce();
@@ -444,9 +520,8 @@ describe("questionnaire completion", () => {
     await clickButton({ target, label: "Bicycle" });
     await clickButton({ target, label: "Next" });
 
-    expect(navigateToSurveyRoot).toHaveBeenCalledExactlyOnceWith({
-      conversationSlugId: "conversation-one",
-      routeContext: { kind: "project", projectSlug: "project-one" },
+    expect(replace).toHaveBeenCalledExactlyOnceWith({
+      path: "/project/project-one/conversation/conversation-one/onboarding/verify/email",
     });
     expect(exitToConversation).not.toHaveBeenCalled();
     expect(showNotifyMessage).not.toHaveBeenCalled();

@@ -32,6 +32,7 @@ import {
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
+import { useConversationOnboardingPrefetch } from "src/composables/conversation/useConversationOnboardingPrefetch";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
@@ -59,8 +60,14 @@ const { t: tParticipation } =
     conversationParticipationTranslations
   );
 
-// Direct links prepare the same lightweight status used by the conversation.
-useParticipationStatusQuery(routeConversationSlugId);
+const { participationStatus } = useParticipationStatusQuery(
+  routeConversationSlugId
+);
+const { nextStepPath } = useConversationOnboardingPrefetch({
+  conversationSlugId: routeConversationSlugId,
+  routeContext,
+  participationStatus,
+});
 
 const isActing = ref(false);
 
@@ -80,10 +87,12 @@ async function handlePrimaryAction(): Promise<void> {
 
   try {
     await router.push({
-      path: getConversationSurveyVerifyPath({
-        conversationSlugId: routeConversationSlugId.value,
-        routeContext: routeContext.value,
-      }),
+      path:
+        nextStepPath.value ??
+        getConversationSurveyVerifyPath({
+          conversationSlugId: routeConversationSlugId.value,
+          routeContext: routeContext.value,
+        }),
     });
   } finally {
     isActing.value = false;

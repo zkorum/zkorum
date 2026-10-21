@@ -33,6 +33,7 @@ import {
     surveyQuestionOptionTable,
     surveyQuestionTable,
     surveyResponseTable,
+    userTable,
     voteTable,
 } from "@/shared-backend/schema.js";
 import { scheduleConversationAnalysisRefresh } from "@/shared-backend/conversationCounters.js";
@@ -92,6 +93,8 @@ import type {
     ConversationParticipationStatus,
     ConversationEmailUpdateOnboardingAction,
     SurveyAnswerSaveResponse,
+    SurveyAnswerRecovery,
+    SurveyStatusCheckResponse,
     SurveyResponseWithdrawResponse,
 } from "@/shared/types/dto.js";
 import { log } from "@/app.js";
@@ -279,7 +282,7 @@ async function markRankingConversationDirty({
     }
 }
 
-async function lockConversationForSurveyConfigUpdate({
+async function lockConversationForSurveyEdit({
     db,
     conversationId,
 }: {
@@ -290,7 +293,32 @@ async function lockConversationForSurveyConfigUpdate({
         .select({ id: conversationTable.id })
         .from(conversationTable)
         .where(eq(conversationTable.id, conversationId))
-        .for("no key update", { of: conversationTable });
+        .for("update", { of: conversationTable });
+}
+
+async function lockSurveyParticipantWrite({
+    db,
+    conversationId,
+    participantId,
+}: {
+    db: PostgresJsDatabase;
+    conversationId: number;
+    participantId: string;
+}): Promise<void> {
+    // KEY SHARE excludes survey editors' UPDATE lock, but is compatible with
+    // other participants and the analysis scheduler's NO KEY UPDATE lock.
+    await db
+        .select({ id: conversationTable.id })
+        .from(conversationTable)
+        .where(eq(conversationTable.id, conversationId))
+        .for("key share");
+    // Lock the owner before reading answers, including simultaneous first saves
+    // for which there is no response row to lock yet.
+    await db
+        .select({ id: userTable.id })
+        .from(userTable)
+        .where(eq(userTable.id, participantId))
+        .for("no key update");
 }
 
 export async function scheduleConversationAnalysisForSurveyChange({
@@ -645,7 +673,7 @@ export function surveyQuestionToConfig({
     question,
 }: {
     question: ActiveSurveyQuestionRecord;
-}): SurveyQuestionConfig {
+}) {
     const baseQuestion = {
         questionSlugId: question.slugId,
         questionText: question.questionText,
@@ -665,7 +693,7 @@ export function surveyQuestionToConfig({
                 ...baseQuestion,
                 questionType: "free_text",
                 constraints: question.constraints,
-            };
+            } satisfies SurveyQuestionConfig;
         case "choice":
             if (question.constraints.type !== "choice") {
                 throw httpErrors.internalServerError(
@@ -686,7 +714,7 @@ export function surveyQuestionToConfig({
                     displayOrder: option.displayOrder,
                     allowsText: option.allowsText,
                 })),
-            };
+            } satisfies SurveyQuestionConfig;
     }
 }
 
@@ -1218,8 +1246,19 @@ export function deriveSurveyRouteResolution({
     surveyState: SurveyParticipantState;
     participantId: string | undefined;
 }): SurveyRouteResolution {
-    const surveyGate = deriveSurveyGate({ surveyState, participantId });
+    return resolveSurveyRoute({
+        surveyState,
+        surveyGate: deriveSurveyGate({ surveyState, participantId }),
+    });
+}
 
+function resolveSurveyRoute({
+    surveyState,
+    surveyGate,
+}: {
+    surveyState: SurveyParticipantState;
+    surveyGate: SurveyGateDetails;
+}): SurveyRouteResolution {
     if (surveyGate.status === "no_survey") {
         return { kind: "none" };
     }
@@ -1286,6 +1325,19 @@ export function deriveSurveyRouteResolution({
     return {
         kind: "question",
         questionSlugId: firstQuestion.slugId,
+    };
+}
+
+function deriveSurveyStatus({
+    surveyState,
+    surveyGate,
+}: {
+    surveyState: SurveyParticipantState;
+    surveyGate: SurveyGateDetails;
+}): SurveyStatusCheckResponse {
+    return {
+        surveyGate: toSurveyGateDto({ surveyGate }),
+        routeResolution: resolveSurveyRoute({ surveyState, surveyGate }),
     };
 }
 
@@ -2290,6 +2342,7 @@ export async function fetchSurveyForm({
     conversationSlugId: string;
     participantId: string | undefined;
 }): Promise<{
+    surveyConfigId: number;
     currentRevision: number;
     questions: SurveyQuestionFormItem[];
     surveyGate: SurveyGateSummary;
@@ -2313,6 +2366,7 @@ export async function fetchSurveyForm({
     });
 
     return {
+        surveyConfigId: activeSurveyConfig.id,
         currentRevision: activeSurveyConfig.currentRevision,
         questions: activeSurveyConfig.questions.map((question) =>
             deriveSurveyQuestionFormItem({
@@ -3000,10 +3054,99 @@ async function persistSurveyAnswer({
     };
 }
 
+function deriveSurveyAnswerRecovery({
+    surveyState,
+    status,
+}: {
+    surveyState: SurveyParticipantState;
+    status: SurveyStatusCheckResponse;
+}): SurveyAnswerRecovery {
+    const { surveyGate, routeResolution } = status;
+    const config = surveyState.activeSurveyConfig;
+    if (config === undefined) {
+        return {
+            kind: "no_survey",
+            surveyGate,
+            routeResolution: { kind: "none" },
+        };
+    }
+    return {
+        kind: "survey",
+        form: {
+            success: true,
+            surveyConfigId: config.id,
+            currentRevision: config.currentRevision,
+            surveyGate,
+            questions: config.questions.map((question) =>
+                deriveSurveyQuestionFormItem({
+                    question,
+                    storedAnswer: surveyState.answersByQuestionId.get(
+                        question.id,
+                    ),
+                    surveyIsOptional: config.isOptional,
+                }),
+            ),
+        },
+        routeResolution,
+    };
+}
+
+type GetSurveyEmailUpdateAction = (params: {
+    database: PostgresJsDatabase;
+    userId: string;
+    conversationSlugId: string;
+}) => Promise<ConversationEmailUpdateOnboardingAction | undefined>;
+
+async function getSurveyWriteParticipationStatus({
+    db,
+    status,
+    participantId,
+    conversationSlugId,
+    skipEmailUpdateConsent,
+    getEmailUpdateOnboardingAction,
+}: {
+    db: PostgresJsDatabase;
+    status: SurveyStatusCheckResponse;
+    participantId: string;
+    conversationSlugId: string;
+    skipEmailUpdateConsent: boolean;
+    getEmailUpdateOnboardingAction: GetSurveyEmailUpdateAction;
+}): Promise<ConversationParticipationStatus> {
+    const gate = status.surveyGate;
+    const reason = getParticipationBlockedReasonFromSurveyGateStatus({
+        surveyGateStatus: gate.status,
+        isOptional: gate.isOptional,
+    });
+    if (reason !== undefined) {
+        return {
+            status: "onboarding_required",
+            nextStep: {
+                kind: "survey",
+                routeResolution: status.routeResolution,
+            },
+        };
+    }
+    const action = skipEmailUpdateConsent
+        ? undefined
+        : await getEmailUpdateOnboardingAction({
+              database: db,
+              userId: participantId,
+              conversationSlugId,
+          });
+    return action === undefined
+        ? { status: "ready" }
+        : {
+              status: "onboarding_required",
+              nextStep: { kind: "email_updates", action },
+          };
+}
+
 export async function saveSurveyAnswer({
     db,
     conversationSlugId,
     questionSlugId,
+    expectedQuestionSemanticVersion,
+    knownSurveyRevision,
     answer,
     didWrite,
     userAgent,
@@ -3016,6 +3159,8 @@ export async function saveSurveyAnswer({
     db: PostgresJsDatabase;
     conversationSlugId: string;
     questionSlugId: string;
+    expectedQuestionSemanticVersion: number;
+    knownSurveyRevision: number;
     answer: SurveyAnswerSubmission | null;
     didWrite: string;
     userAgent: string;
@@ -3023,11 +3168,7 @@ export async function saveSurveyAnswer({
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     valkey?: Valkey;
     skipEmailUpdateConsent: boolean;
-    getEmailUpdateOnboardingAction: (params: {
-        database: PostgresJsDatabase;
-        userId: string;
-        conversationSlugId: string;
-    }) => Promise<ConversationEmailUpdateOnboardingAction | undefined>;
+    getEmailUpdateOnboardingAction: GetSurveyEmailUpdateAction;
 }): Promise<SurveyAnswerSaveResponse> {
     const participationCheck = await checkConversationParticipation({
         db,
@@ -3051,7 +3192,113 @@ export async function saveSurveyAnswer({
     });
 
     const surveyTransition = await db.transaction(async (tx) => {
-        // The upsert locks the response even when two first answers arrive together.
+        await lockSurveyParticipantWrite({
+            db: tx,
+            conversationId: conversation.conversationId,
+            participantId,
+        });
+        const loadedSurveyState = await loadSurveyParticipantState({
+            db: tx,
+            conversationId: conversation.conversationId,
+            participantId,
+        });
+        const previousSurveyGate = deriveSurveyGate({
+            surveyState: loadedSurveyState,
+            participantId,
+        });
+        const previousStatus = deriveSurveyStatus({
+            surveyState: loadedSurveyState,
+            surveyGate: previousSurveyGate,
+        });
+        const activeSurveyConfig = loadedSurveyState.activeSurveyConfig;
+        const storedQuestion = activeSurveyConfig?.questions.find(
+            (question) => question.slugId === questionSlugId,
+        );
+        async function recoverChangedSurvey() {
+            const recovery = deriveSurveyAnswerRecovery({
+                surveyState: loadedSurveyState,
+                status:
+                    storedQuestion === undefined
+                        ? previousStatus
+                        : {
+                              ...previousStatus,
+                              routeResolution: {
+                                  kind: "question",
+                                  questionSlugId: storedQuestion.slugId,
+                              },
+                          },
+            });
+            // Optional saved responses stay valid, but an unsaved draft must not
+            // be silently reinterpreted as an answer to different wording.
+            return {
+                response: {
+                    success: false,
+                    reason: "survey_changed",
+                    participationStatus:
+                        await getSurveyWriteParticipationStatus({
+                            db: tx,
+                            status: previousStatus,
+                            participantId,
+                            conversationSlugId,
+                            skipEmailUpdateConsent,
+                            getEmailUpdateOnboardingAction,
+                        }),
+                    recovery,
+                } satisfies SurveyAnswerSaveResponse,
+                analysisRefreshScheduled: false,
+            };
+        }
+
+        if (
+            activeSurveyConfig === undefined ||
+            storedQuestion?.currentSemanticVersion !==
+                expectedQuestionSemanticVersion
+        ) {
+            return await recoverChangedSurvey();
+        }
+
+        const question = getParticipantSurveyQuestion({
+            question: storedQuestion,
+            surveyIsOptional: activeSurveyConfig.isOptional,
+        });
+        let normalizedAnswer: SurveyAnswerForStorage | null;
+        try {
+            if (
+                answer?.questionType === "choice" &&
+                !validateSurveyAnswer({ question, answer })
+            ) {
+                throw httpErrors.badRequest("Invalid survey answer payload");
+            }
+            normalizedAnswer =
+                answer === null
+                    ? null
+                    : normalizeSurveyAnswerForStorage({
+                          question,
+                          answer,
+                          storedAnswer:
+                              loadedSurveyState.answersByQuestionId.get(
+                                  question.id,
+                              ),
+                      });
+            if (
+                normalizedAnswer?.questionType === "free_text" &&
+                !validateSurveyAnswer({ question, answer: normalizedAnswer })
+            ) {
+                throw httpErrors.badRequest("Invalid survey answer payload");
+            }
+        } catch (error) {
+            // A non-semantic config change can still disable an annotation field.
+            // Return its new constraints instead of trapping an old client on 400s.
+            if (
+                knownSurveyRevision !== activeSurveyConfig.currentRevision &&
+                error instanceof httpErrors.HttpError &&
+                error.statusCode === 400
+            ) {
+                return await recoverChangedSurvey();
+            }
+            throw error;
+        }
+
         const responseRows = await tx
             .insert(surveyResponseTable)
             .values({
@@ -3079,62 +3326,7 @@ export async function saveSurveyAnswer({
             throw httpErrors.internalServerError(
                 "Survey response could not be saved",
             );
-        const activeSurveyConfig = await getActiveSurveyConfigRecord({
-            db: tx,
-            conversationId: conversation.conversationId,
-        });
-        if (activeSurveyConfig === undefined)
-            throw httpErrors.notFound("Survey not found");
         const shouldResetWithdrawnResponse = response.withdrawnAt !== null;
-        const previousSurveyState: SurveyParticipantState = {
-            activeSurveyConfig,
-            response,
-            answersByQuestionId: shouldResetWithdrawnResponse
-                ? new Map<number, StoredSurveyAnswer>()
-                : await loadSurveyAnswers({
-                      db: tx,
-                      surveyResponseId: response.id,
-                  }),
-        };
-        const previousSurveyGate = deriveSurveyGate({
-            surveyState: previousSurveyState,
-            participantId,
-        });
-
-        const storedQuestion = activeSurveyConfig.questions.find(
-            (currentQuestion) => currentQuestion.slugId === questionSlugId,
-        );
-        if (storedQuestion === undefined) {
-            throw httpErrors.notFound("Survey question not found");
-        }
-        const question = getParticipantSurveyQuestion({
-            question: storedQuestion,
-            surveyIsOptional: activeSurveyConfig.isOptional,
-        });
-
-        if (
-            answer?.questionType === "choice" &&
-            !validateSurveyAnswer({ question, answer })
-        ) {
-            throw httpErrors.badRequest("Invalid survey answer payload");
-        }
-        const normalizedAnswer =
-            answer === null
-                ? null
-                : normalizeSurveyAnswerForStorage({
-                      question,
-                      answer,
-                      storedAnswer: previousSurveyState.answersByQuestionId.get(
-                          question.id,
-                      ),
-                  });
-
-        if (
-            normalizedAnswer?.questionType === "free_text" &&
-            !validateSurveyAnswer({ question, answer: normalizedAnswer })
-        ) {
-            throw httpErrors.badRequest("Invalid survey answer payload");
-        }
 
         const finalizeSurveyAnswerSave = async (
             answersByQuestionId: Map<number, StoredSurveyAnswer>,
@@ -3154,44 +3346,24 @@ export async function saveSurveyAnswer({
                 surveyState: nextSurveyState,
                 participantId,
             });
+            const status = deriveSurveyStatus({
+                surveyState: nextSurveyState,
+                surveyGate: nextSurveyGate,
+            });
             const justCompleted =
                 previousSurveyGate.status !== "complete_valid" &&
                 nextSurveyGate.status === "complete_valid";
 
-            const gate = toSurveyGateDto({ surveyGate: nextSurveyGate });
-            const reason = getParticipationBlockedReasonFromSurveyGateStatus({
-                surveyGateStatus: gate.status,
-                isOptional: gate.isOptional,
-            });
-            const emailUpdateAction =
-                reason === undefined &&
-                !skipEmailUpdateConsent &&
-                (await getEmailUpdateOnboardingAction({
-                    database: tx,
-                    userId: participantId,
+            const participationStatus = await getSurveyWriteParticipationStatus(
+                {
+                    db: tx,
+                    status,
+                    participantId,
                     conversationSlugId,
-                }));
-            const participationStatus: ConversationParticipationStatus =
-                reason !== undefined
-                    ? {
-                          status: "onboarding_required",
-                          nextStep: {
-                              kind: "survey",
-                              routeResolution: deriveSurveyRouteResolution({
-                                  surveyState: nextSurveyState,
-                                  participantId,
-                              }),
-                          },
-                      }
-                    : emailUpdateAction
-                      ? {
-                            status: "onboarding_required",
-                            nextStep: {
-                                kind: "email_updates",
-                                action: emailUpdateAction,
-                            },
-                        }
-                      : { status: "ready" };
+                    skipEmailUpdateConsent,
+                    getEmailUpdateOnboardingAction,
+                },
+            );
 
             if (justCompleted) {
                 await tx
@@ -3222,10 +3394,32 @@ export async function saveSurveyAnswer({
                     : false;
 
             return {
-                nextSurveyGate,
-                participationStatus,
+                response: {
+                    success: true,
+                    surveyGate: status.surveyGate,
+                    participationStatus,
+                    justCompleted,
+                    surveyConfigId: activeSurveyConfig.id,
+                    currentRevision: activeSurveyConfig.currentRevision,
+                    savedQuestion: deriveSurveyQuestionFormItem({
+                        question: storedQuestion,
+                        storedAnswer: answersByQuestionId.get(
+                            storedQuestion.id,
+                        ),
+                        surveyIsOptional: activeSurveyConfig.isOptional,
+                    }),
+                    routeResolution: status.routeResolution,
+                    recovery:
+                        knownSurveyRevision ===
+                            activeSurveyConfig.currentRevision &&
+                        loadedSurveyState.response !== undefined
+                            ? undefined
+                            : deriveSurveyAnswerRecovery({
+                                  surveyState: nextSurveyState,
+                                  status,
+                              }),
+                } satisfies SurveyAnswerSaveResponse,
                 analysisRefreshScheduled,
-                justCompleted,
             };
         };
 
@@ -3245,14 +3439,14 @@ export async function saveSurveyAnswer({
             conversationId: conversation.conversationId,
             surveyResponseId: response.id,
             question,
-            previousAnswer: previousSurveyState.answersByQuestionId.get(
+            previousAnswer: loadedSurveyState.answersByQuestionId.get(
                 question.id,
             ),
             answer: normalizedAnswer,
             now,
         });
         const nextAnswersByQuestionId = new Map(
-            previousSurveyState.answersByQuestionId,
+            loadedSurveyState.answersByQuestionId,
         );
         if (savedAnswer === undefined)
             nextAnswersByQuestionId.delete(question.id);
@@ -3260,12 +3454,7 @@ export async function saveSurveyAnswer({
         return await finalizeSurveyAnswerSave(nextAnswersByQuestionId);
     });
 
-    const {
-        nextSurveyGate,
-        participationStatus,
-        analysisRefreshScheduled,
-        justCompleted,
-    } = surveyTransition;
+    const { analysisRefreshScheduled } = surveyTransition;
 
     if (analysisRefreshScheduled) {
         await wakeScheduledConversationAnalysisForSurveyChange({
@@ -3274,12 +3463,7 @@ export async function saveSurveyAnswer({
         });
     }
 
-    return {
-        success: true,
-        surveyGate: toSurveyGateDto({ surveyGate: nextSurveyGate }),
-        justCompleted,
-        participationStatus,
-    };
+    return surveyTransition.response;
 }
 
 export async function withdrawSurveyResponse({
@@ -3290,6 +3474,8 @@ export async function withdrawSurveyResponse({
     now,
     currentDisplayLanguage,
     valkey,
+    skipEmailUpdateConsent,
+    getEmailUpdateOnboardingAction,
 }: {
     db: PostgresJsDatabase;
     conversationSlugId: string;
@@ -3298,6 +3484,8 @@ export async function withdrawSurveyResponse({
     now: Date;
     currentDisplayLanguage: SupportedDisplayLanguageCodes;
     valkey?: Valkey;
+    skipEmailUpdateConsent: boolean;
+    getEmailUpdateOnboardingAction: GetSurveyEmailUpdateAction;
 }): Promise<SurveyResponseWithdrawResponse> {
     const participationCheck = await checkConversationParticipation({
         db,
@@ -3321,6 +3509,11 @@ export async function withdrawSurveyResponse({
     });
 
     const surveyTransition = await db.transaction(async (tx) => {
+        await lockSurveyParticipantWrite({
+            db: tx,
+            conversationId: conversation.conversationId,
+            participantId,
+        });
         // The absence check must use the writer too: replica lag must not turn
         // withdrawal of an existing response into a successful no-op.
         const previousSurveyState = await loadSurveyParticipantState({
@@ -3332,18 +3525,59 @@ export async function withdrawSurveyResponse({
             surveyState: previousSurveyState,
             participantId,
         });
+        const previousStatus = deriveSurveyStatus({
+            surveyState: previousSurveyState,
+            surveyGate: previousSurveyGate,
+        });
         const activeSurveyConfig = previousSurveyState.activeSurveyConfig;
         if (activeSurveyConfig === undefined) {
-            throw httpErrors.notFound("Survey not found");
+            // The active-form loader deliberately skips retired surveys. A
+            // withdrawal still has to remove their retained participant data.
+            const withdrawnRows = await tx
+                .update(surveyResponseTable)
+                .set({ withdrawnAt: now, completedAt: null, updatedAt: now })
+                .where(
+                    and(
+                        eq(
+                            surveyResponseTable.conversationId,
+                            conversation.conversationId,
+                        ),
+                        eq(surveyResponseTable.participantId, participantId),
+                    ),
+                )
+                .returning({ id: surveyResponseTable.id });
+            const withdrawn = withdrawnRows.at(0);
+            if (withdrawn !== undefined) {
+                await softDeleteSurveyResponseAnswers({
+                    db: tx,
+                    surveyResponseId: withdrawn.id,
+                    now,
+                });
+                await queueConversationSurveyUpdatedEvent({
+                    db: tx,
+                    conversationSlugId,
+                    configChanged: false,
+                });
+            }
         }
-        if (previousSurveyState.response === undefined) {
+        if (
+            activeSurveyConfig === undefined ||
+            previousSurveyState.response === undefined
+        ) {
             return {
-                surveyGate: toSurveyGateDto({ surveyGate: previousSurveyGate }),
-                routeResolution: deriveSurveyRouteResolution({
+                recovery: deriveSurveyAnswerRecovery({
                     surveyState: previousSurveyState,
-                    participantId,
+                    status: previousStatus,
                 }),
                 analysisRefreshScheduled: false,
+                participationStatus: await getSurveyWriteParticipationStatus({
+                    db: tx,
+                    status: previousStatus,
+                    participantId,
+                    conversationSlugId,
+                    skipEmailUpdateConsent,
+                    getEmailUpdateOnboardingAction,
+                }),
             };
         }
         const surveyResponseId = previousSurveyState.response.id;
@@ -3359,14 +3593,23 @@ export async function withdrawSurveyResponse({
             .set({ withdrawnAt: now, completedAt: null, updatedAt: now })
             .where(eq(surveyResponseTable.id, surveyResponseId));
 
-        const nextSurveyState = await loadSurveyParticipantState({
-            db: tx,
-            conversationId: conversation.conversationId,
-            participantId,
-        });
+        const nextSurveyState: SurveyParticipantState = {
+            activeSurveyConfig,
+            response: {
+                ...previousSurveyState.response,
+                withdrawnAt: now,
+                completedAt: null,
+                updatedAt: now,
+            },
+            answersByQuestionId: new Map(),
+        };
         const nextSurveyGate = deriveSurveyGate({
             surveyState: nextSurveyState,
             participantId,
+        });
+        const status = deriveSurveyStatus({
+            surveyState: nextSurveyState,
+            surveyGate: nextSurveyGate,
         });
         await queueConversationSurveyUpdatedEvent({
             db: tx,
@@ -3388,12 +3631,19 @@ export async function withdrawSurveyResponse({
                   )
                 : false;
         return {
-            surveyGate: toSurveyGateDto({ surveyGate: nextSurveyGate }),
-            routeResolution: deriveSurveyRouteResolution({
+            recovery: deriveSurveyAnswerRecovery({
                 surveyState: nextSurveyState,
-                participantId,
+                status,
             }),
             analysisRefreshScheduled,
+            participationStatus: await getSurveyWriteParticipationStatus({
+                db: tx,
+                status,
+                participantId,
+                conversationSlugId,
+                skipEmailUpdateConsent,
+                getEmailUpdateOnboardingAction,
+            }),
         };
     });
 
@@ -3468,7 +3718,7 @@ export async function updateSurveyConfigByAuthor({
     });
 
     const surveyConfigUpdate = await db.transaction(async (tx) => {
-        await lockConversationForSurveyConfigUpdate({
+        await lockConversationForSurveyEdit({
             db: tx,
             conversationId: conversation.conversationId,
         });
@@ -3564,7 +3814,7 @@ export async function deleteSurveyConfigByAuthor({
         rankingMode: conversation.rankingMode,
     });
     const surveyConfigDeleteResult = await db.transaction(async (tx) => {
-        await lockConversationForSurveyConfigUpdate({
+        await lockConversationForSurveyEdit({
             db: tx,
             conversationId: conversation.conversationId,
         });

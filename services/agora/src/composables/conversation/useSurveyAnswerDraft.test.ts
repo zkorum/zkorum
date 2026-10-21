@@ -55,6 +55,24 @@ function createDraft() {
 }
 
 describe("survey draft hydration", () => {
+  it("does not carry an unsaved answer into a new semantic question version", async () => {
+    const { question, draft } = createDraft();
+    draft.optionTextValues.value.other = {
+      textValueHtml: "<p>Old wording draft</p>",
+    };
+    question.value = {
+      ...question.value,
+      currentSemanticVersion: 2,
+      currentAnswer: undefined,
+      isCurrentAnswerValid: false,
+      isMissingRequired: true,
+    };
+    await nextTick();
+    expect(draft.optionTextValues.value).toEqual({});
+    expect(draft.selectedSingleOptionSlugId.value).toBeNull();
+    expect(draft.hasDraftChanged.value).toBe(false);
+  });
+
   it("keeps unsaved text during a background form refresh", async () => {
     const { question, draft } = createDraft();
     draft.optionTextValues.value.other = {

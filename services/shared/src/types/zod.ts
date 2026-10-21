@@ -1304,6 +1304,7 @@ export const zodSurveyAnswerSubmission = z.discriminatedUnion("questionType", [
 ]);
 
 const zodSurveyQuestionFormItemFields = {
+    questionSlugId: zodSlugId,
     currentAnswer: zodSurveyAnswerDraft.optional(),
     isPassed: z.boolean(),
     isMissingRequired: z.boolean(),
@@ -1315,7 +1316,14 @@ const zodSurveyQuestionFormItemFields = {
 
 export const zodSurveyQuestionFormItem = z.discriminatedUnion("questionType", [
     zodSurveyChoiceQuestionConfig
-        .extend(zodSurveyQuestionFormItemFields)
+        .extend({
+            ...zodSurveyQuestionFormItemFields,
+            options: z
+                .array(
+                    zodSurveyQuestionOption.extend({ optionSlugId: zodSlugId }),
+                )
+                .min(2),
+        })
         .strict(),
     zodSurveyFreeTextQuestionConfig
         .extend(zodSurveyQuestionFormItemFields)

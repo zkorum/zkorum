@@ -9606,17 +9606,117 @@ export type ApiV1ReportOpinionCreatePostRequestReportReasonEnum = typeof ApiV1Re
 /**
  * @type ApiV1SurveyAnswerSavePost200Response
  */
-export type ApiV1SurveyAnswerSavePost200Response = ApiV1SurveyAnswerSavePost200ResponseOneOf | ApiV1VoteCastPost200ResponseOneOf1OneOf;
+export type ApiV1SurveyAnswerSavePost200Response = ApiV1SurveyAnswerSavePost200ResponseOneOf | ApiV1SurveyAnswerSavePost200ResponseOneOf1;
 
 export interface ApiV1SurveyAnswerSavePost200ResponseOneOf {
     'success': boolean;
     'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
     'justCompleted': boolean;
+    'surveyConfigId': number;
+    'currentRevision': number;
+    'savedQuestion': ApiV1SurveyAnswerSavePost200ResponseOneOfSavedQuestion;
+    'routeResolution': ApiV1VoteCastPost200ResponseOneOf1OneOfParticipationStatusOneOfNextStepOneOf3RouteResolution;
+    'recovery'?: ApiV1SurveyAnswerSavePost200ResponseOneOfRecovery;
     'participationStatus': ApiV1ConversationParticipationStatusPost200Response;
 }
+/**
+ * @type ApiV1SurveyAnswerSavePost200ResponseOneOf1
+ */
+export type ApiV1SurveyAnswerSavePost200ResponseOneOf1 = ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOf | ApiV1VoteCastPost200ResponseOneOf1OneOf;
+
+export interface ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOf {
+    'success': boolean;
+    'reason': ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOfReasonEnum;
+    'participationStatus': ApiV1ConversationParticipationStatusPost200Response;
+    'recovery': ApiV1SurveyAnswerSavePost200ResponseOneOfRecovery;
+}
+
+export const ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOfReasonEnum = {
+    SurveyChanged: 'survey_changed',
+} as const;
+
+export type ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOfReasonEnum = typeof ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOfReasonEnum[keyof typeof ApiV1SurveyAnswerSavePost200ResponseOneOf1OneOfReasonEnum];
+
+/**
+ * @type ApiV1SurveyAnswerSavePost200ResponseOneOfRecovery
+ */
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfRecovery = ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf | ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1;
+
+export interface ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf {
+    'kind': ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfKindEnum;
+    'form': ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfForm;
+    'routeResolution': ApiV1VoteCastPost200ResponseOneOf1OneOfParticipationStatusOneOfNextStepOneOf3RouteResolution;
+}
+
+export const ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfKindEnum = {
+    Survey: 'survey',
+} as const;
+
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfKindEnum = typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfKindEnum[keyof typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfKindEnum];
+
+export interface ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1 {
+    'kind': ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1KindEnum;
+    'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
+    'routeResolution': ApiV1VoteCastPost200ResponseOneOf1OneOfParticipationStatusOneOfNextStepOneOf3RouteResolutionOneOf;
+}
+
+export const ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1KindEnum = {
+    NoSurvey: 'no_survey',
+} as const;
+
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1KindEnum = typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1KindEnum[keyof typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOf1KindEnum];
+
+export interface ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfForm {
+    'success': boolean;
+    'surveyConfigId': number;
+    'currentRevision': number;
+    'questions': Array<ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInner>;
+    'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
+}
+export interface ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInner {
+    'questionSlugId': string;
+    'questionText': string;
+    'isRequired': boolean;
+    'displayOrder': number;
+    'textChangeIsSemantic'?: boolean;
+    'choiceDisplay': ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerChoiceDisplayEnum;
+    'isPublicAggregateSuppressionEnabled': boolean;
+    'options': Array<ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfOptionsInner>;
+    'questionType': ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerQuestionTypeEnum;
+    'constraints': ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfigQuestionsInnerOneOf1Constraints;
+    'currentAnswer'?: ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswer;
+    'isPassed': boolean;
+    'isMissingRequired': boolean;
+    'isStale': boolean;
+    'isCurrentAnswerValid': boolean;
+    'currentSemanticVersion': number;
+    'answeredQuestionSemanticVersion'?: number;
+    'displayContent'?: ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfDisplayContent;
+}
+
+export const ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerChoiceDisplayEnum = {
+    Auto: 'auto',
+    List: 'list',
+    Dropdown: 'dropdown',
+} as const;
+
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerChoiceDisplayEnum = typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerChoiceDisplayEnum[keyof typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerChoiceDisplayEnum];
+export const ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerQuestionTypeEnum = {
+    FreeText: 'free_text',
+} as const;
+
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerQuestionTypeEnum = typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerQuestionTypeEnum[keyof typeof ApiV1SurveyAnswerSavePost200ResponseOneOfRecoveryOneOfFormQuestionsInnerQuestionTypeEnum];
+
+/**
+ * @type ApiV1SurveyAnswerSavePost200ResponseOneOfSavedQuestion
+ */
+export type ApiV1SurveyAnswerSavePost200ResponseOneOfSavedQuestion = ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOf | ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOf1;
+
 export interface ApiV1SurveyAnswerSavePostRequest {
     'conversationSlugId': string;
     'questionSlugId': string;
+    'expectedQuestionSemanticVersion': number;
+    'knownSurveyRevision': number;
     'answer': ApiV1SurveyAnswerSavePostRequestAnswer | null;
     'skipEmailUpdateConsent'?: boolean;
 }
@@ -9685,6 +9785,7 @@ export type ApiV1SurveyFormFetchPost200Response = ApiV1SurveyFormFetchPost200Res
 
 export interface ApiV1SurveyFormFetchPost200ResponseOneOf {
     'success': boolean;
+    'surveyConfigId': number;
     'currentRevision': number;
     'questions': Array<ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInner>;
     'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
@@ -9701,14 +9802,14 @@ export const ApiV1SurveyFormFetchPost200ResponseOneOf1ReasonEnum = {
 export type ApiV1SurveyFormFetchPost200ResponseOneOf1ReasonEnum = typeof ApiV1SurveyFormFetchPost200ResponseOneOf1ReasonEnum[keyof typeof ApiV1SurveyFormFetchPost200ResponseOneOf1ReasonEnum];
 
 export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInner {
-    'questionSlugId'?: string;
+    'questionSlugId': string;
     'questionText': string;
     'isRequired': boolean;
     'displayOrder': number;
     'textChangeIsSemantic'?: boolean;
     'choiceDisplay': ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerChoiceDisplayEnum;
     'isPublicAggregateSuppressionEnabled': boolean;
-    'options': Array<ApiV1ConversationCreatePostRequestOneOfSurveyConfigQuestionsInnerOneOfOptionsInner>;
+    'options': Array<ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfOptionsInner>;
     'questionType': ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerQuestionTypeEnum;
     'constraints': ApiV1ConversationGetForEditPost200ResponseOneOfSurveyConfigQuestionsInnerOneOf1Constraints;
     'currentAnswer'?: ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswer;
@@ -9811,14 +9912,14 @@ export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfDisp
     'optionText': string;
 }
 export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOf {
-    'questionSlugId'?: string;
+    'questionSlugId': string;
     'questionText': string;
     'isRequired': boolean;
     'displayOrder': number;
     'textChangeIsSemantic'?: boolean;
     'choiceDisplay': ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfChoiceDisplayEnum;
     'isPublicAggregateSuppressionEnabled': boolean;
-    'options': Array<ApiV1ConversationCreatePostRequestOneOfSurveyConfigQuestionsInnerOneOfOptionsInner>;
+    'options': Array<ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfOptionsInner>;
     'questionType': ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfQuestionTypeEnum;
     'constraints': ApiV1ConversationCreatePostRequestOneOfSurveyConfigQuestionsInnerOneOfConstraints;
     'currentAnswer'?: ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswer;
@@ -9844,7 +9945,7 @@ export const ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfQue
 export type ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfQuestionTypeEnum = typeof ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfQuestionTypeEnum[keyof typeof ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfQuestionTypeEnum];
 
 export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOf1 {
-    'questionSlugId'?: string;
+    'questionSlugId': string;
     'questionText': string;
     'isRequired': boolean;
     'displayOrder': number;
@@ -9898,15 +9999,22 @@ export type ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurr
 export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfCurrentAnswerOneOfOptionTextValuesValue {
     'textValueHtml': string;
 }
+export interface ApiV1SurveyFormFetchPost200ResponseOneOfQuestionsInnerAllOfOneOfOptionsInner {
+    'optionSlugId': string;
+    'optionText': string;
+    'displayOrder': number;
+    'allowsText'?: boolean;
+    'textChangeIsSemantic'?: boolean;
+}
 /**
  * @type ApiV1SurveyResponseWithdrawPost200Response
  */
 export type ApiV1SurveyResponseWithdrawPost200Response = ApiV1SurveyResponseWithdrawPost200ResponseOneOf | ApiV1VoteCastPost200ResponseOneOf1OneOf;
 
 export interface ApiV1SurveyResponseWithdrawPost200ResponseOneOf {
-    'surveyGate': ApiV1ConversationFetchRecentPost200ResponseOneOfFeedItemListInnerConversationDataInteractionSurveyGate;
-    'routeResolution': ApiV1VoteCastPost200ResponseOneOf1OneOfParticipationStatusOneOfNextStepOneOf3RouteResolution;
     'success': boolean;
+    'participationStatus': ApiV1ConversationParticipationStatusPost200Response;
+    'recovery': ApiV1SurveyAnswerSavePost200ResponseOneOfRecovery;
 }
 export interface ApiV1SurveyResultsAggregatedPost200Response {
     'hasSurvey': boolean;
@@ -15977,13 +16085,13 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
+         * @param {ApiV1ConversationParticipationStatusPostRequest} apiV1ConversationParticipationStatusPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SurveyResponseWithdrawPost: async (apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiV1ModerationConversationWithdrawPostRequest' is not null or undefined
-            assertParamExists('apiV1SurveyResponseWithdrawPost', 'apiV1ModerationConversationWithdrawPostRequest', apiV1ModerationConversationWithdrawPostRequest)
+        apiV1SurveyResponseWithdrawPost: async (apiV1ConversationParticipationStatusPostRequest: ApiV1ConversationParticipationStatusPostRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiV1ConversationParticipationStatusPostRequest' is not null or undefined
+            assertParamExists('apiV1SurveyResponseWithdrawPost', 'apiV1ConversationParticipationStatusPostRequest', apiV1ConversationParticipationStatusPostRequest)
             const localVarPath = `/api/v1/survey/response/withdraw`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -16006,7 +16114,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ModerationConversationWithdrawPostRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(apiV1ConversationParticipationStatusPostRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -18348,12 +18456,12 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
+         * @param {ApiV1ConversationParticipationStatusPostRequest} apiV1ConversationParticipationStatusPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1SurveyResponseWithdrawPost200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest, options);
+        async apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest: ApiV1ConversationParticipationStatusPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiV1SurveyResponseWithdrawPost200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiV1SurveyResponseWithdrawPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -19849,12 +19957,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
+         * @param {ApiV1ConversationParticipationStatusPostRequest} apiV1ConversationParticipationStatusPostRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1SurveyResponseWithdrawPost200Response> {
-            return localVarFp.apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest, options).then((request) => request(axios, basePath));
+        apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest: ApiV1ConversationParticipationStatusPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiV1SurveyResponseWithdrawPost200Response> {
+            return localVarFp.apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -21438,12 +21546,12 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {ApiV1ModerationConversationWithdrawPostRequest} apiV1ModerationConversationWithdrawPostRequest 
+     * @param {ApiV1ConversationParticipationStatusPostRequest} apiV1ConversationParticipationStatusPostRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      */
-    public apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest: ApiV1ModerationConversationWithdrawPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiV1SurveyResponseWithdrawPost(apiV1ModerationConversationWithdrawPostRequest, options).then((request) => request(this.axios, this.basePath));
+    public apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest: ApiV1ConversationParticipationStatusPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiV1SurveyResponseWithdrawPost(apiV1ConversationParticipationStatusPostRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

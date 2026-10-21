@@ -118,7 +118,6 @@ import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
 import { useConversationOnboardingExit } from "src/composables/conversation/useConversationOnboardingExit";
 import { useConversationOnboardingRoute } from "src/composables/conversation/useConversationOnboardingRoute";
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
-import { useSurveyNavigation } from "src/composables/conversation/useSurveyNavigation";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
 import { htmlToCountedText } from "src/shared/richText";
@@ -126,13 +125,12 @@ import {
   getSurveyOptionText,
   surveyOptionTextToPlainText,
 } from "src/shared/surveyChoiceText";
-import type {
-  ParticipationBlockedReason,
-  SurveyQuestionFormItem,
-} from "src/shared/types/zod";
+import type { ConversationParticipationRejection } from "src/shared/types/dto";
+import type { SurveyQuestionFormItem } from "src/shared/types/zod";
 import { useSurveyWithdrawMutation } from "src/utils/api/survey/useSurveyQueries";
 import { useGoBackButtonHandler } from "src/utils/nav/goBackButton";
 import {
+  getConversationOnboardingStepPath,
   getConversationPath,
   getConversationSurveyContinuePath,
   getConversationSurveyOnboardingPath,
@@ -156,8 +154,6 @@ const { routeConversationSlugId, routeContext } =
 const { safeNavigateBack } = useGoBackButtonHandler();
 const { showNotifyMessage } = useNotify();
 const { exitToConversation } = useConversationOnboardingExit();
-const { navigateToNextSurveyStep, navigateToSurveyRoot } =
-  useSurveyNavigation();
 const { t } = useComponentI18n<ConversationSurveySummaryTranslations>(
   conversationSurveySummaryTranslations
 );
@@ -364,29 +360,19 @@ function getContinuePath(): string | undefined {
 }
 
 async function handleBlockedReason(
-  reason: ParticipationBlockedReason
+  response: ConversationParticipationRejection
 ): Promise<void> {
-  switch (reason) {
-    case "survey_required":
-    case "survey_outdated":
-      await navigateToNextSurveyStep({
+  const status = response.participationStatus;
+  if (status.status === "onboarding_required") {
+    await router.replace({
+      path: getConversationOnboardingStepPath({
         conversationSlugId: conversationSlugId.value,
         routeContext: routeContext.value,
-      });
-      break;
-    case "account_required":
-    case "strong_verification_required":
-    case "email_verification_required":
-    case "event_ticket_required":
-      await navigateToSurveyRoot({
-        conversationSlugId: conversationSlugId.value,
-        routeContext: routeContext.value,
-      });
-      break;
-    case "conversation_closed":
-    case "conversation_locked":
-      await handleBackToConversation();
-      break;
+        nextStep: status.nextStep,
+      }),
+    });
+  } else {
+    await handleBackToConversation();
   }
 }
 
@@ -395,10 +381,6 @@ async function handleEditQuestion({
 }: {
   question: SurveyQuestionFormItem;
 }): Promise<void> {
-  if (question.questionSlugId === undefined) {
-    return;
-  }
-
   await router.push({
     path: getConversationSurveyQuestionPath({
       conversationSlugId: conversationSlugId.value,
@@ -423,23 +405,24 @@ async function handlePrimaryAction(): Promise<void> {
 }
 
 async function handleWithdraw(): Promise<void> {
+  let response: Awaited<ReturnType<typeof withdrawMutation.mutateAsync>>;
   try {
-    const response = await withdrawMutation.mutateAsync();
-
-    if (!response.success) {
-      await handleBlockedReason(response.reason);
-      return;
-    }
-
-    await router.replace({
-      path: getConversationSurveyOnboardingPath({
-        conversationSlugId: conversationSlugId.value,
-        routeContext: routeContext.value,
-      }),
-    });
+    response = await withdrawMutation.mutateAsync();
   } catch {
     showNotifyMessage(t("failedToWithdrawMessage"));
+    return;
   }
+  if (response === undefined) return;
+  if (!response.success) {
+    await handleBlockedReason(response);
+    return;
+  }
+  await router.replace({
+    path: getConversationSurveyOnboardingPath({
+      conversationSlugId: conversationSlugId.value,
+      routeContext: routeContext.value,
+    }),
+  });
 }
 
 function handleOpenWithdrawDialog(): void {

@@ -714,7 +714,9 @@ export async function updateConversation({
                 ),
             )
             .where(and(eq(conversationTable.slugId, conversationSlugId)))
-            .for("no key update", { of: conversationTable });
+            // Editing currentContentId/projectId can upgrade the row lock too.
+            // Take UPDATE up front, before participant KEY SHARE locks can race it.
+            .for("update", { of: conversationTable });
 
         if (conversationResults.length === 0) {
             return { success: false, reason: "not_found" } as const;

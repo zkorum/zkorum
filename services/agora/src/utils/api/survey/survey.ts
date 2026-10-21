@@ -121,12 +121,16 @@ export function useBackendSurveyApi() {
   async function saveSurveyAnswer({
     conversationSlugId,
     questionSlugId,
+    expectedQuestionSemanticVersion,
+    knownSurveyRevision,
     answer,
     skipEmailUpdateConsent,
     isCurrent,
   }: {
     conversationSlugId: string;
     questionSlugId: string;
+    expectedQuestionSemanticVersion: number;
+    knownSurveyRevision: number;
     answer: SurveyAnswerClientSubmission | null;
     skipEmailUpdateConsent: boolean;
     isCurrent: () => boolean;
@@ -139,6 +143,8 @@ export function useBackendSurveyApi() {
       const params: ApiV1SurveyAnswerSavePostRequest = {
         conversationSlugId,
         questionSlugId,
+        expectedQuestionSemanticVersion,
+        knownSurveyRevision,
         answer,
         skipEmailUpdateConsent,
       };
@@ -168,18 +174,25 @@ export function useBackendSurveyApi() {
 
   async function withdrawSurveyResponse({
     conversationSlugId,
+    skipEmailUpdateConsent,
+    isCurrent,
   }: {
     conversationSlugId: string;
+    skipEmailUpdateConsent: boolean;
+    isCurrent: () => boolean;
   }): Promise<
-    AxiosSuccessResponse<SurveyResponseWithdrawResponse> | AxiosErrorResponse
+    | AxiosSuccessResponse<SurveyResponseWithdrawResponse>
+    | AxiosErrorResponse
+    | { status: "cancelled" }
   > {
     try {
-      const params = { conversationSlugId };
+      const params = { conversationSlugId, skipEmailUpdateConsent };
       const { url, options } =
         await DefaultApiAxiosParamCreator().apiV1SurveyResponseWithdrawPost(
           params
         );
       const encodedUcan = await buildEncodedUcan(url, options);
+      if (!isCurrent()) return { status: "cancelled" };
       const response = await DefaultApiFactory(
         undefined,
         undefined,
