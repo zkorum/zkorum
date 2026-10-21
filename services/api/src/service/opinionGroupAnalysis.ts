@@ -10,9 +10,7 @@ import {
     opinionGroupCandidateTable,
     opinionGroupDescriptionTable,
     opinionGroupDescriptionTranslationTable,
-    opinionGroupDescriptionTranslationWorkTable,
     opinionGroupLineageTable,
-    opinionGroupLineageDescriptionWorkTable,
     opinionGroupSpecTable,
     opinionGroupTable,
     opinionGroupUserTable,
@@ -440,30 +438,16 @@ async function buildDerivedAnalysisDescriptionReadiness({
             eq(opinionGroupLineageTable.id, opinionGroupTable.lineageId),
         )
         .leftJoin(
-            opinionGroupLineageDescriptionWorkTable,
-            eq(
-                opinionGroupLineageDescriptionWorkTable.lineageId,
-                opinionGroupLineageTable.id,
-            ),
-        )
-        .leftJoin(
             opinionGroupDescriptionTranslationTable,
             and(
                 eq(
                     opinionGroupDescriptionTranslationTable.descriptionId,
                     opinionGroupLineageTable.systemDescriptionId,
                 ),
-                eq(opinionGroupDescriptionTranslationTable.locale, requestedLocale),
-            ),
-        )
-        .leftJoin(
-            opinionGroupDescriptionTranslationWorkTable,
-            and(
                 eq(
-                    opinionGroupDescriptionTranslationWorkTable.descriptionId,
-                    opinionGroupLineageTable.systemDescriptionId,
+                    opinionGroupDescriptionTranslationTable.locale,
+                    requestedLocale,
                 ),
-                eq(opinionGroupDescriptionTranslationWorkTable.locale, requestedLocale),
             ),
         )
         .where(inArray(opinionGroupCandidateTable.id, requiredCandidateIds));
@@ -482,9 +466,12 @@ async function buildDerivedAnalysisDescriptionReadiness({
         : null;
 
     const requestedExpected =
-        requestedLocale !== "en" && englishReady && uniqueLineageRows.length > 0;
+        requestedLocale !== "en" &&
+        englishReady &&
+        uniqueLineageRows.length > 0;
     const requestedReady =
-        requestedExpected && uniqueLineageRows.every((row) => row.translationId !== null);
+        requestedExpected &&
+        uniqueLineageRows.every((row) => row.translationId !== null);
     const requestedStatus: AiDescriptionLocaleStatus | null = requestedExpected
         ? requestedReady
             ? "ready"
@@ -557,15 +544,10 @@ function resolveDescriptionText({
     adminDescriptionId,
     systemDescriptionId,
     descriptionsById,
-    translationsByDescriptionId,
 }: {
     adminDescriptionId: number | null;
     systemDescriptionId: number | null;
     descriptionsById: Map<number, { label: string; summary: string }>;
-    translationsByDescriptionId: Map<
-        number,
-        { label: string; summary: string }
-    >;
 }): DescriptionText {
     const getDescription = (
         descriptionId: number | null,
@@ -574,10 +556,7 @@ function resolveDescriptionText({
             return undefined;
         }
 
-        return (
-            translationsByDescriptionId.get(descriptionId) ??
-            descriptionsById.get(descriptionId)
-        );
+        return descriptionsById.get(descriptionId);
     };
 
     const description =
@@ -614,44 +593,35 @@ export async function getDescriptionTextsByGroupId({
                       id: opinionGroupDescriptionTable.id,
                       label: opinionGroupDescriptionTable.label,
                       summary: opinionGroupDescriptionTable.summary,
+                      translatedLabel:
+                          opinionGroupDescriptionTranslationTable.label,
+                      translatedSummary:
+                          opinionGroupDescriptionTranslationTable.summary,
                   })
                   .from(opinionGroupDescriptionTable)
-                  .where(
-                      inArray(opinionGroupDescriptionTable.id, descriptionIds),
-                  );
-    const translationRows =
-        descriptionIds.length === 0
-            ? []
-            : await db
-                  .select({
-                      descriptionId:
-                          opinionGroupDescriptionTranslationTable.descriptionId,
-                      label: opinionGroupDescriptionTranslationTable.label,
-                      summary: opinionGroupDescriptionTranslationTable.summary,
-                  })
-                  .from(opinionGroupDescriptionTranslationTable)
-                  .where(
+                  .leftJoin(
+                      opinionGroupDescriptionTranslationTable,
                       and(
-                          inArray(
+                          eq(
                               opinionGroupDescriptionTranslationTable.descriptionId,
-                              descriptionIds,
+                              opinionGroupDescriptionTable.id,
                           ),
                           eq(
                               opinionGroupDescriptionTranslationTable.locale,
                               displayLanguage,
                           ),
                       ),
+                  )
+                  .where(
+                      inArray(opinionGroupDescriptionTable.id, descriptionIds),
                   );
     const descriptionsById = new Map(
         descriptionRows.map((row) => [
             row.id,
-            { label: row.label, summary: row.summary },
-        ]),
-    );
-    const translationsByDescriptionId = new Map(
-        translationRows.map((row) => [
-            row.descriptionId,
-            { label: row.label, summary: row.summary },
+            {
+                label: row.translatedLabel ?? row.label,
+                summary: row.translatedSummary ?? row.summary,
+            },
         ]),
     );
 
@@ -662,7 +632,6 @@ export async function getDescriptionTextsByGroupId({
                 adminDescriptionId: group.adminDescriptionId,
                 systemDescriptionId: group.systemDescriptionId,
                 descriptionsById,
-                translationsByDescriptionId,
             }),
         ]),
     );
@@ -789,7 +758,10 @@ export async function getOpinionGroupAnalysisSelection({
         )
         .innerJoin(
             polisConversationConfigTable,
-            eq(polisConversationConfigTable.id, conversationTable.polisConfigId),
+            eq(
+                polisConversationConfigTable.id,
+                conversationTable.polisConfigId,
+            ),
         )
         .innerJoin(
             analysisSnapshotTable,
@@ -969,13 +941,17 @@ export async function getOpinionGroupAnalysisSelection({
             resolvedBy: "unavailable_fixed_count" as const,
         };
     })();
-    const descriptionReadiness = await buildDerivedAnalysisDescriptionReadiness({
-        db,
-        aiLabelingEnabled: latestResult.aiLabelingEnabled,
-        requestedLocale,
-        requiredCandidateIds:
-            resolved.candidate === undefined ? [] : [resolved.candidate.candidateId],
-    });
+    const descriptionReadiness = await buildDerivedAnalysisDescriptionReadiness(
+        {
+            db,
+            aiLabelingEnabled: latestResult.aiLabelingEnabled,
+            requestedLocale,
+            requiredCandidateIds:
+                resolved.candidate === undefined
+                    ? []
+                    : [resolved.candidate.candidateId],
+        },
+    );
     const useSystemDescriptions = shouldUseSystemDescriptions({
         aiLabelingEnabled: latestResult.aiLabelingEnabled,
         requestedLocale,

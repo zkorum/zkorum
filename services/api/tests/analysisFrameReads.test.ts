@@ -6,6 +6,7 @@ import postgres from "postgres";
 import { GenericContainer, type StartedTestContainer } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { fetchAnalysisFrameGroupLabelsByFrameKey } from "../src/service/comment.js";
+import { getDescriptionTextsByGroupId } from "../src/service/opinionGroupAnalysis.js";
 import * as schema from "../src/shared-backend/schema.js";
 import { readDbFixtureSql } from "./dbFixture.js";
 
@@ -57,6 +58,133 @@ describe("published analysis frame reads", () => {
         await replicaClient?.end({ timeout: 5 });
         await client?.end({ timeout: 5 });
         await container?.stop();
+    });
+
+    it("loads localized descriptions in one query with admin and English fallback", async () => {
+        const system = first(
+            await db
+                .insert(schema.opinionGroupDescriptionTable)
+                .values({
+                    locale: "en",
+                    label: "System",
+                    summary: "System summary",
+                })
+                .returning(),
+        );
+        const fallback = first(
+            await db
+                .insert(schema.opinionGroupDescriptionTable)
+                .values({
+                    locale: "en",
+                    label: "Fallback",
+                    summary: "Fallback summary",
+                })
+                .returning(),
+        );
+        const admin = first(
+            await db
+                .insert(schema.opinionGroupDescriptionTable)
+                .values({
+                    locale: "en",
+                    label: "Admin",
+                    summary: "Admin summary",
+                })
+                .returning(),
+        );
+        await db.insert(schema.opinionGroupDescriptionTranslationTable).values([
+            {
+                descriptionId: system.id,
+                locale: "fr",
+                label: "Système",
+                summary: "Résumé système",
+            },
+            {
+                descriptionId: fallback.id,
+                locale: "es",
+                label: "Español",
+                summary: "Resumen",
+            },
+        ]);
+        const statements: string[] = [];
+        const measuredDb = drizzle(client, {
+            logger: {
+                logQuery(query) {
+                    statements.push(query);
+                },
+            },
+        });
+        const descriptions = await getDescriptionTextsByGroupId({
+            db: measuredDb,
+            groups: [
+                {
+                    groupId: 1,
+                    systemDescriptionId: system.id,
+                    adminDescriptionId: null,
+                },
+                {
+                    groupId: 2,
+                    systemDescriptionId: fallback.id,
+                    adminDescriptionId: null,
+                },
+                {
+                    groupId: 3,
+                    systemDescriptionId: system.id,
+                    adminDescriptionId: admin.id,
+                },
+                {
+                    groupId: 4,
+                    systemDescriptionId: null,
+                    adminDescriptionId: null,
+                },
+            ],
+            displayLanguage: "fr",
+            includeSystemDescriptions: true,
+        });
+        expect(descriptions.get(1)).toEqual({
+            label: "Système",
+            summary: "Résumé système",
+        });
+        expect(descriptions.get(2)).toEqual({
+            label: "Fallback",
+            summary: "Fallback summary",
+        });
+        expect(descriptions.get(3)).toEqual({
+            label: "Admin",
+            summary: "Admin summary",
+        });
+        expect(descriptions.get(4)).toEqual({
+            label: undefined,
+            summary: undefined,
+        });
+        expect(statements).toHaveLength(1);
+    });
+
+    it("does not query descriptions when system labels are disabled and no admin label exists", async () => {
+        const statements: string[] = [];
+        const measuredDb = drizzle(client, {
+            logger: {
+                logQuery(query) {
+                    statements.push(query);
+                },
+            },
+        });
+        const descriptions = await getDescriptionTextsByGroupId({
+            db: measuredDb,
+            groups: [
+                {
+                    groupId: 1,
+                    systemDescriptionId: 123456,
+                    adminDescriptionId: null,
+                },
+            ],
+            displayLanguage: "fr",
+            includeSystemDescriptions: false,
+        });
+        expect(descriptions.get(1)).toEqual({
+            label: undefined,
+            summary: undefined,
+        });
+        expect(statements).toEqual([]);
     });
 
     async function publishedFrame() {
