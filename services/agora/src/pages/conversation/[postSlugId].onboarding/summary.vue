@@ -41,38 +41,16 @@
       <template #body>
         <div class="survey-card">
           <q-list bordered separator class="survey-question-list">
-            <q-item
-              v-for="entry in surveyQuestionEntries"
-              :key="entry.question.questionSlugId"
-              class="survey-question-item"
-            >
-              <q-item-section class="survey-question-item__section">
-                <q-item-label class="survey-question-item__question">
-                  {{ entry.question.questionText }}
-                </q-item-label>
-                <div class="survey-question-item__review-row">
-                  <q-item-label
-                    :caption="entry.isStatusFallback"
-                    class="survey-question-item__answer"
-                    :class="{
-                      'survey-question-item__answer--status':
-                        entry.isStatusFallback,
-                    }"
-                  >
-                    {{ entry.answerPreview }}
-                  </q-item-label>
-
-                  <q-btn
-                    flat
-                    no-caps
-                    color="primary"
-                    class="survey-question-item__edit-button"
-                    :label="t('editAnswerLabel')"
-                    @click="handleEditQuestion({ question: entry.question })"
-                  />
-                </div>
-              </q-item-section>
-            </q-item>
+            <SurveyAnswerReviewItem
+              v-for="question in surveyForm.questions"
+              :key="question.questionSlugId"
+              :conversation-slug-id="conversationSlugId"
+              :question="question"
+              :source-language-code="conversationSourceLanguageCode"
+              :status-label="getQuestionStatusLabel({ question })"
+              :edit-label="t('editAnswerLabel')"
+              @edit="handleEditQuestion({ question })"
+            />
           </q-list>
 
           <div class="survey-card__actions">
@@ -112,6 +90,7 @@
 import { useQueryClient } from "@tanstack/vue-query";
 import StepperLayout from "src/components/onboarding/layouts/StepperLayout.vue";
 import InfoHeader from "src/components/onboarding/ui/InfoHeader.vue";
+import SurveyAnswerReviewItem from "src/components/survey/SurveyAnswerReviewItem.vue";
 import ErrorRetryBlock from "src/components/ui/ErrorRetryBlock.vue";
 import PageLoadingSpinner from "src/components/ui/PageLoadingSpinner.vue";
 import ZKConfirmDialog from "src/components/ui-library/ZKConfirmDialog.vue";
@@ -120,11 +99,6 @@ import { useConversationOnboardingRoute } from "src/composables/conversation/use
 import { useConversationSurveyState } from "src/composables/conversation/useConversationSurveyState";
 import { useComponentI18n } from "src/composables/ui/useComponentI18n";
 import ConversationOnboardingLayout from "src/layouts/ConversationOnboardingLayout.vue";
-import { htmlToCountedText } from "src/shared/richText";
-import {
-  getSurveyOptionText,
-  surveyOptionTextToPlainText,
-} from "src/shared/surveyChoiceText";
 import type { ConversationParticipationRejection } from "src/shared/types/dto";
 import type { SurveyQuestionFormItem } from "src/shared/types/zod";
 import { useSurveyWithdrawMutation } from "src/utils/api/survey/useSurveyQueries";
@@ -136,6 +110,7 @@ import {
   getConversationSurveyOnboardingPath,
   getConversationSurveyQuestionPath,
 } from "src/utils/survey/navigation";
+import { getConversationLanguageSettingSourceLanguageCode } from "src/utils/translation/contentTranslation";
 import type { DismissalController } from "src/utils/ui/dismissalController";
 import { useNotify } from "src/utils/ui/notify";
 import { computed, ref, watch } from "vue";
@@ -159,6 +134,7 @@ const { t } = useComponentI18n<ConversationSurveySummaryTranslations>(
 );
 
 const {
+  conversationData,
   conversationSlugId,
   surveyStatus,
   surveyForm,
@@ -199,15 +175,15 @@ const canWithdraw = computed(() => {
 
 const isWithdrawing = computed(() => withdrawMutation.isPending.value);
 
-const surveyQuestionEntries = computed(() => {
-  return (surveyForm.value?.questions ?? []).map((question) => {
-    const answerPreview = getQuestionAnswerPreview({ question });
+const conversationSourceLanguageCode = computed(() => {
+  const metadata = conversationData.value?.metadata;
+  if (metadata === undefined) {
+    return undefined;
+  }
 
-    return {
-      question,
-      answerPreview: answerPreview ?? getQuestionStatusLabel({ question }),
-      isStatusFallback: answerPreview === undefined,
-    };
+  return getConversationLanguageSettingSourceLanguageCode({
+    contentLanguageMetadata: metadata.contentLanguageMetadata,
+    languageSetting: metadata.languageSetting,
   });
 });
 
@@ -268,63 +244,6 @@ function getQuestionStatusLabel({
   }
 
   return t("questionStatusNotAnswered");
-}
-
-function getQuestionAnswerPreview({
-  question,
-}: {
-  question: SurveyQuestionFormItem;
-}): string | undefined {
-  const currentAnswer = question.currentAnswer;
-
-  if (currentAnswer === undefined) {
-    return undefined;
-  }
-
-  switch (currentAnswer.questionType) {
-    case "free_text": {
-      const plainText = htmlToCountedText(currentAnswer.textValueHtml)
-        .replace(/\s*\n\s*/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      return plainText.length > 0 ? plainText : undefined;
-    }
-    case "choice": {
-      if (question.questionType !== "choice") {
-        return undefined;
-      }
-
-      const optionTextBySlugId = new Map(
-        question.options.map((option) => [
-          option.optionSlugId,
-          option.optionText,
-        ])
-      );
-      const selectedOptionTexts = currentAnswer.optionSlugIds
-        .map((optionSlugId) => {
-          const optionText = optionTextBySlugId.get(optionSlugId);
-          const optionAnswer = getSurveyOptionText({
-            values: currentAnswer.optionTextValues,
-            optionSlugId,
-          });
-          const textValue =
-            optionAnswer === undefined
-              ? undefined
-              : surveyOptionTextToPlainText(optionAnswer);
-          return optionText === undefined
-            ? undefined
-            : textValue === undefined || textValue.length === 0
-              ? optionText
-              : `${optionText} — ${textValue}`;
-        })
-        .filter((optionText): optionText is string => optionText !== undefined);
-
-      return selectedOptionTexts.length > 0
-        ? selectedOptionTexts.join(", ")
-        : undefined;
-    }
-  }
 }
 
 const lastAnsweredQuestionSlugId = computed(() => {
@@ -468,58 +387,6 @@ async function handleBackToLastAnsweredQuestion(): Promise<void> {
 
 .survey-question-list {
   border-radius: 12px;
-}
-
-.survey-question-item {
-  align-items: flex-start;
-}
-
-.survey-question-item__section {
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.survey-question-item__question {
-  white-space: normal;
-  line-height: 1.4;
-}
-
-.survey-question-item__review-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.survey-question-item__answer {
-  white-space: normal;
-  color: rgba(0, 0, 0, 0.76);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-}
-
-.survey-question-item__answer--status {
-  color: rgba(0, 0, 0, 0.56);
-}
-
-.survey-question-item__edit-button {
-  align-self: center;
-}
-
-@media (max-width: 420px) {
-  .survey-question-item__review-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .survey-question-item__edit-button {
-    justify-self: end;
-  }
 }
 
 .survey-card__actions {
