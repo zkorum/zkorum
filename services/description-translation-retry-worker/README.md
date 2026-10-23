@@ -8,7 +8,35 @@ Bedrock translation is enabled by default through `DESCRIPTION_TRANSLATION_RETRY
 make dev
 ```
 
-## Database polling
+## Translation validation and retries
+
+Bedrock receives up to two immediate attempts, retrying only missing translations.
+When configured, Google fills remaining gaps before durable retry work is released.
+A provider timeout skips its second immediate attempt. Token-limited Bedrock batches
+are split into smaller requests, preserving successful items if another split fails.
+A timeout also stops unstarted split siblings. Outcomes carry a failure category per
+description and locale, so a partial provider failure retains the provider cooldown;
+it is not reclassified as malformed output. Google fallback merges only missing
+locales, preserving an existing Chinese-script translation without duplicate rows.
+
+Both providers reject empty labels/summaries and values exceeding the database's
+100/1000-character limits. Confident summary-language mismatches are rejected;
+uncertain detections and Kyrgyz (unsupported by the local detector) are accepted.
+Short labels are not language-detected. Translation reasoning is optional.
+
+Output/format failures use error code `ai_description_output` and become eligible
+after `min(30 seconds, RETRY_COOLDOWN_SECONDS)`. Provider/service failures retain
+the configured cooldown (default 300 seconds). The same distinction applies to
+English description work. Discovery and claims enforce these delays consistently.
+
+Bedrock response logs include stop reason and token counts. Rejection logs contain
+categories, IDs, and lengths, never source or translated text. Each successful
+translation batch commits its content-update outbox events in the same transaction,
+so unrelated slow batches cannot hold up notifications.
+Bedrock clients are initialized lazily and reused across batches. Chinese script
+conversion rechecks storage limits without repeating language detection.
+
+## Database polling and recovery
 
 Empty or unclaimed polls back off from the configured idle interval to 5 seconds.
 Database failures back off through 5, 10, 20, 40, and at most 60 seconds, resetting

@@ -13,6 +13,7 @@ from agora_analysis_worker_shared.bedrock_label_summary import (
 from agora_analysis_worker_shared.description_generation import (
     DescriptionProviderFailure,
     MissingDescription,
+    description_failure_error,
     generate_english_descriptions,
 )
 from agora_analysis_worker_shared.description_input import (
@@ -25,6 +26,33 @@ from agora_analysis_worker_shared.description_language import (
     EnglishDescription,
     check_description_language,
 )
+from agora_analysis_worker_shared.provider_errors import is_provider_output_error
+
+
+@pytest.mark.parametrize(
+    ("failure", "output_failure", "timeout"),
+    [
+        (
+            DescriptionProviderFailure(reason="provider_timeout", error_type="ReadTimeoutError"),
+            False, True,
+        ),
+        (
+            DescriptionProviderFailure(reason="provider_error", error_type="ClientError"),
+            False, False,
+        ),
+        (
+            DescriptionProviderFailure(reason="invalid_output", error_type="InvalidOutput"),
+            True, False,
+        ),
+        (MissingDescription(), True, False),
+    ],
+)
+def test_partial_description_failure_keeps_its_retry_category(
+    *, failure: DescriptionProviderFailure | MissingDescription, output_failure: bool, timeout: bool
+) -> None:
+    error = description_failure_error(failure)
+    assert is_provider_output_error(error) is output_failure
+    assert isinstance(error, TimeoutError) is timeout
 
 FRENCH = (
     "Ce groupe prône l'autorité parentale, la cohérence éducative et des limites strictes "

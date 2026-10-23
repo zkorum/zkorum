@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from threading import Lock
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from agora_language.detection import (
     DetectionUnavailable,
@@ -20,20 +20,23 @@ from agora_analysis_worker_shared.description_generation import generate_english
 from agora_analysis_worker_shared.description_translation import (
     BedrockTranslationConfig,
     DescriptionTranslationError,
+    TranslationFailure,
+    TranslationResult,
+    create_bedrock_translation_provider,
     description_translation_output_locales,
     description_translation_provider_targets,
     generate_description_translations,
-    generate_description_translations_with_bedrock,
     initialize_google_translation_service,
+    merge_translation_results,
+    translation_result,
 )
-from agora_analysis_worker_shared.provider_errors import is_provider_timeout_error
 from agora_analysis_worker_shared.simulation_providers import (
     generate_simulated_description_translations,
     generate_simulated_label_summaries,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Sequence
 
     from agora_language.detection import DetectionOutcome, LanguageDetectorFunction
 
@@ -49,22 +52,23 @@ if TYPE_CHECKING:
     from agora_analysis_worker_shared.description_input import ConversationDescriptionInput
     from agora_analysis_worker_shared.description_translation import (
         DescriptionForTranslation,
-        DescriptionTranslation,
+        DescriptionTranslator,
         GoogleTranslationService,
     )
-
-    DescriptionTranslator = Callable[
-        [list[DescriptionForTranslation], list[str]],
-        list[DescriptionTranslation],
-    ]
 
 log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
 class DescriptionTranslatorBundle:
-    mode: str
+    mode: Literal["simulation", "bedrock", "google", "bedrock_with_google_fallback"]
     translate: DescriptionTranslator
+
+
+@dataclass(frozen=True)
+class TranslationProvider:
+    name: Literal["Bedrock", "Google"]
+    generate: DescriptionTranslator
 
 
 def build_description_generator(
@@ -163,9 +167,21 @@ def build_description_language_detector(settings: Settings) -> LanguageDetectorF
 
 def build_description_translator(settings: Settings) -> DescriptionTranslatorBundle | None:
     if settings.description_translation_simulation_enabled:
+
+        def simulate(
+            *, descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+        ) -> TranslationResult:
+            return translation_result(
+                description_ids=[description.description_id for description in descriptions],
+                target_language_codes=target_language_codes,
+                translations=generate_simulated_description_translations(
+                    descriptions, target_language_codes
+                ),
+            )
+
         return DescriptionTranslatorBundle(
             mode="simulation",
-            translate=generate_simulated_description_translations,
+            translate=simulate,
         )
 
     bedrock_config = (
@@ -187,57 +203,36 @@ def build_description_translator(settings: Settings) -> DescriptionTranslatorBun
     if bedrock_config is None and google_service is None:
         return None
 
-    if bedrock_config is not None and google_service is not None:
-
-        def translate(
-            descriptions: list[DescriptionForTranslation],
-            target_language_codes: list[str],
-        ) -> list[DescriptionTranslation]:
-            return translate_with_bedrock_then_google(
-                bedrock_config=bedrock_config,
-                google_service=google_service,
-                descriptions=descriptions,
-                target_language_codes=target_language_codes,
-            )
-
-        return DescriptionTranslatorBundle(
-            mode="bedrock_with_google_fallback",
-            translate=translate,
-        )
-
+    providers: list[TranslationProvider] = []
     if bedrock_config is not None:
-
-        def translate_with_bedrock(
-            descriptions: list[DescriptionForTranslation],
-            target_language_codes: list[str],
-        ) -> list[DescriptionTranslation]:
-            return generate_bedrock_translations_with_partial_retries(
-                config=bedrock_config,
-                descriptions=descriptions,
-                target_language_codes=target_language_codes,
-                attempts=2,
+        providers.append(
+            TranslationProvider(
+                name="Bedrock", generate=create_bedrock_translation_provider(bedrock_config)
             )
-
-        return DescriptionTranslatorBundle(mode="bedrock", translate=translate_with_bedrock)
-
-    if google_service is None:
-        return None
-
-    def translate_with_google(
-        descriptions: list[DescriptionForTranslation],
-        target_language_codes: list[str],
-    ) -> list[DescriptionTranslation]:
-        return _retry_translation_provider(
-            provider_name="Google",
-            attempts=2,
-            call=lambda: _generate_google_translations(
-                google_service=google_service,
-                descriptions=descriptions,
-                target_language_codes=target_language_codes,
-            ),
+        )
+    if google_service is not None:
+        providers.append(
+            TranslationProvider(
+                name="Google", generate=create_google_translation_provider(google_service)
+            )
         )
 
-    return DescriptionTranslatorBundle(mode="google", translate=translate_with_google)
+    def translate(
+        *, descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+    ) -> TranslationResult:
+        return translate_with_providers(
+            providers=providers,
+            descriptions=descriptions,
+            target_language_codes=target_language_codes,
+        )
+
+    if bedrock_config is not None and google_service is not None:
+        mode = "bedrock_with_google_fallback"
+    elif bedrock_config is not None:
+        mode = "bedrock"
+    else:
+        mode = "google"
+    return DescriptionTranslatorBundle(mode=mode, translate=translate)
 
 
 def _build_google_translation_service(settings: Settings) -> GoogleTranslationService | None:
@@ -267,243 +262,91 @@ def _build_google_translation_service(settings: Settings) -> GoogleTranslationSe
         return None
 
 
-def _generate_google_translations(
-    *,
-    google_service: GoogleTranslationService,
-    descriptions: list[DescriptionForTranslation],
-    target_language_codes: list[str],
-) -> list[DescriptionTranslation]:
-    return generate_description_translations(
-        service=google_service,
-        descriptions=descriptions,
-        target_language_codes=target_language_codes,
-    )
-
-
-def translate_with_bedrock_then_google(
-    *,
-    bedrock_config: BedrockTranslationConfig,
-    google_service: GoogleTranslationService,
-    descriptions: list[DescriptionForTranslation],
-    target_language_codes: list[str],
-) -> list[DescriptionTranslation]:
-    bedrock_translations: list[DescriptionTranslation] = []
-    try:
-        bedrock_translations = generate_bedrock_translations_with_partial_retries(
-            config=bedrock_config,
+def create_google_translation_provider(service: GoogleTranslationService) -> DescriptionTranslator:
+    def generate(
+        *, descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+    ) -> TranslationResult:
+        return generate_description_translations(
+            service=service,
             descriptions=descriptions,
             target_language_codes=target_language_codes,
+        )
+
+    return generate
+
+
+def translate_with_providers(
+    *,
+    providers: Sequence[TranslationProvider],
+    descriptions: list[DescriptionForTranslation],
+    target_language_codes: list[str],
+    initial_result: TranslationResult | None = None,
+) -> TranslationResult:
+    result = translation_result(
+        description_ids=[description.description_id for description in descriptions],
+        target_language_codes=target_language_codes,
+    )
+    if initial_result is not None:
+        result = merge_translation_results(existing=result, new=initial_result)
+    for provider in providers:
+        result = retry_translation_provider(
+            provider_name=provider.name,
+            generate=provider.generate,
             attempts=2,
-        )
-    except Exception:
-        log.warning(
-            "[DescriptionTranslator] Bedrock translation unavailable; falling back to Google",
-            exc_info=True,
-        )
-
-    translations = fill_missing_translations_with_google(
-        google_service=google_service,
-        descriptions=descriptions,
-        target_language_codes=target_language_codes,
-        translations=bedrock_translations,
-    )
-    if len(translations) > len(bedrock_translations):
-        log.info(
-            "[DescriptionTranslator] Google fallback translation succeeded "
-            "description_count=%d locale_count=%d output_count=%d",
-            len(descriptions),
-            len(target_language_codes),
-            len(translations),
-        )
-    return translations
-
-
-def generate_bedrock_translations_with_partial_retries(
-    *,
-    config: BedrockTranslationConfig,
-    descriptions: list[DescriptionForTranslation],
-    target_language_codes: list[str],
-    attempts: int,
-) -> list[DescriptionTranslation]:
-    translations: list[DescriptionTranslation] = []
-    last_error: Exception | None = None
-    for attempt in range(1, attempts + 1):
-        missing_requests = _missing_translation_requests(
             descriptions=descriptions,
             target_language_codes=target_language_codes,
-            translations=translations,
+            initial_result=result,
         )
-        if not missing_requests:
-            return translations
-        try:
-            attempt_translations: list[DescriptionTranslation] = []
-            for target_language_code, missing_descriptions in missing_requests:
-                attempt_translations.extend(
-                    generate_description_translations_with_bedrock(
-                        config=config,
-                        descriptions=missing_descriptions,
-                        target_language_codes=[target_language_code],
-                    )
-                )
-            translations = _merge_description_translations(
-                existing_translations=translations,
-                new_translations=attempt_translations,
-            )
-        except Exception as error:
-            last_error = error
-            if is_provider_timeout_error(error):
-                log.warning(
-                    "[DescriptionTranslator] Bedrock translation attempt %d/%d timed out",
-                    attempt,
-                    attempts,
-                    exc_info=True,
-                )
-                if translations:
-                    return translations
-                raise
-            log.warning(
-                "[DescriptionTranslator] Bedrock translation attempt %d/%d failed",
-                attempt,
-                attempts,
-                exc_info=True,
-            )
-
-    if translations:
-        return translations
-    msg = f"Bedrock translation failed after {attempts} attempt(s)"
-    raise DescriptionTranslationError(msg) from last_error
+    return result
 
 
-def fill_missing_translations_with_google(
+def retry_translation_provider(
     *,
-    google_service: GoogleTranslationService,
-    descriptions: list[DescriptionForTranslation],
-    target_language_codes: list[str],
-    translations: list[DescriptionTranslation],
-) -> list[DescriptionTranslation]:
-    translation_keys = {
-        (translation.description_id, translation.locale) for translation in translations
-    }
-    missing_translations: list[DescriptionTranslation] = []
-    for target_language_code in description_translation_provider_targets(target_language_codes):
-        output_locales = description_translation_output_locales(target_language_code)
-        missing_descriptions = [
-            description
-            for description in descriptions
-            if any(
-                (description.description_id, output_locale) not in translation_keys
-                for output_locale in output_locales
-            )
-        ]
-        if not missing_descriptions:
-            continue
-        log.info(
-            "[DescriptionTranslator] Bedrock translation returned partial output; "
-            "filling missing descriptions with Google target_locale=%s description_ids=%s",
-            target_language_code,
-            [description.description_id for description in missing_descriptions],
-        )
-        def generate_missing_google_translations(
-            descriptions_for_locale: list[DescriptionForTranslation] = missing_descriptions,
-            locale: str = target_language_code,
-        ) -> list[DescriptionTranslation]:
-            return _generate_google_translations(
-                google_service=google_service,
-                descriptions=descriptions_for_locale,
-                target_language_codes=[locale],
-            )
-
-        try:
-            google_translations = _retry_translation_provider(
-                provider_name="Google",
-                attempts=2,
-                call=generate_missing_google_translations,
-            )
-        except Exception:
-            if translations or missing_translations:
-                log.warning(
-                    "[DescriptionTranslator] Google fallback failed after partial translation; "
-                    "returning partial output",
-                    exc_info=True,
-                )
-                return [*translations, *missing_translations]
-            raise
-        missing_translations.extend(google_translations)
-        translation_keys.update(
-            (translation.description_id, translation.locale)
-            for translation in google_translations
-        )
-    if not missing_translations:
-        return translations
-    return [*translations, *missing_translations]
-
-
-def _missing_translation_requests(
-    *,
-    descriptions: list[DescriptionForTranslation],
-    target_language_codes: list[str],
-    translations: list[DescriptionTranslation],
-) -> list[tuple[str, list[DescriptionForTranslation]]]:
-    translation_keys = {
-        (translation.description_id, translation.locale) for translation in translations
-    }
-    requests: list[tuple[str, list[DescriptionForTranslation]]] = []
-    for target_language_code in description_translation_provider_targets(target_language_codes):
-        output_locales = description_translation_output_locales(target_language_code)
-        missing_descriptions = [
-            description
-            for description in descriptions
-            if any(
-                (description.description_id, output_locale) not in translation_keys
-                for output_locale in output_locales
-            )
-        ]
-        if missing_descriptions:
-            requests.append((target_language_code, missing_descriptions))
-    return requests
-
-
-def _merge_description_translations(
-    *,
-    existing_translations: list[DescriptionTranslation],
-    new_translations: list[DescriptionTranslation],
-) -> list[DescriptionTranslation]:
-    translation_by_key: dict[tuple[int, str], DescriptionTranslation] = {}
-    for translation in [*existing_translations, *new_translations]:
-        translation_by_key.setdefault(
-            (translation.description_id, translation.locale),
-            translation,
-        )
-    return list(translation_by_key.values())
-
-
-def _retry_translation_provider(
-    *,
-    provider_name: str,
+    provider_name: Literal["Bedrock", "Google"],
     attempts: int,
-    call: Callable[[], list[DescriptionTranslation]],
-) -> list[DescriptionTranslation]:
-    last_error: Exception | None = None
+    generate: DescriptionTranslator,
+    descriptions: list[DescriptionForTranslation],
+    target_language_codes: list[str],
+    initial_result: TranslationResult | None = None,
+) -> TranslationResult:
+    result = translation_result(
+        description_ids=[description.description_id for description in descriptions],
+        target_language_codes=target_language_codes,
+    )
+    if initial_result is not None:
+        result = merge_translation_results(existing=result, new=initial_result)
+    timed_out: set[tuple[int, str]] = set()
     for attempt in range(1, attempts + 1):
-        try:
-            return call()
-        except Exception as error:
-            last_error = error
-            if is_provider_timeout_error(error):
-                log.warning(
-                    "[DescriptionTranslator] %s translation attempt %d/%d timed out",
-                    provider_name,
-                    attempt,
-                    attempts,
-                    exc_info=True,
+        for target in description_translation_provider_targets(target_language_codes):
+            locales = description_translation_output_locales(target)
+            pending = [
+                description
+                for description in descriptions
+                if any(
+                    isinstance(
+                        result.outcomes.get((description.description_id, locale)),
+                        TranslationFailure,
+                    )
+                    and (description.description_id, locale) not in timed_out
+                    for locale in locales
                 )
-                raise
-            log.warning(
-                "[DescriptionTranslator] %s translation attempt %d/%d failed",
-                provider_name,
-                attempt,
-                attempts,
-                exc_info=True,
-            )
-    msg = f"{provider_name} translation failed after {attempts} attempt(s)"
-    raise DescriptionTranslationError(msg) from last_error
+            ]
+            if not pending:
+                continue
+            generated = generate(descriptions=pending, target_language_codes=[target])
+            result = merge_translation_results(existing=result, new=generated)
+            for key, outcome in generated.outcomes.items():
+                if isinstance(outcome, TranslationFailure):
+                    if outcome.reason == "provider_timeout":
+                        timed_out.add(key)
+                    log.warning(
+                        "[DescriptionTranslator] Provider attempt incomplete "
+                        "provider=%s attempt=%d/%d description_id=%d locale=%s reason=%s",
+                        provider_name,
+                        attempt,
+                        attempts,
+                        key[0],
+                        key[1],
+                        outcome.reason,
+                    )
+    return result

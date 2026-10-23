@@ -5,13 +5,19 @@ from dataclasses import dataclass, replace
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Literal
 
-from agora_analysis_worker_shared.description_input import GroupDescriptionCorrection
+from agora_analysis_worker_shared.description_input import (
+    DescriptionOutputError,
+    GroupDescriptionCorrection,
+)
 from agora_analysis_worker_shared.description_language import (
     DescriptionLanguageIssue,
     EnglishDescription,
     check_description_language,
 )
-from agora_analysis_worker_shared.provider_errors import is_provider_timeout_error
+from agora_analysis_worker_shared.provider_errors import (
+    is_provider_output_error,
+    is_provider_timeout_error,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -42,7 +48,7 @@ class MissingDescription:
 
 @dataclass(frozen=True)
 class DescriptionProviderFailure:
-    reason: Literal["provider_error", "provider_timeout"]
+    reason: Literal["provider_error", "provider_timeout", "invalid_output"]
     error_type: str
 
 
@@ -72,6 +78,16 @@ def description_failure_message(failure: DescriptionFailure) -> str:
     return "AI description missing from provider output"
 
 
+def description_failure_error(failure: DescriptionFailure) -> Exception:
+    message = description_failure_message(failure)
+    if isinstance(failure, DescriptionProviderFailure):
+        if failure.reason == "provider_timeout":
+            return TimeoutError(message)
+        if failure.reason == "provider_error":
+            return RuntimeError(message)
+    return DescriptionOutputError(message)
+
+
 def generate_english_descriptions(
     *,
     generate: RawDescriptionGenerator,
@@ -91,8 +107,14 @@ def generate_english_descriptions(
             output = generate(request)
         except Exception as error:
             timed_out = is_provider_timeout_error(error)
+            if timed_out:
+                reason = "provider_timeout"
+            elif is_provider_output_error(error):
+                reason = "invalid_output"
+            else:
+                reason = "provider_error"
             failure = DescriptionProviderFailure(
-                reason="provider_timeout" if timed_out else "provider_error",
+                reason=reason,
                 error_type=type(error).__name__,
             )
             for key, state in pending.items():

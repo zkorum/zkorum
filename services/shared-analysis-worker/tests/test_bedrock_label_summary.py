@@ -12,6 +12,7 @@ from agora_analysis_worker_shared.bedrock_label_summary import (
     BedrockLabelSummaryConfig,
     BedrockLabelSummaryError,
     LabelSummary,
+    bedrock_response_metadata,
     build_bedrock_converse_payload,
     generate_label_summaries_with_bedrock,
     parse_bedrock_label_summary_response,
@@ -37,6 +38,18 @@ class FakeBedrockClient:
     def converse(self, **kwargs: object) -> object:
         self.calls.append(kwargs)
         return self.responses.pop(0)
+
+
+def test_bedrock_metadata_does_not_expose_untrusted_values() -> None:
+    metadata = bedrock_response_metadata(
+        {
+            "stopReason": "private provider data",
+            "usage": {"inputTokens": True, "outputTokens": "private provider data"},
+        }
+    )
+    assert metadata.stop_reason == "unknown"
+    assert metadata.input_tokens is None
+    assert metadata.output_tokens is None
 
 
 def _config() -> BedrockLabelSummaryConfig:

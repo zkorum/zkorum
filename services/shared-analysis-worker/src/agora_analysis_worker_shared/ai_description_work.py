@@ -34,7 +34,7 @@ from agora_analysis_worker_shared.db import (
 )
 from agora_analysis_worker_shared.description_generation import (
     MissingDescription,
-    description_failure_message,
+    description_failure_error,
 )
 from agora_analysis_worker_shared.description_input import (
     ConversationDescriptionInput,
@@ -49,9 +49,12 @@ from agora_analysis_worker_shared.description_language import (
 )
 from agora_analysis_worker_shared.description_translation import (
     DescriptionForTranslation,
+    TranslationFailure,
     TranslationRepresentativeOpinion,
+    TranslationResult,
     description_translation_output_locales,
     description_translation_provider_targets,
+    translation_failure_error,
 )
 from agora_analysis_worker_shared.generated_models import (
     AnalysisResultOutcomeEnum,
@@ -90,6 +93,8 @@ POSTGRES_INSERT_BIND_PARAM_LIMIT = 60_000
 DESCRIPTION_TRANSLATION_WORK_BATCH_SIZE = 4
 FIRST_PASS_MAX_EXISTING_ATTEMPT_COUNT = 1
 AI_DESCRIPTION_RETRYABLE_ERROR_CODE = "ai_description_retryable"
+AI_DESCRIPTION_OUTPUT_ERROR_CODE = "ai_description_output"
+AI_DESCRIPTION_OUTPUT_RETRY_COOLDOWN_SECONDS = 30
 AI_DESCRIPTION_NON_RETRYABLE_ERROR_CODE = "ai_description_non_retryable"
 AI_DESCRIPTION_SOURCE_LOCALE = CANONICAL_DESCRIPTION_LOCALE
 SUPPORTED_EAGER_AI_DESCRIPTION_TARGET_LANGUAGE_CODES = set(
@@ -112,7 +117,7 @@ def _iter_chunks[T](values: list[T], *, chunk_size: int) -> Iterator[list[T]]:
 
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator, Mapping, Sequence
+    from collections.abc import Iterator, Mapping, Sequence
 
     from sqlalchemy import Engine, Select
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -124,12 +129,11 @@ if TYPE_CHECKING:
         DescriptionGenerator,
         DescriptionOutcome,
     )
-    from agora_analysis_worker_shared.description_translation import DescriptionTranslation
+    from agora_analysis_worker_shared.description_translation import (
+        DescriptionTranslation,
+        DescriptionTranslator,
+    )
 
-    DescriptionTranslator = Callable[
-        [list[DescriptionForTranslation], list[str]],
-        list[DescriptionTranslation],
-    ]
     type _OrderByExpression = (
         ColumnElement[bool]
         | ColumnElement[datetime | None]
@@ -147,12 +151,22 @@ def _retry_cooldown_filter(
     if retry_cooldown_seconds <= 0:
         return true()
 
-    retry_ready_cutoff = datetime.now(UTC) - timedelta(seconds=retry_cooldown_seconds)
+    now = datetime.now(UTC)
+    retry_ready_cutoff = now - timedelta(seconds=retry_cooldown_seconds)
+    output_ready_cutoff = now - timedelta(
+        seconds=min(retry_cooldown_seconds, AI_DESCRIPTION_OUTPUT_RETRY_COOLDOWN_SECONDS)
+    )
     return or_(
         last_error_code.is_(None),
-        last_error_code != AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
+        last_error_code.not_in(
+            [AI_DESCRIPTION_RETRYABLE_ERROR_CODE, AI_DESCRIPTION_OUTPUT_ERROR_CODE]
+        ),
         last_error_at.is_(None),
         last_error_at <= retry_ready_cutoff,
+        and_(
+            last_error_code == AI_DESCRIPTION_OUTPUT_ERROR_CODE,
+            last_error_at <= output_ready_cutoff,
+        ),
     )
 
 
@@ -219,9 +233,8 @@ class FirstPassPendingStatusError(RuntimeError):
 
 @dataclass(frozen=True)
 class DescriptionTranslationBatchProcessResult:
-    schedules: list[AiDescriptionWorkResult]
     translated_description_ids: list[int]
-    missing_description_ids: list[int] = field(default_factory=list)
+    failures: dict[tuple[int, str], TranslationFailure] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -3734,7 +3747,7 @@ def process_ai_description_locale_work_item(
                     lineage_request.group_key, MissingDescription()
                 )
                 if not isinstance(description, EnglishDescription):
-                    raise DescriptionOutputError(description_failure_message(description))
+                    raise description_failure_error(description)
                 _persist_generated_base_description_for_lineage_work(
                     session,
                     claim=claim,
@@ -3808,11 +3821,21 @@ def process_ai_description_locale_work_item(
         session.commit()
 
     provider_started_at = time.perf_counter()
-    translations = (
-        translate_descriptions([description_request], [claim.locale])
+    result = (
+        translate_descriptions(
+            descriptions=[description_request], target_language_codes=[claim.locale]
+        )
         if description_request is not None
-        else []
+        else TranslationResult(outcomes={})
     )
+    outcome = result.outcomes.get((claim.description_id, claim.locale))
+    if isinstance(outcome, TranslationFailure):
+        raise translation_failure_error(outcome)
+    translations = [
+        translation
+        for translation in result.translations
+        if translation.description_id == claim.description_id and translation.locale == claim.locale
+    ]
     provider_ms = (time.perf_counter() - provider_started_at) * 1000
 
     with Session(engine) as session:
@@ -4072,11 +4095,9 @@ def process_description_translation_work_items_batch(
     *,
     claims: list[ClaimedDescriptionTranslationWorkItem],
     translate_descriptions: DescriptionTranslator,
-    require_activated_view_snapshot: bool = False,
 ) -> DescriptionTranslationBatchProcessResult:
     if not claims:
         return DescriptionTranslationBatchProcessResult(
-            schedules=[],
             translated_description_ids=[],
         )
 
@@ -4087,7 +4108,6 @@ def process_description_translation_work_items_batch(
     provider_target_locale = provider_targets[0]
 
     started_at = time.perf_counter()
-    schedules: list[AiDescriptionWorkResult] = []
     descriptions: list[DescriptionForTranslation] = []
     processable_claims: list[ClaimedDescriptionTranslationWorkItem] = []
 
@@ -4103,22 +4123,9 @@ def process_description_translation_work_items_batch(
                     claim.locale,
                     claim.attempt_count,
                 )
-                schedules.append(
-                    _get_conversation_work_result(
-                        session,
-                        conversation_id=claim.conversation_id,
-                        require_activated_view_snapshot=require_activated_view_snapshot,
-                    )
-                )
                 continue
             if not _conversation_is_processable(session, conversation_id=claim.conversation_id):
-                schedules.append(
-                    _complete_claimed_non_processable_ai_description_work(
-                        session,
-                        claim=claim,
-                        require_activated_view_snapshot=require_activated_view_snapshot,
-                    )
-                )
+                _complete_claimed_non_processable_ai_description_work(session, claim=claim)
                 continue
 
             active_claims.append(claim)
@@ -4138,24 +4145,21 @@ def process_description_translation_work_items_batch(
         session.commit()
 
     provider_started_at = time.perf_counter()
-    translations = (
-        translate_descriptions(descriptions, [provider_target_locale]) if descriptions else []
+    result = (
+        translate_descriptions(
+            descriptions=descriptions, target_language_codes=[provider_target_locale]
+        )
+        if descriptions
+        else TranslationResult(outcomes={})
     )
     provider_ms = (time.perf_counter() - provider_started_at) * 1000
     expected_description_ids = {description.description_id for description in descriptions}
     translation_by_description_locale = _translation_by_description_locale_for_batch(
-        translations=translations,
+        translations=result.translations,
         expected_description_ids=expected_description_ids,
         provider_target_locale=provider_target_locale,
     )
-    missing_description_ids = sorted(
-        {
-            claim.description_id
-            for claim in processable_claims
-            if (claim.description_id, claim.locale) not in translation_by_description_locale
-            and claim.description_id in expected_description_ids
-        }
-    )
+    failures: dict[tuple[int, str], TranslationFailure] = {}
 
     with Session(engine) as session:
         completed_claims: list[ClaimedDescriptionTranslationWorkItem] = []
@@ -4170,28 +4174,23 @@ def process_description_translation_work_items_batch(
                     claim.locale,
                     claim.attempt_count,
                 )
-                schedules.append(
-                    _get_conversation_work_result(
-                        session,
-                        conversation_id=claim.conversation_id,
-                        require_activated_view_snapshot=require_activated_view_snapshot,
-                    )
-                )
                 continue
             if not _conversation_is_processable(session, conversation_id=claim.conversation_id):
-                schedules.append(
-                    _complete_claimed_non_processable_ai_description_work(
-                        session,
-                        claim=claim,
-                        require_activated_view_snapshot=require_activated_view_snapshot,
-                    )
-                )
+                _complete_claimed_non_processable_ai_description_work(session, claim=claim)
                 continue
             if (
                 claim.description_id not in provider_requested_description_ids
                 or (claim.description_id, claim.locale) in translation_by_description_locale
             ):
                 completed_claims.append(claim)
+            else:
+                key = (claim.description_id, claim.locale)
+                outcome = result.outcomes.get(key)
+                failures[key] = (
+                    outcome
+                    if isinstance(outcome, TranslationFailure)
+                    else TranslationFailure(reason="invalid_output")
+                )
 
         active_description_ids = {
             claim.description_id
@@ -4217,18 +4216,23 @@ def process_description_translation_work_items_batch(
         for claim in completed_claims:
             _mark_translation_work_complete(session, claim=claim)
 
-        affected_conversation_ids = sorted({claim.conversation_id for claim in completed_claims})
-        if affected_conversation_ids:
-            schedule_by_conversation_id = {
-                conversation_id: _get_conversation_work_result(
-                    session,
-                    conversation_id=conversation_id,
-                    require_activated_view_snapshot=require_activated_view_snapshot,
-                )
-                for conversation_id in affected_conversation_ids
-            }
-            schedules.extend(
-                schedule_by_conversation_id[claim.conversation_id] for claim in completed_claims
+        translation_updates: dict[tuple[int, str], set[int]] = {}
+        for claim in completed_claims:
+            for locale in description_translation_output_locales(provider_target_locale):
+                if (claim.description_id, locale) in translation_by_description_locale:
+                    translation_updates.setdefault((claim.conversation_id, locale), set()).add(
+                        claim.description_id
+                    )
+        # Publish each batch atomically rather than waiting for unrelated providers
+        # or risking a crash between persistence and notification.
+        if translation_updates:
+            _queue_description_content_updates(
+                session,
+                lineage_ids_by_conversation_id={},
+                translation_description_ids_by_conversation_locale={
+                    context: sorted(description_ids)
+                    for context, description_ids in translation_updates.items()
+                },
             )
         session.commit()
 
@@ -4243,9 +4247,8 @@ def process_description_translation_work_items_batch(
         ",".join(sorted({claim.conversation_slug_id for claim in completed_claims})),
     )
     return DescriptionTranslationBatchProcessResult(
-        schedules=schedules,
         translated_description_ids=sorted(active_description_ids),
-        missing_description_ids=missing_description_ids,
+        failures=failures,
     )
 
 
@@ -4396,7 +4399,7 @@ def retry_ai_description_locale_work_item(
             retry_target_id = claim.description_id
         log.info(
             "[AiDescriptionWorkDB] Released AI description work for retry kind=%s "
-            "conversationSlugId=%s conversationId=%d locale=%s %s=%d attemptCount=%d "
+            "conversationSlugId=%s conversationId=%d locale=%s %s=%d attemptCount=%d errorCode=%s "
             "retryReleasedAt=%s fallbackMarked=%s",
             retry_kind,
             claim.conversation_slug_id,
@@ -4405,6 +4408,7 @@ def retry_ai_description_locale_work_item(
             retry_target_name,
             retry_target_id,
             claim.attempt_count,
+            error_code,
             now.isoformat(),
             False,
         )
