@@ -21,6 +21,11 @@ to bypass Docker's build cache, including package and certificate security updat
 
 ## Database polling and recovery
 
+Malformed or rejected provider output uses error code `ai_description_output` and
+becomes eligible after `min(30 seconds, RETRY_COOLDOWN_SECONDS)`. Provider/service
+failures retain the configured cooldown (default 300 seconds). Response diagnostics
+include Bedrock stop reason, token counts, and JSON candidate counts without text.
+
 The retry worker scans durable PostgreSQL work. Materialization, claims, and lease
 recovery use the primary. Claimable-work discovery can use the configured read
 database; immediately after materialization it uses the primary to see the new

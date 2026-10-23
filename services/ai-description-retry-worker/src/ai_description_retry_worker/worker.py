@@ -9,6 +9,7 @@ from threading import Event
 from typing import TYPE_CHECKING
 
 from agora_analysis_worker_shared.ai_description_work import (
+    AI_DESCRIPTION_OUTPUT_RETRY_COOLDOWN_SECONDS,
     fetch_claimable_ai_description_work_conversation_ids,
     materialize_requested_lineage_description_work,
     recover_expired_ai_description_work,
@@ -273,7 +274,7 @@ def main() -> None:
     worker_id = f"ai-desc:{uuid.uuid4()}"
     log.info(
         "%s Starting worker_id=%s claim_batch=%d ai=%d lease_ttl=%ds "
-        "heartbeat=%ds recovery=%ds retry_cooldown=%ds",
+        "heartbeat=%ds recovery=%ds retry_cooldown=%ds output_retry_cooldown=%ds",
         LOG_PREFIX,
         worker_id,
         settings.db_claim_batch_size,
@@ -282,6 +283,7 @@ def main() -> None:
         settings.heartbeat_interval_seconds,
         settings.running_recovery_interval_seconds,
         settings.retry_cooldown_seconds,
+        min(settings.retry_cooldown_seconds, AI_DESCRIPTION_OUTPUT_RETRY_COOLDOWN_SECONDS),
     )
     try:
         validate_ai_description_config(settings)

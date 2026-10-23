@@ -68,6 +68,12 @@ def database_error_summary(error: BaseException) -> str:
     return " ".join(parts)
 
 
+def worker_error_summary(error: BaseException) -> str:
+    if isinstance(error, SQLAlchemyError):
+        return database_error_summary(error)
+    return f"type={type(error).__name__}; details omitted"
+
+
 def _context_suffix(context: Mapping[str, object] | None) -> str:
     if not context:
         return ""
@@ -87,6 +93,16 @@ def log_database_error(
         _context_suffix(context),
         database_error_summary(error),
     )
+
+
+def log_worker_error_summary(
+    *,
+    logger: logging.Logger,
+    message: str,
+    error: BaseException,
+    context: Mapping[str, object] | None = None,
+) -> None:
+    logger.error("%s%s: %s", message, _context_suffix(context), worker_error_summary(error))
 
 
 def log_worker_error(

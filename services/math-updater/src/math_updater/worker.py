@@ -13,6 +13,8 @@ from agora_analysis_worker_shared.ai_description_lease_heartbeat import (
     start_ai_description_lease_heartbeat,
 )
 from agora_analysis_worker_shared.ai_description_work import (
+    AI_DESCRIPTION_OUTPUT_ERROR_CODE,
+    AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
     DESCRIPTION_TRANSLATION_WORK_BATCH_SIZE,
     AiDescriptionWorkResult,
     ClaimedAiDescriptionLocaleWorkItem,
@@ -58,16 +60,14 @@ from agora_analysis_worker_shared.db import (
     release_retryable_work_items_batch,
     upsert_input_snapshots_batch,
 )
-from agora_analysis_worker_shared.description_generation import description_failure_message
-from agora_analysis_worker_shared.description_input import (
-    DescriptionInputError,
-    DescriptionOutputError,
-)
+from agora_analysis_worker_shared.description_generation import description_failure_error
+from agora_analysis_worker_shared.description_input import DescriptionInputError
 from agora_analysis_worker_shared.description_services import (
     build_description_generator,
     build_description_language_detector,
     build_description_translator,
 )
+from agora_analysis_worker_shared.description_translation import translation_failure_error
 from agora_analysis_worker_shared.generated_models import AnalysisResultOutcomeEnum
 from agora_analysis_worker_shared.input_snapshot import (
     PreparedInputSnapshot,
@@ -78,8 +78,11 @@ from agora_analysis_worker_shared.logging_utils import (
     configure_worker_logging,
     log_database_error,
     log_worker_error,
+    log_worker_error_summary,
+    worker_error_summary,
 )
 from agora_analysis_worker_shared.postgres_engine import create_ready_postgres_engine
+from agora_analysis_worker_shared.provider_errors import is_provider_output_error
 from agora_analysis_worker_shared.simulation_providers import (
     SimulatedRetryableError,
     build_simulation_runtime,
@@ -114,16 +117,10 @@ if TYPE_CHECKING:
     )
     from agora_analysis_worker_shared.description_generation import DescriptionGenerator
     from agora_analysis_worker_shared.description_translation import (
-        DescriptionForTranslation,
-        DescriptionTranslation,
+        DescriptionTranslator,
     )
     from agora_analysis_worker_shared.simulation_providers import SimulationRuntime
     from sqlalchemy import Engine
-
-    DescriptionTranslator = Callable[
-        [list[DescriptionForTranslation], list[str]],
-        list[DescriptionTranslation],
-    ]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -657,7 +654,7 @@ def _process_ai_description_conversation_ids(
                 error,
             )
         else:
-            log_worker_error(
+            log_worker_error_summary(
                 logger=log,
                 message="[MathUpdater] Retryable AI description work failure",
                 error=error,
@@ -670,13 +667,17 @@ def _process_ai_description_conversation_ids(
             )
         is_timeout = _is_timeout_error(error)
         is_first_pass_timeout = is_first_pass_scope and is_timeout
+        if is_first_pass_timeout:
+            error_code = "ai_description_timeout"
+        elif is_provider_output_error(error):
+            error_code = AI_DESCRIPTION_OUTPUT_ERROR_CODE
+        else:
+            error_code = AI_DESCRIPTION_RETRYABLE_ERROR_CODE
         schedule = retry_ai_description_locale_work_item(
             primary_engine,
             claim=claim,
-            error_code="ai_description_timeout"
-            if is_first_pass_timeout
-            else "ai_description_retryable",
-            error_message=str(error),
+            error_code=error_code,
+            error_message=worker_error_summary(error),
         )
         if is_first_pass_timeout:
             log.warning(
@@ -731,7 +732,7 @@ def _process_ai_description_conversation_ids(
             for claim in processable_claims:
                 failure = result.failures.get(claim.lineage_id)
                 if failure is not None:
-                    error = DescriptionOutputError(description_failure_message(failure))
+                    error = description_failure_error(failure)
                     retry_schedules.append((claim, process_claim_error(claim=claim, error=error)))
         except Exception as error:
             retry_schedules.extend(
@@ -784,16 +785,13 @@ def _process_ai_description_conversation_ids(
                 claims=processable_claims,
                 translate_descriptions=translator,
             )
-            if result.missing_description_ids:
-                missing_description_ids = set(result.missing_description_ids)
-                missing_error = DescriptionOutputError(
-                    "translation output did not include all requested descriptions"
-                )
-                retry_schedules.extend(
-                    (claim, process_claim_error(claim=claim, error=missing_error))
-                    for claim in processable_claims
-                    if claim.description_id in missing_description_ids
-                )
+            for claim in processable_claims:
+                failure = result.failures.get((claim.description_id, claim.locale))
+                if failure is not None:
+                    schedule = process_claim_error(
+                        claim=claim, error=translation_failure_error(failure)
+                    )
+                    retry_schedules.append((claim, schedule))
         except Exception as error:
             retry_schedules.extend(
                 (claim, process_claim_error(claim=claim, error=error))

@@ -3,7 +3,10 @@
     :to="{
       name: '/conversation/[postSlugId]/',
       params: { postSlugId: conversationSlugId },
-      query: { opinion: opinionSlugId },
+      query: {
+        opinion: opinionSlugId,
+        filter: 'my_statements' satisfies CommentFilterOptions,
+      },
     }"
   >
     <ZKHoverEffect
@@ -76,6 +79,7 @@
 import ConversationTitle from "src/components/features/conversation/ConversationTitle.vue";
 import UserIdentityCard from "src/components/features/user/UserIdentityCard.vue";
 import type { OpinionItem } from "src/shared/types/zod";
+import type { CommentFilterOptions } from "src/utils/component/opinion";
 import { normalConversationRouteContext } from "src/utils/router/conversationRouteContext";
 
 import SpaLink from "../../ui-library/SpaLink.vue";

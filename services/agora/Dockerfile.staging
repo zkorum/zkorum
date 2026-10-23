@@ -1,6 +1,7 @@
 # ---- Dependencies ----
 # The frontend output is architecture-independent; avoid emulating build tools.
 FROM --platform=$BUILDPLATFORM node:24.22.1-alpine AS deps
+RUN apk add --no-cache 'ca-certificates>=20261020-r0'
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@12.4.1 --activate
 ENV PATH=/app/node_modules/.bin:$PATH
@@ -17,6 +18,7 @@ RUN pnpm run build:staging
 # ---- Production ----
 # Reset the target after the native build stage, including its CPU variant.
 FROM --platform=$TARGETPLATFORM nginx:stable-alpine
+RUN apk add --no-cache 'ca-certificates>=20261020-r0'
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist/spa /usr/share/nginx/html
 EXPOSE 80

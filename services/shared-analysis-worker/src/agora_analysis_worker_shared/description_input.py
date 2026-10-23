@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from agora_analysis_worker_shared.generated_models import VoteEnumSimple
+from agora_analysis_worker_shared.provider_errors import ProviderOutputError
 
 if TYPE_CHECKING:
     from agora_analysis_worker_shared.analysis_compute import ComputedOpinionGroup
@@ -14,7 +15,7 @@ class DescriptionInputError(RuntimeError):
     pass
 
 
-class DescriptionOutputError(RuntimeError):
+class DescriptionOutputError(ProviderOutputError):
     pass
 
 

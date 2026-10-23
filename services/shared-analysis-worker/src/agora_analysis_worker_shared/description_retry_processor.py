@@ -11,12 +11,12 @@ from agora_analysis_worker_shared.ai_description_lease_heartbeat import (
 )
 from agora_analysis_worker_shared.ai_description_work import (
     AI_DESCRIPTION_NON_RETRYABLE_ERROR_CODE,
+    AI_DESCRIPTION_OUTPUT_ERROR_CODE,
     AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
     DESCRIPTION_TRANSLATION_WORK_BATCH_SIZE,
     AiDescriptionWorkResult,
     ClaimedDescriptionTranslationWorkItem,
     ClaimedLineageDescriptionWorkItem,
-    DescriptionTranslationBatchProcessResult,
     claim_ai_description_locale_work_items_batch,
     complete_non_processable_ai_description_work_batch,
     description_translation_work_claim_batches,
@@ -27,11 +27,14 @@ from agora_analysis_worker_shared.ai_description_work import (
     queue_ai_description_content_updated_events,
     retry_ai_description_locale_work_item,
 )
-from agora_analysis_worker_shared.description_generation import description_failure_message
-from agora_analysis_worker_shared.description_input import (
-    DescriptionInputError,
-    DescriptionOutputError,
+from agora_analysis_worker_shared.description_generation import description_failure_error
+from agora_analysis_worker_shared.description_input import DescriptionInputError
+from agora_analysis_worker_shared.description_translation import translation_failure_error
+from agora_analysis_worker_shared.logging_utils import (
+    log_worker_error_summary,
+    worker_error_summary,
 )
+from agora_analysis_worker_shared.provider_errors import is_provider_output_error
 from agora_analysis_worker_shared.simulation_providers import (
     SimulatedRetryableError,
     emit_load_event,
@@ -39,22 +42,14 @@ from agora_analysis_worker_shared.simulation_providers import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from sqlalchemy import Engine
 
     from agora_analysis_worker_shared.ai_description_work import ClaimedAiDescriptionLocaleWorkItem
     from agora_analysis_worker_shared.description_generation import DescriptionGenerator
     from agora_analysis_worker_shared.description_translation import (
-        DescriptionForTranslation,
-        DescriptionTranslation,
+        DescriptionTranslator,
     )
     from agora_analysis_worker_shared.simulation_providers import SimulationRuntime
-
-    DescriptionTranslator = Callable[
-        [list[DescriptionForTranslation], list[str]],
-        list[DescriptionTranslation],
-    ]
 
 log = logging.getLogger(__name__)
 
@@ -190,20 +185,21 @@ def process_ai_description_conversation_ids(
         error: Exception,
     ) -> AiDescriptionWorkResult:
         if isinstance(error, DescriptionInputError):
-            log.exception(
-                "%s Non-retryable %s failure conversationSlugId=%s locale=%s %s",
+            log.error(
+                "%s Non-retryable %s failure conversationSlugId=%s locale=%s %s error_type=%s",
                 log_prefix,
                 _claim_kind(claim),
                 claim.conversation_slug_id,
                 claim.locale,
                 _claim_target_log(claim),
+                type(error).__name__,
             )
             return mark_non_retryable_ai_description_locale_work_item(
                 primary_engine,
                 claim=claim,
                 ai_description_epoch=ai_description_epoch,
                 error_code=AI_DESCRIPTION_NON_RETRYABLE_ERROR_CODE,
-                error_message=str(error),
+                error_message=f"{type(error).__name__}: invalid description input",
                 require_activated_view_snapshot=True,
             )
 
@@ -218,19 +214,23 @@ def process_ai_description_conversation_ids(
                 error,
             )
         else:
-            log.exception(
-                "%s Retryable %s failure conversationSlugId=%s locale=%s %s",
-                log_prefix,
-                _claim_kind(claim),
-                claim.conversation_slug_id,
-                claim.locale,
-                _claim_target_log(claim),
+            log_worker_error_summary(
+                logger=log,
+                message=f"{log_prefix} Retryable AI description work failure",
+                error=error,
+                context={
+                    "conversationSlugId": claim.conversation_slug_id,
+                    "locale": claim.locale,
+                    **_claim_target_metadata(claim),
+                },
             )
         return retry_ai_description_locale_work_item(
             primary_engine,
             claim=claim,
-            error_code=AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
-            error_message=str(error),
+            error_code=AI_DESCRIPTION_OUTPUT_ERROR_CODE
+            if is_provider_output_error(error)
+            else AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
+            error_message=worker_error_summary(error),
             require_activated_view_snapshot=True,
         )
 
@@ -284,7 +284,7 @@ def process_ai_description_conversation_ids(
             for claim in processable_claims:
                 failure = result.failures.get(claim.lineage_id)
                 if failure is not None:
-                    error = DescriptionOutputError(description_failure_message(failure))
+                    error = description_failure_error(failure)
                     retry_schedules.append((claim, process_claim_error(claim=claim, error=error)))
             return retry_schedules, set(result.generated_lineage_ids)
         except Exception as error:
@@ -306,10 +306,7 @@ def process_ai_description_conversation_ids(
         claims: list[ClaimedDescriptionTranslationWorkItem],
         *,
         translate: DescriptionTranslator,
-    ) -> tuple[
-        list[TranslationRetryResult],
-        DescriptionTranslationBatchProcessResult,
-    ]:
+    ) -> list[TranslationRetryResult]:
         processable_claims: list[ClaimedDescriptionTranslationWorkItem] = []
         retry_schedules: list[TranslationRetryResult] = []
         for claim in claims:
@@ -324,10 +321,7 @@ def process_ai_description_conversation_ids(
                 retry_schedules.append((claim, process_claim_error(claim=claim, error=error)))
 
         if not processable_claims:
-            return retry_schedules, DescriptionTranslationBatchProcessResult(
-                schedules=[],
-                translated_description_ids=[],
-            )
+            return retry_schedules
         provider_started_at = time.perf_counter()
         log.info(
             "%s Starting translation provider batch claim_count=%d conversationSlugIds=%s "
@@ -344,7 +338,6 @@ def process_ai_description_conversation_ids(
                 primary_engine,
                 claims=processable_claims,
                 translate_descriptions=translate,
-                require_activated_view_snapshot=True,
             )
             log.info(
                 "%s Finished translation provider batch claim_count=%d translated_count=%d "
@@ -352,21 +345,18 @@ def process_ai_description_conversation_ids(
                 log_prefix,
                 len(processable_claims),
                 len(result.translated_description_ids),
-                len(result.missing_description_ids),
+                len(result.failures),
                 (time.perf_counter() - provider_started_at) * 1000,
                 ",".join(sorted({claim.conversation_slug_id for claim in processable_claims})),
                 ",".join(str(claim.description_id) for claim in processable_claims),
             )
-            if result.missing_description_ids:
-                missing_description_ids = set(result.missing_description_ids)
-                missing_error = DescriptionOutputError(
-                    "translation output did not include all requested descriptions"
-                )
-                retry_schedules.extend(
-                    (claim, process_claim_error(claim=claim, error=missing_error))
-                    for claim in processable_claims
-                    if claim.description_id in missing_description_ids
-                )
+            for claim in processable_claims:
+                failure = result.failures.get((claim.description_id, claim.locale))
+                if failure is not None:
+                    schedule = process_claim_error(
+                        claim=claim, error=translation_failure_error(failure)
+                    )
+                    retry_schedules.append((claim, schedule))
         except Exception as error:
             log.warning(
                 "%s Failed translation provider batch claim_count=%d elapsed_ms=%.1f "
@@ -382,11 +372,7 @@ def process_ai_description_conversation_ids(
                 (claim, process_claim_error(claim=claim, error=error))
                 for claim in processable_claims
             )
-            result = DescriptionTranslationBatchProcessResult(
-                schedules=[],
-                translated_description_ids=[],
-            )
-        return retry_schedules, result
+        return retry_schedules
 
     stop_heartbeat = start_ai_description_lease_heartbeat(
         primary_engine=primary_engine,
@@ -399,7 +385,6 @@ def process_ai_description_conversation_ids(
     try:
         processing_started_at = time.perf_counter()
         lineage_ids_by_conversation_id: dict[int, set[int]] = {}
-        translation_description_ids_by_conversation_locale: dict[tuple[int, str], set[int]] = {}
         lineage_claims = [
             claim for claim in claims if isinstance(claim, ClaimedLineageDescriptionWorkItem)
         ]
@@ -443,14 +428,17 @@ def process_ai_description_conversation_ids(
                                     claim.conversation_id,
                                     set(),
                                 ).add(claim.lineage_id)
-                    except Exception:
-                        log.exception(
-                            "%s Failed to finalize retry state claims=%s",
-                            log_prefix,
-                            ", ".join(
-                                f"{claim.conversation_slug_id}:{claim.locale}:{claim.lineage_id}"
-                                for claim in claims_for_candidate
-                            ),
+                    except Exception as error:
+                        log_worker_error_summary(
+                            logger=log,
+                            message=f"{log_prefix} Failed to finalize retry state",
+                            error=error,
+                            context={
+                                "claims": ", ".join(
+                                    f"{claim.conversation_slug_id}:{claim.locale}:{claim.lineage_id}"
+                                    for claim in claims_for_candidate
+                                )
+                            },
                         )
 
         translation_claim_batches = description_translation_work_claim_batches(translation_claims)
@@ -467,7 +455,7 @@ def process_ai_description_conversation_ids(
                 for future in as_completed(future_by_translation_claims):
                     claims_for_locale = future_by_translation_claims[future]
                     try:
-                        retry_schedules, result = future.result()
+                        retry_schedules = future.result()
                         for claim, schedule in retry_schedules:
                             if schedule.retry_released_at is not None:
                                 emit_load_event(
@@ -483,26 +471,20 @@ def process_ai_description_conversation_ids(
                                         **_claim_target_metadata(claim),
                                     },
                                 )
-                        if result.translated_description_ids:
-                            translated_ids = set(result.translated_description_ids)
-                            for claim in claims_for_locale:
-                                if claim.description_id not in translated_ids:
-                                    continue
-                                translation_description_ids_by_conversation_locale.setdefault(
-                                    (claim.conversation_id, claim.locale),
-                                    set(),
-                                ).add(claim.description_id)
-                    except Exception:
-                        log.exception(
-                            "%s Failed to finalize translation batch retry state claims=%s",
-                            log_prefix,
-                            ", ".join(
-                                f"{claim.conversation_slug_id}:{claim.locale}:{claim.description_id}"
-                                for claim in claims_for_locale
-                            ),
+                    except Exception as error:
+                        log_worker_error_summary(
+                            logger=log,
+                            message=f"{log_prefix} Translation retry finalization failed",
+                            error=error,
+                            context={
+                                "claims": ", ".join(
+                                    f"{claim.conversation_slug_id}:{claim.locale}:{claim.description_id}"
+                                    for claim in claims_for_locale
+                                )
+                            },
                         )
 
-        if lineage_ids_by_conversation_id or translation_description_ids_by_conversation_locale:
+        if lineage_ids_by_conversation_id:
             try:
                 queue_ai_description_content_updated_events(
                     primary_engine,
@@ -510,17 +492,13 @@ def process_ai_description_conversation_ids(
                         conversation_id: sorted(lineage_ids)
                         for conversation_id, lineage_ids in lineage_ids_by_conversation_id.items()
                     },
-                    translation_description_ids_by_conversation_locale={
-                        context: sorted(description_ids)
-                        for context, description_ids in (
-                            translation_description_ids_by_conversation_locale.items()
-                        )
-                    },
+                    translation_description_ids_by_conversation_locale={},
                 )
-            except Exception:
-                log.exception(
-                    "%s Failed to queue AI description content update events",
-                    log_prefix,
+            except Exception as error:
+                log_worker_error_summary(
+                    logger=log,
+                    message=f"{log_prefix} Failed to queue AI description content update events",
+                    error=error,
                 )
 
         log.info(

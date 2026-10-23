@@ -62,4 +62,4 @@ if [ "$runtime" = "node" ]; then
   exec pnpm start:dev
 fi
 
-PYTHONUNBUFFERED=1 exec uv run python -m "$module"
+PYTHONUNBUFFERED=1 exec sh "$repo_root/scripts/run-python-worker.sh" "$module"

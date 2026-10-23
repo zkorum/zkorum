@@ -30,9 +30,10 @@ from sqlalchemy.schema import CreateSchema, DropSchema
 from sqlalchemy.sql.selectable import CTE
 from sqlalchemy.sql.visitors import iterate
 
-from agora_analysis_worker_shared import description_repair
+from agora_analysis_worker_shared import ai_description_work, description_repair
 from agora_analysis_worker_shared.ai_description_work import (
     AI_DESCRIPTION_NON_RETRYABLE_ERROR_CODE,
+    AI_DESCRIPTION_OUTPUT_ERROR_CODE,
     AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
     DESCRIPTION_TRANSLATION_WORK_BATCH_SIZE,
     CandidateLocaleRequestRow,
@@ -87,9 +88,18 @@ from agora_analysis_worker_shared.description_repair import (
     fetch_live_descriptions,
     replace_live_description,
 )
+from agora_analysis_worker_shared.description_retry_processor import (
+    TranslateDescriptions,
+    process_ai_description_conversation_ids,
+)
 from agora_analysis_worker_shared.description_translation import (
     DescriptionForTranslation,
     DescriptionTranslation,
+    DescriptionTranslationOutputError,
+    TranslatedDescriptionText,
+    TranslationFailure,
+    TranslationResult,
+    translation_result,
 )
 from agora_analysis_worker_shared.generated_models import (
     AnalysisFamilyEnum,
@@ -1984,17 +1994,21 @@ def test_process_translation_work_items_batch_persists_multiple_translations() -
     def translate_descriptions(
         descriptions: list[DescriptionForTranslation],
         target_language_codes: list[str],
-    ) -> list[DescriptionTranslation]:
+    ) -> TranslationResult:
         calls.append((descriptions, target_language_codes))
-        return [
-            DescriptionTranslation(
-                description_id=description.description_id,
-                locale=target_language_codes[0],
-                label=f"{description.label} fr",
-                summary=f"{description.summary} fr",
-            )
-            for description in descriptions
-        ]
+        return translation_result(
+            description_ids=[description.description_id for description in descriptions],
+            target_language_codes=target_language_codes,
+            translations=[
+                DescriptionTranslation(
+                    description_id=description.description_id,
+                    locale=target_language_codes[0],
+                    label=f"{description.label} fr",
+                    summary=f"{description.summary} fr",
+                )
+                for description in descriptions
+            ],
+        )
 
     result = process_description_translation_work_items_batch(
         engine,
@@ -2041,7 +2055,7 @@ def test_process_translation_work_items_batch_persists_multiple_translations() -
     ]
     assert [translation.label for translation in translations] == ["Group one fr", "Group two fr"]
     assert all(work_row.lease_token is None for work_row in work_rows)
-    assert [schedule.conversation_id for schedule in result.schedules] == [10, 10]
+    assert result.failures == {}
     assert result.translated_description_ids == [501, 502]
 
 
@@ -2084,6 +2098,134 @@ def test_content_update_events_coalesce_locales_per_snapshot() -> None:
     assert events[0].payload["candidateIds"] == [401]
 
 
+@pytest.mark.parametrize("notification_fails", [False, True])
+def test_translation_batch_commits_notification_atomically(
+    *, notification_fails: bool, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine = _create_engine()
+    with Session(engine) as session:
+        _insert_non_processable_ai_work_state(session)
+        view = session.execute(select(ConversationViewSnapshot)).scalar_one()
+        view.activated_at = NOW
+        session.add(
+            OpinionGroupDescription(
+                id=501, locale="en", label="Skeptics", summary="Questions cost.", created_at=NOW
+            )
+        )
+        work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+        work.lease_owner = "worker-1"
+        work.lease_token = "token-translation"
+        work.lease_expires_at = datetime.now(UTC) + timedelta(minutes=10)
+        session.commit()
+
+    def translate(
+        descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+    ) -> TranslationResult:
+        del descriptions, target_language_codes
+        return translation_result(
+            description_ids=[501],
+            target_language_codes=["fr"],
+            translations=[
+                DescriptionTranslation(
+                    description_id=501,
+                    locale="fr",
+                    label="Sceptiques",
+                    summary="Interroge les coûts.",
+                )
+            ],
+        )
+
+    if notification_fails:
+
+        def fail_notification(_session: Session, **_kwargs: object) -> None:
+            raise RuntimeError("outbox unavailable")
+
+        monkeypatch.setattr(
+            ai_description_work, "_queue_description_content_updates", fail_notification
+        )
+        with pytest.raises(RuntimeError, match="outbox unavailable"):
+            process_description_translation_work_items_batch(
+                engine, claims=[_translation_claim()], translate_descriptions=translate
+            )
+    else:
+        process_description_translation_work_items_batch(
+            engine, claims=[_translation_claim()], translate_descriptions=translate
+        )
+
+    with Session(engine) as session:
+        translations = session.scalars(select(OpinionGroupDescriptionTranslation)).all()
+        events = session.scalars(select(RealtimeEventOutbox)).all()
+        work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+        if notification_fails:
+            assert translations == []
+            assert events == []
+            assert work.lease_token == "token-translation"
+        else:
+            assert len(translations) == 1
+            assert work.lease_token is None
+            assert len(events) == 1
+            assert events[0].payload["conversationViewSnapshotId"] == 20
+            assert events[0].payload["locales"] == ["fr"]
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_code"),
+    [
+        (DescriptionTranslationOutputError("invalid output"), AI_DESCRIPTION_OUTPUT_ERROR_CODE),
+        (TimeoutError("provider unavailable"), AI_DESCRIPTION_RETRYABLE_ERROR_CODE),
+        (
+            OperationalError(
+                "private SQL",
+                {"summary": "private translated text"},
+                RuntimeError("private provider message"),
+            ),
+            AI_DESCRIPTION_RETRYABLE_ERROR_CODE,
+        ),
+    ],
+)
+def test_translation_retry_worker_classifies_output_and_provider_failures(
+    *, error: Exception, expected_code: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    engine = _create_engine()
+    with Session(engine) as session:
+        _insert_non_processable_ai_work_state(session)
+        view = session.execute(select(ConversationViewSnapshot)).scalar_one()
+        view.activated_at = NOW
+        session.add(
+            OpinionGroupDescription(
+                id=501, locale="en", label="Skeptics", summary="Questions cost.", created_at=NOW
+            )
+        )
+        session.commit()
+
+    def translate(
+        descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+    ) -> TranslationResult:
+        del descriptions, target_language_codes
+        raise error
+
+    processed = process_ai_description_conversation_ids(
+        primary_engine=engine,
+        worker_id="test-worker",
+        conversation_ids=[10],
+        lease_ttl_seconds=45,
+        heartbeat_interval_seconds=15,
+        claim_limit=4,
+        max_workers=1,
+        ai_description_epoch=1,
+        retry_cooldown_seconds=300,
+        work=TranslateDescriptions(translate=translate),
+        log_prefix="[DescriptionTranslationRetryWorker]",
+    )
+    with Session(engine) as session:
+        work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+        assert work.last_error_code == expected_code
+        assert work.lease_token is None
+        assert "private" not in (work.last_error_message or "")
+    assert processed == 1
+    assert "private" not in caplog.text
+
+
 def test_process_translation_work_items_batch_rejects_output_mismatch() -> None:
     engine = _create_engine()
     with Session(engine) as session:
@@ -2108,17 +2250,12 @@ def test_process_translation_work_items_batch_rejects_output_mismatch() -> None:
         session.commit()
 
     def translate_descriptions(
-        _descriptions: list[DescriptionForTranslation],
+        descriptions: list[DescriptionForTranslation],
         target_language_codes: list[str],
-    ) -> list[DescriptionTranslation]:
-        return [
-            DescriptionTranslation(
-                description_id=999,
-                locale=target_language_codes[0],
-                label="wrong",
-                summary="wrong",
-            )
-        ]
+    ) -> TranslationResult:
+        del descriptions
+        translation = TranslatedDescriptionText(label="wrong", summary="wrong")
+        return TranslationResult(outcomes={(999, target_language_codes[0]): translation})
 
     with pytest.raises(DescriptionOutputError):
         process_description_translation_work_items_batch(
@@ -2137,6 +2274,80 @@ def test_process_translation_work_items_batch_rejects_output_mismatch() -> None:
 
     assert translation_count == []
     assert translation_work.lease_token == "token-translation"
+
+
+def test_partial_chinese_translation_only_fails_the_missing_locale() -> None:
+    engine = _create_engine()
+    with Session(engine) as session:
+        _insert_non_processable_ai_work_state(session)
+        view = session.execute(select(ConversationViewSnapshot)).scalar_one()
+        view.activated_at = NOW
+        session.add(
+            OpinionGroupDescription(
+                id=501, locale="en", label="Group", summary="Summary", created_at=NOW
+            )
+        )
+        work = session.execute(select(OpinionGroupDescriptionTranslationWork)).scalar_one()
+        work.locale = DisplayLanguageCode.zh_hant
+        work.lease_owner = "worker-1"
+        work.lease_token = "traditional-token"
+        work.lease_expires_at = datetime.now(UTC) + timedelta(minutes=10)
+        session.add(
+            OpinionGroupDescriptionTranslationWork(
+                id=203,
+                description_id=501,
+                conversation_id=10,
+                locale="zh-Hans",
+                attempt_count=1,
+                lease_owner="worker-1",
+                lease_token="simplified-token",
+                lease_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+                created_at=NOW,
+                updated_at=NOW,
+            )
+        )
+        request = session.execute(
+            select(OpinionGroupCandidateDescriptionLocaleRequest)
+        ).scalar_one()
+        request.locale = DisplayLanguageCode.zh_hant
+        session.commit()
+
+    def translate(
+        *, descriptions: list[DescriptionForTranslation], target_language_codes: list[str]
+    ) -> TranslationResult:
+        return translation_result(
+            description_ids=[description.description_id for description in descriptions],
+            target_language_codes=target_language_codes,
+            failure=TranslationFailure(reason="provider_timeout"),
+            translations=[
+                DescriptionTranslation(
+                    description_id=501,
+                    locale="zh-Hant",
+                    label="群體",
+                    summary="這個群體支持審慎監管。",
+                )
+            ],
+        )
+
+    result = process_description_translation_work_items_batch(
+        engine,
+        claims=[
+            _translation_claim(locale="zh-Hant", lease_token="traditional-token"),
+            _translation_claim(work_id=203, locale="zh-Hans", lease_token="simplified-token"),
+        ],
+        translate_descriptions=translate,
+    )
+    assert result.failures == {(501, "zh-Hans"): TranslationFailure(reason="provider_timeout")}
+    with Session(engine) as session:
+        work_by_locale = {
+            row.locale: row
+            for row in session.scalars(select(OpinionGroupDescriptionTranslationWork))
+        }
+        assert work_by_locale[DisplayLanguageCode.zh_hant].lease_token is None
+        assert work_by_locale[DisplayLanguageCode.zh_hans].lease_token == "simplified-token"
+        events = session.scalars(select(RealtimeEventOutbox)).all()
+        assert len(events) == 1
+        assert events[0].payload["locales"] == ["zh-Hant"]
 
 
 def test_non_processable_ai_cleanup_fallbacks_statuses_without_activation() -> None:
@@ -3543,7 +3754,13 @@ def test_translation_retry_fallback_does_not_activate_first_pass_snapshot() -> N
     assert translation_work.lease_token is None
 
 
-def test_retry_cooldown_blocks_recent_failed_lineage_work() -> None:
+@pytest.mark.parametrize(
+    ("error_code", "wait_seconds"),
+    [(AI_DESCRIPTION_RETRYABLE_ERROR_CODE, 301), (AI_DESCRIPTION_OUTPUT_ERROR_CODE, 31)],
+)
+def test_retry_cooldown_blocks_recent_failed_lineage_work(
+    *, error_code: str, wait_seconds: int
+) -> None:
     engine = _create_engine()
     with Session(engine) as session:
         _insert_non_processable_ai_work_state(session)
@@ -3554,7 +3771,7 @@ def test_retry_cooldown_blocks_recent_failed_lineage_work() -> None:
         lineage = session.execute(select(OpinionGroupLineage)).scalar_one()
         lineage.system_description_id = None
         lineage_work = session.execute(select(OpinionGroupLineageDescriptionWork)).scalar_one()
-        lineage_work.last_error_code = AI_DESCRIPTION_RETRYABLE_ERROR_CODE
+        lineage_work.last_error_code = error_code
         lineage_work.last_error_at = datetime.now(UTC)
         session.commit()
 
@@ -3584,7 +3801,7 @@ def test_retry_cooldown_blocks_recent_failed_lineage_work() -> None:
 
     with Session(engine) as session:
         lineage_work = session.execute(select(OpinionGroupLineageDescriptionWork)).scalar_one()
-        lineage_work.last_error_at = datetime.now(UTC) - timedelta(seconds=301)
+        lineage_work.last_error_at = datetime.now(UTC) - timedelta(seconds=wait_seconds)
         session.commit()
 
     expired_cooldown_claimable_ids = fetch_claimable_ai_description_work_conversation_ids(
@@ -3618,7 +3835,13 @@ def test_retry_cooldown_blocks_recent_failed_lineage_work() -> None:
     assert isinstance(expired_cooldown_claims[0], ClaimedLineageDescriptionWorkItem)
 
 
-def test_retry_cooldown_blocks_recent_failed_translation_work() -> None:
+@pytest.mark.parametrize(
+    ("error_code", "wait_seconds"),
+    [(AI_DESCRIPTION_RETRYABLE_ERROR_CODE, 301), (AI_DESCRIPTION_OUTPUT_ERROR_CODE, 31)],
+)
+def test_retry_cooldown_blocks_recent_failed_translation_work(
+    *, error_code: str, wait_seconds: int
+) -> None:
     engine = _create_engine()
     with Session(engine) as session:
         _insert_non_processable_ai_work_state(session)
@@ -3629,7 +3852,7 @@ def test_retry_cooldown_blocks_recent_failed_translation_work() -> None:
         translation_work = session.execute(
             select(OpinionGroupDescriptionTranslationWork)
         ).scalar_one()
-        translation_work.last_error_code = AI_DESCRIPTION_RETRYABLE_ERROR_CODE
+        translation_work.last_error_code = error_code
         translation_work.last_error_at = datetime.now(UTC)
         session.commit()
 
@@ -3661,7 +3884,7 @@ def test_retry_cooldown_blocks_recent_failed_translation_work() -> None:
         translation_work = session.execute(
             select(OpinionGroupDescriptionTranslationWork)
         ).scalar_one()
-        translation_work.last_error_at = datetime.now(UTC) - timedelta(seconds=301)
+        translation_work.last_error_at = datetime.now(UTC) - timedelta(seconds=wait_seconds)
         session.commit()
 
     expired_cooldown_claimable_ids = fetch_claimable_ai_description_work_conversation_ids(

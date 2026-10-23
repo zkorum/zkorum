@@ -7,7 +7,7 @@ NO_CACHE_FLAG := $(if $(filter 1,$(NO_CACHE)),--no-cache)
 all: dev
 
 dev:
-	PYTHONUNBUFFERED=1 uv run python -m content_translation_worker.worker
+	PYTHONUNBUFFERED=1 sh ../../scripts/run-python-worker.sh content_translation_worker.worker
 
 lint:
 	uv run --extra dev ruff check .

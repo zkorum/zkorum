@@ -241,7 +241,7 @@ dev-math-updater:
 	$(LOG_RUNNER) --service math-updater -- $(MAKE) dev-math-updater-raw
 
 dev-math-updater-raw:
-	cd services/math-updater && AGORA_DEV_MODE=true PYTHONUNBUFFERED=1 uv run python -m math_updater.worker
+	cd services/math-updater && AGORA_DEV_MODE=true PYTHONUNBUFFERED=1 $(MAKE) dev
 
 dev-math-updater-scenario:
 	$(LOG_RUNNER) --service math-updater -- $(MAKE) dev-math-updater-scenario-raw
@@ -281,7 +281,7 @@ dev-content-translation-worker:
 	$(LOG_RUNNER) --service content-translation-worker -- $(MAKE) dev-content-translation-worker-scenario-raw SCENARIO="$(CONTENT_TRANSLATION_WORKER_DEV_SCENARIO)"
 
 dev-content-translation-worker-raw:
-	cd services/content-translation-worker && PYTHONUNBUFFERED=1 uv run python -m content_translation_worker.worker
+	cd services/content-translation-worker && $(MAKE) dev
 
 dev-content-translation-worker-scenario:
 	$(LOG_RUNNER) --service content-translation-worker -- $(MAKE) dev-content-translation-worker-scenario-raw
@@ -293,7 +293,7 @@ dev-import-worker:
 	$(LOG_RUNNER) --service import-worker -- $(MAKE) dev-import-worker-raw
 
 dev-import-worker-raw:
-	cd services/import-worker && PYTHONUNBUFFERED=1 uv run python -m import_worker.worker
+	cd services/import-worker && PYTHONUNBUFFERED=1 $(MAKE) dev
 
 dev-x-analyzer:
 	$(LOG_RUNNER) --service x-analyzer -- $(MAKE) dev-x-analyzer-raw

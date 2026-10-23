@@ -4,13 +4,16 @@ import json
 import logging
 import re
 from collections.abc import Mapping, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol, TypeGuard, Unpack
 
 from botocore.config import Config
 from botocore.session import get_session
 
 from agora_analysis_worker_shared.description_input import GroupDescriptionCorrection
+from agora_analysis_worker_shared.provider_errors import ProviderOutputError
 
 if TYPE_CHECKING:
     from mypy_boto3_bedrock_runtime.type_defs import ConverseRequestTypeDef
@@ -38,6 +41,52 @@ CORRECTION_INSTRUCTION = (
 
 class BedrockLabelSummaryError(RuntimeError):
     pass
+
+
+class BedrockLabelSummaryOutputError(BedrockLabelSummaryError, ProviderOutputError):
+    pass
+
+
+class BedrockStopReason(StrEnum):
+    unknown = "unknown"
+    end_turn = "end_turn"
+    tool_use = "tool_use"
+    max_tokens = "max_tokens"
+    stop_sequence = "stop_sequence"
+    guardrail_intervened = "guardrail_intervened"
+    content_filtered = "content_filtered"
+    malformed_model_output = "malformed_model_output"
+    malformed_tool_use = "malformed_tool_use"
+    model_context_window_exceeded = "model_context_window_exceeded"
+
+
+@dataclass(frozen=True)
+class BedrockResponseMetadata:
+    stop_reason: BedrockStopReason
+    input_tokens: int | None
+    output_tokens: int | None
+
+
+def bedrock_response_metadata(response: object) -> BedrockResponseMetadata:
+    stop_reason = BedrockStopReason.unknown
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    if _is_string_key_mapping(response):
+        raw_stop_reason = response.get("stopReason")
+        if isinstance(raw_stop_reason, str):
+            with suppress(ValueError):
+                stop_reason = BedrockStopReason(raw_stop_reason)
+        usage = response.get("usage")
+        if _is_string_key_mapping(usage):
+            raw_input_tokens = usage.get("inputTokens")
+            raw_output_tokens = usage.get("outputTokens")
+            if type(raw_input_tokens) is int and raw_input_tokens >= 0:
+                input_tokens = raw_input_tokens
+            if type(raw_output_tokens) is int and raw_output_tokens >= 0:
+                output_tokens = raw_output_tokens
+    return BedrockResponseMetadata(
+        stop_reason=stop_reason, input_tokens=input_tokens, output_tokens=output_tokens
+    )
 
 
 class BedrockConverseClient(Protocol):
@@ -116,16 +165,21 @@ def generate_label_summaries_with_bedrock(
 
     response = bedrock_client.converse(**command_payload)
     model_response_text = extract_text_content_from_response(response)
+    metadata = bedrock_response_metadata(response)
     log.info(
         "[DescriptionGenerator] Bedrock label/summary response "
-        "model_id=%s analysis_snapshot_id=%s response_characters=%d",
+        "model_id=%s analysis_snapshot_id=%s response_characters=%d "
+        "stop_reason=%s input_tokens=%s output_tokens=%s",
         config.model_id,
         conversation.analysis_snapshot_id,
         len(model_response_text) if model_response_text is not None else 0,
+        metadata.stop_reason,
+        metadata.input_tokens,
+        metadata.output_tokens,
     )
     if model_response_text is None:
         msg = "unable to extract text content from Bedrock response"
-        raise BedrockLabelSummaryError(msg)
+        raise BedrockLabelSummaryOutputError(msg)
     parsed = parse_bedrock_label_summary_text(
         model_response_text,
         expected_group_keys={group.group_key for group in conversation.groups},
@@ -182,7 +236,7 @@ def parse_bedrock_label_summary_response(
     model_response_text = extract_text_content_from_response(response)
     if model_response_text is None:
         msg = "unable to extract text content from Bedrock response"
-        raise BedrockLabelSummaryError(msg)
+        raise BedrockLabelSummaryOutputError(msg)
     return parse_bedrock_label_summary_text(
         model_response_text,
         expected_group_keys=expected_group_keys,
@@ -195,7 +249,8 @@ def parse_bedrock_label_summary_text(
     expected_group_keys: set[str] | None = None,
 ) -> ParsedLabelSummaryOutput:
     last_error: BedrockLabelSummaryError | None = None
-    for model_response in iter_llm_output_json_candidates(model_response_text):
+    candidates = iter_llm_output_json_candidates(model_response_text)
+    for model_response in candidates:
         try:
             if expected_group_keys is not None:
                 return parse_label_summary_output_for_groups(
@@ -206,7 +261,13 @@ def parse_bedrock_label_summary_text(
         except BedrockLabelSummaryError as error:
             last_error = error
     msg = "unable to parse AI label/summary output from any JSON object"
-    raise BedrockLabelSummaryError(msg) from last_error
+    log.warning(
+        "[DescriptionGenerator] JSON output rejected json_candidate_count=%d "
+        "expected_group_count=%s",
+        len(candidates),
+        len(expected_group_keys) if expected_group_keys is not None else None,
+    )
+    raise BedrockLabelSummaryOutputError(msg) from last_error
 
 
 def extract_text_content_from_response(response: object) -> str | None:
@@ -238,7 +299,7 @@ def parse_llm_output_json(raw_llm_output: str) -> dict[str, object]:
         return candidate
 
     msg = "unable to extract first JSON object from LLM output"
-    raise BedrockLabelSummaryError(msg)
+    raise BedrockLabelSummaryOutputError(msg)
 
 
 def iter_llm_output_json_candidates(raw_llm_output: str) -> list[dict[str, object]]:
@@ -269,7 +330,7 @@ def parse_label_summary_output(model_response: dict[str, object]) -> ParsedLabel
         return ParsedLabelSummaryOutput(mode="loose", clusters=loose_clusters)
 
     msg = "unable to parse AI label/summary output"
-    raise BedrockLabelSummaryError(msg)
+    raise BedrockLabelSummaryOutputError(msg)
 
 
 def parse_label_summary_output_for_groups(
@@ -284,7 +345,7 @@ def parse_label_summary_output_for_groups(
     clusters = model_response.get("clusters")
     if not _is_string_key_mapping(clusters):
         msg = "unable to parse AI label/summary output"
-        raise BedrockLabelSummaryError(msg)
+        raise BedrockLabelSummaryOutputError(msg)
 
     parsed_clusters: dict[str, LabelSummary] = {}
     used_loose_mode = False
@@ -302,7 +363,7 @@ def parse_label_summary_output_for_groups(
 
     if not parsed_clusters:
         msg = "AI label/summary output did not include any valid expected clusters"
-        raise BedrockLabelSummaryError(msg)
+        raise BedrockLabelSummaryOutputError(msg)
     return ParsedLabelSummaryOutput(
         mode="loose" if used_loose_mode else "strict",
         clusters=parsed_clusters,

@@ -69,6 +69,11 @@ export function useSurveyQuestionDisplayContent({
       requestedTranslationSourceKey.value === sourceKey.value &&
       hasTranslationControl.value
   );
+  const shouldLoadTranslation = computed(
+    () =>
+      hasCurrentRequestedTranslation.value ||
+      pendingServerTranslationMode.value !== undefined
+  );
   const translationSubject = computed(() => ({
     kind: "survey_question" as const,
     conversationSlugId: toValue(conversationSlugId),
@@ -81,17 +86,13 @@ export function useSurveyQuestionDisplayContent({
     subject: translationSubject,
     expectedSourceVersion: sourceVersion,
     sourceLanguageCode,
-    enabled: computed(
-      () =>
-        hasCurrentRequestedTranslation.value ||
-        pendingServerTranslationMode.value !== undefined
-    ),
+    enabled: shouldLoadTranslation,
     initialModePreference: pendingServerTranslationMode,
   });
   const currentRequestedTranslationPreview = computed(() => {
     const preview = requestedTranslationPreview.value;
     if (
-      !hasCurrentRequestedTranslation.value ||
+      !shouldLoadTranslation.value ||
       preview === undefined ||
       preview.sourceVersion !== sourceVersion.value
     ) {

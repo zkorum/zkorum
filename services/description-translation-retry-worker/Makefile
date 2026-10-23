@@ -7,7 +7,7 @@ NO_CACHE_FLAG := $(if $(filter 1,$(NO_CACHE)),--no-cache)
 all: dev
 
 dev:
-	AGORA_DEV_MODE=true PYTHONUNBUFFERED=1 uv run python -m description_translation_retry_worker.worker
+	AGORA_DEV_MODE=true PYTHONUNBUFFERED=1 sh ../../scripts/run-python-worker.sh description_translation_retry_worker.worker
 
 lint:
 	uv run --extra dev ruff check
