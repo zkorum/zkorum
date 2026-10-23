@@ -7,7 +7,7 @@ NO_CACHE_FLAG := $(if $(filter 1,$(NO_CACHE)),--no-cache)
 all: dev
 
 dev:
-	uv run python -m import_worker.worker
+	sh ../../scripts/run-python-worker.sh import_worker.worker
 
 test:
 	uv run --extra dev pytest -v

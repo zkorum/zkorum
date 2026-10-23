@@ -54,6 +54,15 @@ Python worker and experiments projects require uv 0.13.4 or newer and certifi
 enforce patched CA packages. Rebuild images with `--pull --no-cache`, refresh local
 environments with `uv sync --locked`, and restart running workers.
 
+Local Python worker `make dev` targets and scenario launches automatically select
+the patched certifi bundle for gRPC, whose bundled roots are independent of
+Python's normal HTTPS trust store. Explicit `GRPC_DEFAULT_SSL_ROOTS_FILE_PATH`
+overrides must point to an updated bundle too.
+
+Worker Dockerfiles bootstrap pip from the Python advisory's hash-pinned wheel
+before downloading other packages. Standalone Python installations outside the
+project virtual environments need their own pip and certifi upgrades.
+
 ### Package-manager configuration
 
 All nine JavaScript services pin `pnpm@12.4.1` in `package.json`, and the API,

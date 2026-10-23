@@ -13,7 +13,12 @@ docker() {
   [[ "$1" == compose && "$2" == -f && "$3" == docker-compose-production.yml ]] || return 91
   shift 3
   case "$*" in
+    "pull nginx")
+      [[ "$FAIL_STEP" != pull ]] || return 45
+      stage=pulled
+      ;;
     "up -d")
+      [[ "$stage" == pulled ]] || return 95
       [[ "$FAIL_STEP" != compose ]] || return 42
       stage=started
       ;;
@@ -38,7 +43,12 @@ for (const { failure, status, description } of [
   {
     failure: "none",
     status: 0,
-    description: "starts, checks and reloads in the deployment directory",
+    description: "pulls, starts, checks and reloads in the deployment directory",
+  },
+  {
+    failure: "pull",
+    status: 45,
+    description: "does not deploy after the nginx pull fails",
   },
   {
     failure: "compose",
